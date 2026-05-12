@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>後勤統計 — 遊戲片追貨平台 v2</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#d8dde6;--border2:#b8c0cc;
+  --text:#1a2030;--text2:#3d4a5c;--text3:#7a8699;
+  --accent:#1d6ef5;--accent-dim:#e8f0fe;--accent-b:#bfcffe;
+  --green:#16a34a;--green-dim:#dcfce7;--green-b:#bbf7d0;
+  --red:#dc2626;--red-dim:#fef2f2;--red-b:#fecaca;
+  --amber:#d97706;--amber-dim:#fef9c3;--amber-b:#fde68a;
+  --purple:#7c3aed;--purple-dim:#f5f3ff;--purple-b:#ddd6fe;
+  --font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono',monospace;
+  --radius:12px;--radius-sm:8px;--shadow:0 2px 8px rgba(0,0,0,0.07);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.nav-logo{font-weight:900;font-size:1rem;color:var(--accent)}
+.nav-tag{font-size:0.8rem;background:var(--amber-dim);color:var(--amber);border:2px solid var(--amber-b);border-radius:20px;padding:3px 12px;font-weight:700}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn-sm{background:#fff;border:2px solid var(--border);color:var(--text2);border-radius:var(--radius-sm);padding:6px 14px;font-family:var(--font);font-size:0.88rem;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.btn-amber{background:var(--amber-dim);border:2px solid var(--amber-b);color:var(--amber);border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.btn-green{background:var(--green-dim);border:2px solid var(--green-b);color:var(--green);border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.btn-red{background:var(--red-dim);border:2px solid var(--red-b);color:var(--red);border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.container{max-width:1400px;margin:0 auto;padding:1.5rem}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:9px 20px;border-radius:var(--radius-sm);font-size:0.92rem;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--text2);font-family:var(--font);transition:all .15s}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* WINDOW BAR */
+.window-bar{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.win-status{display:flex;align-items:center;gap:8px;font-weight:700;font-size:0.95rem}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.open{background:var(--green)}
+.dot.closed{background:var(--red)}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)}
+.stat-card.clickable{cursor:pointer;transition:border-color .15s}
+.stat-card.clickable:hover{border-color:var(--accent)}
+.stat-label{font-size:0.8rem;font-weight:700;color:var(--text3);margin-bottom:6px}
+.stat-val{font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px}
+.stat-sub{font-size:0.78rem;color:var(--text3)}
+.c-blue{color:var(--accent)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-amber{color:var(--amber)}
+
+/* TABLE */
+.tbl-wrap{background:#fff;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.tbl-header{padding:12px 16px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);flex-wrap:wrap}
+.tbl-title{font-size:0.95rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:0.72rem;font-weight:700;color:var(--text3);text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.has-order:hover td{background:var(--surface2)}
+tr.expand-row td{background:var(--surface2)}
+.num{font-family:var(--mono);font-weight:600}
+
+/* STATUS BADGES */
+.status-badge{display:inline-flex;align-items:center;font-size:0.8rem;font-weight:700;border-radius:6px;padding:3px 10px;border:1px solid}
+
+/* PLATFORM TAGS */
+.platform-tag{font-family:var(--mono);font-size:0.72rem;padding:2px 7px;border-radius:5px;font-weight:700;display:inline-block}
+.NS{color:#1d6ef5;background:#e8f0fe;border:1px solid #bfcffe}
+.NS2{color:#0d47a1;background:#dce5ff;border:1px solid #9ab0ff}
+.PS5{color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe}
+.PS4{color:#059669;background:#ecfdf5;border:1px solid #a7f3d0}
+.VR{color:#dc2626;background:#fef2f2;border:1px solid #fecaca}
+
+/* PROGRESS BAR */
+.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+.filter-select{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;cursor:pointer;-webkit-appearance:none}
+.filter-select:focus{border-color:var(--accent)}
+.search-box{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;width:200px}
+.search-box:focus{border-color:var(--accent)}
+
+/* INLINE EDIT */
+.inline-num{width:80px;background:#fff;border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:0.9rem;font-weight:600;text-align:right;padding:4px 7px;outline:none}
+.inline-num:focus{border-color:var(--accent)}
+.inline-num.filled{border-color:var(--green);background:var(--green-dim)}
+.inline-text{background:#fff;border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:0.85rem;padding:5px 8px;outline:none}
+.inline-text:focus{border-color:var(--accent)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius);padding:2rem;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal h2{font-size:1.05rem;font-weight:900;margin-bottom:1.4rem}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fg label{font-size:0.8rem;font-weight:700;color:var(--text3)}
+.fg input,.fg select,.fg textarea{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.92rem;padding:8px 10px;outline:none;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem}
+
+/* EXPAND ROW */
+.expand-content{padding:16px 20px 16px 52px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.expand-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.expand-item .label{font-size:0.7rem;font-weight:700;color:var(--text3);letter-spacing:0.05em;margin-bottom:4px}
+.expand-item .value{font-family:var(--mono);font-weight:700;font-size:1.1rem}
+.expand-item .hint{font-size:0.7rem;color:var(--text3);margin-top:2px}
+
+/* REPLENISHMENT TIMELINE */
+.rep-timeline{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rep-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;border:1px solid}
+
+/* DEALER PILLS */
+.dp{font-size:0.78rem;font-weight:700;border-radius:6px;padding:2px 9px;display:inline-flex;align-items:center;margin:2px}
+.dp.has-order{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)}
+.dp.no-order{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+
+/* ALLOCATION */
+.alloc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px}
+.alloc-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:9999}
+.loading-spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.toast{position:fixed;top:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:var(--radius-sm);font-weight:700;z-index:9999;box-shadow:var(--shadow);font-size:0.92rem}
+</style>
+</head>
+<body>
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-spinner"></div>
+  <p style="color:var(--text2);font-weight:500">連線中…</p>
+</div>
+
+<nav>
+  <div class="nav-logo">🎮 遊戲片追貨平台</div>
+  <span class="nav-tag">後勤統計</span>
+  <div class="nav-right">
+    <button class="btn-amber" onclick="showArchiveModal()">📦 結算歸檔</button>
+    <button class="btn-sm" onclick="location.href='index.html'">登出</button>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- 收單視窗 -->
+  <div class="window-bar">
+    <div class="win-status">
+      <div class="dot" id="win-dot"></div>
+      <span id="win-label">—</span>
+      <span style="color:var(--text3);font-weight:400;font-size:0.88rem">週次：</span>
+      <span id="win-week" style="font-family:var(--mono)">—</span>
+    </div>
+    <button class="btn-sm" id="win-toggle-btn" onclick="toggleWindow()">—</button>
+    <span style="font-size:0.82rem;color:var(--text3)" id="win-hint"></span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn-primary" onclick="showNotifyModal()">📢 通知 Sales</button>
+    </div>
+  </div>
+
+  <!-- 摘要卡片 -->
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">有需求品項</div><div class="stat-val c-blue" id="st-items">—</div><div class="stat-sub">個品項</div></div>
+    <div class="stat-card"><div class="stat-label">合計需求量</div><div class="stat-val c-green" id="st-qty">—</div><div class="stat-sub">件</div></div>
+    <div class="stat-card clickable" onclick="filterStatus('shortage_pending')"><div class="stat-label">⚠ 待補貨</div><div class="stat-val c-red" id="st-shortage">—</div><div class="stat-sub">個品項（點擊篩選）</div></div>
+    <div class="stat-card"><div class="stat-label">已填單通路</div><div class="stat-val c-amber" id="st-dealers">—</div><div class="stat-sub">/ 全部通路</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('demand',this)">📊 需求總覽</button>
+    <button class="tab" onclick="switchTab('inventory',this)">📦 庫存管理</button>
+    <button class="tab" onclick="switchTab('allocation',this)">🗂 人工分配</button>
+    <button class="tab" onclick="switchTab('links',this)">🔗 通路連結</button>
+    <button class="tab" onclick="switchTab('window',this)">📅 週期設定</button>
+  </div>
+
+  <!-- ══ 需求總覽 ══ -->
+  <div id="panel-demand">
+    <div class="filter-bar">
+      <select class="filter-select" id="d-vendor" onchange="renderDemand()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="d-status" onchange="renderDemand()">
+        <option value="">全部狀態</option>
+        <option value="ok">現貨足夠</option>
+        <option value="shortage_pending">待補貨</option>
+        <option value="replenishing">追加中</option>
+        <option value="partial_arrived">部分到貨</option>
+        <option value="completed">已完成</option>
+      </select>
+      <input class="search-box" id="d-search" placeholder="🔍 搜尋品名或條碼…" oninput="renderDemand()">
+      <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="d-count">—</span>
+      <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="d-only-demand" onchange="renderDemand()"> 只顯示有需求品項
+      </label>
+    </div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-header">
+        <span class="tbl-title">需求摘要總覽</span>
+        <span style="font-size:0.8rem;color:var(--text3);margin-left:auto">點擊列展開通路明細與補貨記錄</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:48px">代理</th>
+          <th style="width:56px">平台</th>
+          <th>品名</th>
+          <th style="width:75px;text-align:right">現庫存</th>
+          <th style="width:75px;text-align:right">總需求</th>
+          <th style="width:75px;text-align:right">缺口</th>
+          <th style="width:80px;text-align:right">PM追加</th>
+          <th style="width:130px">ETA</th>
+          <th style="width:130px;text-align:center">狀態</th>
+          <th style="width:28px"></th>
+        </tr></thead>
+        <tbody id="demand-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 庫存管理 ══ -->
+  <div id="panel-inventory" class="hidden">
+    <div style="display:flex;gap:10px;margin-bottom:1.2rem;align-items:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="showInitInventoryModal()">＋ 初始化 / 調整庫存</button>
+      <span style="font-size:0.85rem;color:var(--text3)">初始庫存由後勤設定，currentStock = 初始庫存 − 已登記需求 ＋ 已到貨</span>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="inv-vendor" onchange="renderInventory()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <input class="search-box" id="inv-search" placeholder="🔍 搜尋品名…" oninput="renderInventory()">
+      <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="inv-only-stock" onchange="renderInventory()"> 只顯示有庫存品項
+      </label>
+      <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="inv-count">—</span>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-header"><span class="tbl-title">庫存總覽</span></div>
+      <table>
+        <thead><tr>
+          <th style="width:48px">代理</th>
+          <th style="width:56px">平台</th>
+          <th>品名</th>
+          <th style="width:90px;text-align:right">初始庫存</th>
+          <th style="width:90px;text-align:right">已登記需求</th>
+          <th style="width:90px;text-align:right">已到貨</th>
+          <th style="width:90px;text-align:right">當前庫存</th>
+          <th style="width:180px">備註</th>
+          <th style="width:50px;text-align:center">調整</th>
+        </tr></thead>
+        <tbody id="inventory-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 人工分配 ══ -->
+  <div id="panel-allocation" class="hidden">
+    <div style="margin-bottom:1.2rem;font-size:0.9rem;color:var(--text2);background:var(--amber-dim);border:1px solid var(--amber-b);border-radius:var(--radius-sm);padding:12px 16px">
+      ⚠️ 當缺口 > 0 時，後勤需手動分配各通路的出貨量。分配後業務和經銷商可以看到分配結果。
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="alloc-vendor" onchange="renderAllocation()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <input class="search-box" id="alloc-search" placeholder="🔍 搜尋品名…" oninput="renderAllocation()">
+      <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="alloc-only-shortage" onchange="renderAllocation()" checked> 只顯示有缺口品項
+      </label>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-header"><span class="tbl-title">人工分配表</span><span style="font-size:0.8rem;color:var(--text3);margin-left:auto">修改後自動儲存</span></div>
+      <table>
+        <thead><tr>
+          <th style="width:48px">代理</th>
+          <th style="width:56px">平台</th>
+          <th>品名</th>
+          <th style="width:75px;text-align:right">總需求</th>
+          <th style="width:75px;text-align:right">缺口</th>
+          <th>通路分配（各通路可分配量）</th>
+        </tr></thead>
+        <tbody id="allocation-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 通路連結 ══ -->
+  <div id="panel-links" class="hidden">
+    <div style="display:flex;gap:10px;margin-bottom:1.2rem">
+      <button class="btn-primary" onclick="copyAllLinks()">複製全部連結</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-header"><span class="tbl-title">通路專屬連結</span></div>
+      <table>
+        <thead><tr>
+          <th>通路名稱</th><th>業務</th><th>連結</th><th style="width:80px;text-align:center">複製</th>
+        </tr></thead>
+        <tbody id="links-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 週期設定 ══ -->
+  <div id="panel-window" class="hidden">
+    <div class="tbl-wrap" style="max-width:480px">
+      <div class="tbl-header"><span class="tbl-title">週期設定</span></div>
+      <div style="padding:1.5rem;display:flex;flex-direction:column;gap:14px">
+        <div class="fg"><label>週次</label><input id="w-week" placeholder="2025-W20"></div>
+        <div class="fg"><label>收單開始時間</label><input id="w-start" type="datetime-local"></div>
+        <div class="fg"><label>收單截止時間</label><input id="w-end" type="datetime-local"></div>
+        <button class="btn-primary" onclick="saveWindowSettings()" style="align-self:flex-start;padding:9px 24px">儲存設定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 調整庫存 Modal -->
+<div class="modal-overlay" id="inv-modal">
+  <div class="modal">
+    <h2>📦 初始化 / 調整庫存</h2>
+    <div class="fg"><label>搜尋品項</label>
+      <input id="inv-m-search" placeholder="輸入品名或P/N搜尋…" oninput="searchInvProduct()">
+    </div>
+    <div id="inv-m-result" style="max-height:200px;overflow-y:auto;margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius-sm)"></div>
+    <div id="inv-m-fields" class="hidden">
+      <div style="background:var(--accent-dim);border:1px solid var(--accent-b);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:0.88rem;font-weight:600" id="inv-m-selected"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>初始庫存</label><input id="inv-m-initial" type="number" min="0" placeholder="0"></div>
+        <div class="fg"><label>備註</label><input id="inv-m-note" placeholder="說明"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('inv-modal')">取消</button>
+      <button class="btn-primary" onclick="saveInventory()">儲存庫存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通知 Modal -->
+<div class="modal-overlay" id="notify-modal">
+  <div class="modal">
+    <h2>📢 通知 Sales</h2>
+    <div style="margin-bottom:12px">
+      <select class="filter-select" id="notify-sales" style="width:100%" onchange="buildNotifyMsg()">
+        <option value="">全部業務</option>
+      </select>
+    </div>
+    <textarea id="notify-msg" rows="10" style="width:100%;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:var(--mono);font-size:0.82rem;outline:none;resize:vertical"></textarea>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('notify-modal')">關閉</button>
+      <button class="btn-primary" onclick="copyNotifyMsg()">複製訊息</button>
+    </div>
+  </div>
+</div>
+
+<!-- 結算歸檔 Modal -->
+<div class="modal-overlay" id="archive-modal">
+  <div class="modal" style="max-width:440px">
+    <h2>📦 結算歸檔</h2>
+    <p style="font-size:0.9rem;color:var(--text2);margin-bottom:1.2rem;line-height:1.7">
+      將本週所有訂單歸檔後，系統清空訂單並開啟下一週收單。<br>
+      <strong style="color:var(--red)">⚠ 此操作不可復原。</strong>
+    </p>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem;font-size:0.9rem">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--text3)">歸檔週次</span><strong id="archive-week">—</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--text3)">有需求品項</span><strong id="archive-items">—</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">合計需求量</span><strong id="archive-qty">—</strong></div>
+    </div>
+    <div class="fg"><label>下週週次</label><input id="archive-next-week" placeholder="2025-W21"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('archive-modal')">取消</button>
+      <button class="btn-amber" onclick="confirmArchive()">確認結算歸檔</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="firebase.js"></script>
+<script>
+// ── 狀態 ────────────────────────────────────────────────────────────────────
+let fbDB, products={}, dealers={}, orders={}, inventory={}, replenishments={}, allocations={}, winData={};
+let activeTab='demand', _invPid='', _invVendor='';
+let allDemandRows=[];
+
+// ── 初始化 ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  if(sessionStorage.getItem('role')!=='logistics') { location.href='index.html'; return; }
+  try {
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDB = firebase.database();
+    const [pSnap,dSnap,oSnap,iSnap,rSnap,aSnap,wSnap] = await Promise.all([
+      fbDB.ref('products').once('value'),
+      fbDB.ref('dealers').once('value'),
+      fbDB.ref('orders').once('value'),
+      fbDB.ref('inventory').once('value'),
+      fbDB.ref('replenishments').once('value'),
+      fbDB.ref('allocations').once('value'),
+      fbDB.ref('window').once('value'),
+    ]);
+    products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
+    orders=oSnap.val()||{}; inventory=iSnap.val()||{};
+    replenishments=rSnap.val()||{}; allocations=aSnap.val()||{};
+    winData=wSnap.val()||{};
+
+    // 即時監聽
+    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};rebuildAndRender();});
+    fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};rebuildAndRender();});
+    fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};rebuildAndRender();});
+    fbDB.ref('allocations').on('value',s=>{allocations=s.val()||{};});
+    fbDB.ref('window').on('value',s=>{winData=s.val()||{};renderWindowCtrl();});
+
+    // 通知業務下拉
+    const sel=document.getElementById('notify-sales');
+    SALES_LIST.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+
+    populateWindowForm();
+    rebuildAndRender();
+    document.getElementById('loading-screen').classList.add('hidden');
+  } catch(err) {
+    document.getElementById('loading-screen').innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem"><div style="font-size:3rem">⚠️</div><div style="margin-top:1rem;font-weight:600">${err.message}</div></div>`;
+  }
+});
+
+// ── 核心計算 ──────────────────────────────────────────────────────────────────
+function getAllProds() {
+  const rows=[];
+  Object.entries(products).forEach(([vendor,prods])=>{
+    Object.values(prods||{}).forEach(p=>{ if(p&&p.name) rows.push({...p,vendor}); });
+  });
+  return rows;
+}
+
+function getTotalDemand(pid) {
+  return Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
+}
+
+function getCurrentStock(pid) {
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
+  const demand=getTotalDemand(pid);
+  const arrived=getArrivedQty(pid);
+  return Math.max(0, initial - demand + arrived);
+}
+
+function getArrivedQty(pid) {
+  const reps=replenishments[pid]||{};
+  return Object.values(reps).reduce((s,r)=>s+(r.receivedQty||0),0);
+}
+
+function getTotalReplenishment(pid) {
+  const reps=replenishments[pid]||{};
+  return Object.values(reps).reduce((s,r)=>s+(r.qty||0),0);
+}
+
+function getLatestETA(pid) {
+  const reps=replenishments[pid]||{};
+  const active=Object.values(reps).filter(r=>r.status!=='completed'&&r.eta);
+  if(!active.length) return '';
+  return active.sort((a,b)=>a.eta>b.eta?1:-1)[0].eta;
+}
+
+function getDemandStatus(pid) {
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
+  const demand=getTotalDemand(pid);
+  if(demand===0) return '';
+  const arrived=getArrivedQty(pid);
+  const reps=Object.values(replenishments[pid]||{});
+  const shortage=demand-(initial+getTotalReplenishment(pid));
+
+  if(initial>=demand&&arrived===0) return 'ok';
+  if(reps.length===0&&shortage>0) return 'shortage_pending';
+  const allComplete=reps.length>0&&reps.every(r=>r.status==='completed');
+  if(allComplete) return 'completed';
+  const hasPartial=reps.some(r=>r.receivedQty>0&&r.receivedQty<r.qty);
+  if(hasPartial) return 'partial_arrived';
+  return 'replenishing';
+}
+
+function buildDemandRows() {
+  const rows=[];
+  getAllProds().forEach(p=>{
+    const demand=getTotalDemand(p.id);
+    const inv=inventory[p.id]||{};
+    const initial=inv.initialStock||0;
+    const arrived=getArrivedQty(p.id);
+    const currentStock=getCurrentStock(p.id);
+    const repQty=getTotalReplenishment(p.id);
+    const shortage=Math.max(0,demand-(initial+repQty));
+    const eta=getLatestETA(p.id);
+    const status=getDemandStatus(p.id);
+    const reps=replenishments[p.id]||{};
+    rows.push({p,demand,initial,arrived,currentStock,repQty,shortage,eta,status,reps});
+  });
+  allDemandRows=rows;
+  return rows;
+}
+
+function rebuildAndRender() {
+  buildDemandRows();
+  renderStats();
+  if(activeTab==='demand') renderDemand();
+  else if(activeTab==='inventory') renderInventory();
+  else if(activeTab==='allocation') renderAllocation();
+}
+
+// ── 統計卡片 ──────────────────────────────────────────────────────────────────
+function renderStats() {
+  const rows=allDemandRows.filter(r=>r.demand>0);
+  document.getElementById('st-items').textContent=rows.length;
+  document.getElementById('st-qty').textContent=rows.reduce((s,r)=>s+r.demand,0).toLocaleString();
+  document.getElementById('st-shortage').textContent=rows.filter(r=>r.status==='shortage_pending').length;
+  const allDids=Object.keys(dealers);
+  const filled=allDids.filter(did=>Object.keys(orders[did]||{}).some(pid=>(orders[did][pid]?.qty||0)>0)).length;
+  document.getElementById('st-dealers').textContent=filled+' / '+allDids.length;
+}
+
+// ── 需求總覽 ──────────────────────────────────────────────────────────────────
+let _statusFilter='';
+function filterStatus(s){_statusFilter=s;document.getElementById('d-status').value=s;renderDemand();}
+
+function renderDemand() {
+  const vendor=document.getElementById('d-vendor').value;
+  const statusF=document.getElementById('d-status').value;
+  const search=(document.getElementById('d-search').value||'').toLowerCase();
+  const onlyDemand=document.getElementById('d-only-demand').checked;
+
+  let rows=allDemandRows.filter(r=>{
+    if(vendor&&r.p.vendor!==vendor) return false;
+    if(statusF&&r.status!==statusF) return false;
+    if(onlyDemand&&r.demand===0) return false;
+    if(search&&!r.p.name.toLowerCase().includes(search)&&!(r.p.barcode||'').includes(search)&&!(r.p.pn||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('d-count').textContent=rows.length+' 項';
+
+  document.getElementById('demand-tbody').innerHTML=rows.map(r=>{
+    const {p,demand,currentStock,repQty,shortage,eta,status,reps}=r;
+    const sd=DEMAND_STATUS[status]||{l:'—',color:'var(--text3)',bg:'#fff',bd:'var(--border)'};
+    const repList=Object.values(reps);
+    const latestRep=repList.filter(r=>r.status!=='completed').sort((a,b)=>a.eta>b.eta?1:-1)[0];
+
+    return `<tr class="has-order" style="cursor:pointer" onclick="toggleExpand('${p.id}')">
+      <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:0.9rem">${p.name}</div>
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);margin-top:1px">${p.pn&&p.pn!=='—'?p.pn:''}</div>
+      </td>
+      <td class="num" style="text-align:right;color:${currentStock>0?'var(--green)':'var(--text3)'}">${demand>0?(inventory[p.id]?.initialStock||0):'—'}</td>
+      <td class="num" style="text-align:right;color:${demand>0?'var(--text)':'var(--text3)'};font-weight:700">${demand||'—'}</td>
+      <td class="num" style="text-align:right;color:${shortage>0?'var(--red)':'var(--green)'}">
+        ${demand>0?(shortage>0?'+'+shortage:'✓'):'—'}
+      </td>
+      <td class="num" style="text-align:right;color:${repQty>0?'var(--accent)':'var(--text3)'}">${repQty||'—'}</td>
+      <td style="font-size:0.85rem;color:var(--amber);font-weight:600">${eta||'—'}</td>
+      <td style="text-align:center">
+        ${status?`<span class="status-badge" style="color:${sd.color};background:${sd.bg};border-color:${sd.bd}">${sd.l}</span>`:'—'}
+      </td>
+      <td style="text-align:center;color:var(--text3);font-size:0.8rem" id="arr-${p.id}">▶</td>
+    </tr>
+    <tr id="expand-${p.id}" style="display:none">
+      <td colspan="10" style="padding:0">
+        ${buildExpandContent(p,r)}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function buildExpandContent(p, r) {
+  const {demand,initial,arrived,currentStock,repQty,shortage,reps}=r;
+  const inv=inventory[p.id]||{};
+  const allDids=Object.keys(dealers);
+  const dealerQtys={};
+  allDids.forEach(did=>{const q=(orders[did]||{})[p.id]?.qty||0;if(q>0)dealerQtys[did]=q;});
+  const repList=Object.values(reps).sort((a,b)=>a.createdAt>b.createdAt?1:-1);
+  const allocMap=allocations[p.id]||{};
+
+  const repHtml=repList.length?repList.map((rep,i)=>{
+    const sd=REPLENISHMENT_STATUS[rep.status]||{};
+    const pct=rep.qty>0?Math.min(100,Math.round((rep.receivedQty||0)/rep.qty*100)):0;
+    return `<div class="rep-item" style="background:${sd.bg};border-color:${sd.bd}">
+      <span style="font-size:0.72rem;font-weight:700;color:var(--text3);min-width:20px">第${i+1}批</span>
+      <span style="font-family:var(--mono);font-weight:700;color:var(--accent)">＋${rep.qty} 件</span>
+      <span style="font-size:0.82rem;color:var(--amber);font-weight:600">ETA: ${rep.eta||'—'}</span>
+      <span style="font-size:0.82rem;color:${sd.color};font-weight:700">${sd.l||'—'}</span>
+      <span style="font-size:0.78rem;color:var(--text2)">${rep.note||''}</span>
+      ${rep.receivedQty>0?`<span style="font-family:var(--mono);font-size:0.8rem;color:var(--green)">已到 ${rep.receivedQty}/${rep.qty}</span>`:''}
+      ${rep.status!=='completed'?`<button onclick="event.stopPropagation();showArrivalModal('${p.id}','${Object.keys(reps)[i]}')" style="margin-left:auto;background:var(--green);color:#fff;border:none;border-radius:5px;padding:3px 10px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer">確認到貨</button>`:''}
+    </div>`;
+  }).join(''):`<div style="font-size:0.85rem;color:var(--text3);padding:8px 0">尚無補貨記錄</div>`;
+
+  const dealerHtml=allDids.map(did=>{
+    const qty=dealerQtys[did]||0;
+    const allocated=allocMap[did]?.allocatedQty||0;
+    if(!qty&&!allocated) return `<span class="dp no-order">${dealers[did]?.name||did} —</span>`;
+    return `<span class="dp has-order">${dealers[did]?.name||did} ×${qty}${allocated?` (分${allocated})`:''}  </span>`;
+  }).join('');
+
+  return `<div class="expand-content">
+    <div class="expand-grid">
+      <div class="expand-item">
+        <div class="label">初始庫存</div>
+        <div class="value" style="color:${initial>0?'var(--green)':'var(--text3)'}">${initial||'0'}</div>
+        <div class="hint">後勤設定</div>
+      </div>
+      <div class="expand-item">
+        <div class="label">已到貨</div>
+        <div class="value" style="color:${arrived>0?'var(--green)':'var(--text3)'}">${arrived||'0'}</div>
+        <div class="hint">補貨實際到貨累計</div>
+      </div>
+      <div class="expand-item">
+        <div class="label">缺口</div>
+        <div class="value" style="color:${shortage>0?'var(--red)':'var(--green)'}">
+          ${shortage>0?'+'+shortage+'　需補':'✓ 足夠'}
+        </div>
+        <div class="hint">需求${demand} − (初始${initial}+追加${repQty})</div>
+      </div>
+      <div class="expand-item">
+        <div class="label">備註</div>
+        <div style="font-size:0.85rem;color:var(--text2)">${inv.note||'—'}</div>
+        <div class="hint"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--text3);letter-spacing:0.05em;margin-bottom:8px">補貨記錄（PM 建立）</div>
+      <div class="rep-timeline">${repHtml}</div>
+    </div>
+    <div>
+      <div style="font-size:0.72rem;font-weight:700;color:var(--text3);letter-spacing:0.05em;margin-bottom:8px">通路訂單明細</div>
+      <div style="line-height:2">${dealerHtml}</div>
+    </div>
+  </div>`;
+}
+
+function toggleExpand(pid) {
+  const row=document.getElementById('expand-'+pid);
+  const arr=document.getElementById('arr-'+pid);
+  if(!row) return;
+  const open=row.style.display!=='none';
+  row.style.display=open?'none':'table-row';
+  if(arr) arr.textContent=open?'▶':'▼';
+}
+
+// ── 庫存管理 ──────────────────────────────────────────────────────────────────
+function renderInventory() {
+  const vendor=document.getElementById('inv-vendor').value;
+  const search=(document.getElementById('inv-search').value||'').toLowerCase();
+  const onlyStock=document.getElementById('inv-only-stock').checked;
+
+  const rows=getAllProds().filter(p=>{
+    if(vendor&&p.vendor!==vendor) return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!(p.pn||'').toLowerCase().includes(search)) return false;
+    const inv=inventory[p.id]||{};
+    if(onlyStock&&!inv.initialStock) return false;
+    return true;
+  });
+
+  document.getElementById('inv-count').textContent=rows.length+' 項';
+  document.getElementById('inventory-tbody').innerHTML=rows.map(p=>{
+    const inv=inventory[p.id]||{};
+    const initial=inv.initialStock||0;
+    const demand=getTotalDemand(p.id);
+    const arrived=getArrivedQty(p.id);
+    const current=getCurrentStock(p.id);
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3)">${p.pn&&p.pn!=='—'?p.pn:''}</div>
+      </td>
+      <td class="num" style="text-align:right;color:${initial>0?'var(--green)':'var(--text3)'}">${initial||'—'}</td>
+      <td class="num" style="text-align:right;color:${demand>0?'var(--accent)':'var(--text3)'}">${demand||'—'}</td>
+      <td class="num" style="text-align:right;color:${arrived>0?'var(--green)':'var(--text3)'}">${arrived||'—'}</td>
+      <td class="num" style="text-align:right;font-weight:700;color:${current>0?'var(--green)':current===0&&initial>0?'var(--amber)':'var(--text3)'}">${initial>0?current:'—'}</td>
+      <td style="font-size:0.85rem;color:var(--text2)">${inv.note||'—'}</td>
+      <td style="text-align:center">
+        <button onclick="showAdjustInventory('${p.id}','${p.vendor}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">調整</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 人工分配 ──────────────────────────────────────────────────────────────────
+function renderAllocation() {
+  const vendor=document.getElementById('alloc-vendor').value;
+  const search=(document.getElementById('alloc-search').value||'').toLowerCase();
+  const onlyShortage=document.getElementById('alloc-only-shortage').checked;
+
+  const rows=allDemandRows.filter(r=>{
+    if(vendor&&r.p.vendor!==vendor) return false;
+    if(search&&!r.p.name.toLowerCase().includes(search)) return false;
+    if(onlyShortage&&r.shortage<=0) return false;
+    if(r.demand===0) return false;
+    return true;
+  });
+
+  document.getElementById('allocation-tbody').innerHTML=rows.map(r=>{
+    const {p,demand,shortage}=r;
+    const allocMap=allocations[p.id]||{};
+    const allDids=Object.keys(dealers).filter(did=>(orders[did]||{})[p.id]?.qty>0);
+    const totalAlloc=Object.values(allocMap).reduce((s,a)=>s+(a.allocatedQty||0),0);
+
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
+      </td>
+      <td class="num" style="text-align:right;font-weight:700">${demand}</td>
+      <td class="num" style="text-align:right;color:${shortage>0?'var(--red)':'var(--green)'};font-weight:700">
+        ${shortage>0?'+'+shortage:'✓'}
+      </td>
+      <td>
+        <div class="alloc-grid">
+          ${allDids.map(did=>{
+            const reqQty=(orders[did]||{})[p.id]?.qty||0;
+            const alloc=allocMap[did]?.allocatedQty||0;
+            return `<div class="alloc-item">
+              <span style="font-size:0.82rem;font-weight:600">${dealers[did]?.name||did}<br><span style="font-size:0.75rem;color:var(--text3)">需求 ${reqQty}</span></span>
+              <input class="inline-num" type="number" min="0" max="${reqQty}" value="${alloc||''}" placeholder="0"
+                style="width:70px"
+                onchange="saveAllocation('${p.id}','${did}',parseInt(this.value)||0)">
+            </div>`;
+          }).join('')}
+        </div>
+        ${shortage>0?`<div style="font-size:0.78rem;color:var(--text3);margin-top:6px">已分配 ${totalAlloc} / 需求 ${demand}，尚有缺口 ${shortage}</div>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveAllocation(pid, dealerId, qty) {
+  if(!allocations[pid]) allocations[pid]={};
+  if(!allocations[pid][dealerId]) allocations[pid][dealerId]={};
+  allocations[pid][dealerId].allocatedQty=qty;
+  allocations[pid][dealerId].updatedAt=new Date().toISOString();
+  await fbDB.ref(`allocations/${pid}/${dealerId}`).update({allocatedQty:qty,updatedAt:new Date().toISOString()});
+  showToast('分配已儲存');
+}
+
+// ── 通路連結 ──────────────────────────────────────────────────────────────────
+function renderLogLinks() {
+  const base=location.origin+location.pathname.replace('logistics.html','');
+  document.getElementById('links-tbody').innerHTML=Object.entries(dealers).map(([id,d])=>{
+    const url=`${base}dealer.html?code=${d.code}2025`;
+    return `<tr>
+      <td style="font-weight:600">${d.name}</td>
+      <td style="color:var(--text2)">${d.sales||'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem;color:var(--text3)">${url}</td>
+      <td style="text-align:center">
+        <button onclick="copyLink('${url}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">複製</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function copyLink(url) { navigator.clipboard.writeText(url); showToast('已複製'); }
+function copyAllLinks() {
+  const base=location.origin+location.pathname.replace('logistics.html','');
+  const text=Object.entries(dealers).map(([id,d])=>`${d.name}：${base}dealer.html?code=${d.code}2025`).join('\n');
+  navigator.clipboard.writeText(text); showToast('已複製全部連結');
+}
+
+// ── 週期設定 ──────────────────────────────────────────────────────────────────
+function renderWindowCtrl() {
+  const open=winData.open||false;
+  document.getElementById('win-dot').className='dot '+(open?'open':'closed');
+  document.getElementById('win-label').textContent='收單視窗：'+(open?'開放中':'已關閉');
+  document.getElementById('win-week').textContent=winData.week||'—';
+  document.getElementById('win-toggle-btn').textContent=open?'關閉收單視窗':'開放收單視窗';
+  document.getElementById('win-toggle-btn').className=open?'btn-amber':'btn-green';
+  document.getElementById('win-hint').textContent=open?'關閉後經銷商無法修改訂單':'';
+}
+
+async function toggleWindow() {
+  const newOpen=!(winData.open||false);
+  winData.open=newOpen;
+  await fbDB.ref('window/open').set(newOpen);
+  renderWindowCtrl(); showToast(newOpen?'✅ 收單已開放':'🔒 收單已關閉');
+}
+
+function populateWindowForm() {
+  if(winData.week) document.getElementById('w-week').value=winData.week;
+  if(winData.startTime) document.getElementById('w-start').value=winData.startTime;
+  if(winData.endTime) document.getElementById('w-end').value=winData.endTime;
+}
+
+function renderWindowForm() { populateWindowForm(); }
+
+async function saveWindowSettings() {
+  const week=document.getElementById('w-week').value.trim();
+  const start=document.getElementById('w-start').value;
+  const end=document.getElementById('w-end').value;
+  if(!week) { alert('請填入週次'); return; }
+  await fbDB.ref('window').update({week,startTime:start,endTime:end});
+  winData={...winData,week,startTime:start,endTime:end};
+  renderWindowCtrl(); showToast('週期設定已儲存');
+}
+
+// ── 庫存 Modal ────────────────────────────────────────────────────────────────
+function showInitInventoryModal() { _invPid=''; _invVendor=''; document.getElementById('inv-m-search').value=''; document.getElementById('inv-m-result').innerHTML=''; document.getElementById('inv-m-fields').classList.add('hidden'); openModal('inv-modal'); }
+function showAdjustInventory(pid,vendor) {
+  _invPid=pid; _invVendor=vendor;
+  let p=null;
+  Object.values(products[vendor]||{}).forEach(pr=>{if(pr.id===pid)p=pr;});
+  if(!p) return;
+  document.getElementById('inv-m-search').value=p.name;
+  document.getElementById('inv-m-result').innerHTML='';
+  document.getElementById('inv-m-selected').textContent=p.name+(p.pn&&p.pn!=='—'?' ('+p.pn+')':'');
+  const inv=inventory[pid]||{};
+  document.getElementById('inv-m-initial').value=inv.initialStock||0;
+  document.getElementById('inv-m-note').value=inv.note||'';
+  document.getElementById('inv-m-fields').classList.remove('hidden');
+  openModal('inv-modal');
+}
+
+function searchInvProduct() {
+  const q=(document.getElementById('inv-m-search').value||'').toLowerCase();
+  if(!q) { document.getElementById('inv-m-result').innerHTML=''; return; }
+  const results=getAllProds().filter(p=>p.name.toLowerCase().includes(q)||(p.pn||'').toLowerCase().includes(q)||(p.barcode||'').includes(q)).slice(0,8);
+  document.getElementById('inv-m-result').innerHTML=results.map(p=>`
+    <div onclick="selectInvProduct('${p.id}','${p.vendor}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:0.88rem;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <span class="platform-tag ${p.platform}" style="flex-shrink:0">${p.platform}</span>
+      <span style="font-weight:600">${p.name}</span>
+      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--text3)">${p.pn&&p.pn!=='—'?p.pn:''}</span>
+    </div>`).join('');
+}
+
+function selectInvProduct(pid, vendor) {
+  _invPid=pid; _invVendor=vendor;
+  let p=null;
+  Object.values(products[vendor]||{}).forEach(pr=>{if(pr.id===pid)p=pr;});
+  if(!p) return;
+  document.getElementById('inv-m-result').innerHTML='';
+  document.getElementById('inv-m-selected').textContent=p.name+(p.pn&&p.pn!=='—'?' ('+p.pn+')':'');
+  const inv=inventory[pid]||{};
+  document.getElementById('inv-m-initial').value=inv.initialStock||0;
+  document.getElementById('inv-m-note').value=inv.note||'';
+  document.getElementById('inv-m-fields').classList.remove('hidden');
+}
+
+async function saveInventory() {
+  if(!_invPid) { alert('請先選擇品項'); return; }
+  const initial=parseInt(document.getElementById('inv-m-initial').value)||0;
+  const note=document.getElementById('inv-m-note').value.trim();
+  await fbDB.ref(`inventory/${_invPid}`).update({ initialStock:initial, note, updatedAt:new Date().toISOString() });
+  inventory[_invPid]={...inventory[_invPid], initialStock:initial, note};
+  closeModal('inv-modal'); rebuildAndRender(); showToast('庫存已更新');
+}
+
+// ── 到貨確認 Modal ────────────────────────────────────────────────────────────
+let _arrivalPid='', _arrivalRepId='';
+function showArrivalModal(pid, repId) {
+  _arrivalPid=pid; _arrivalRepId=repId;
+  const rep=(replenishments[pid]||{})[repId]||{};
+  const html=`<div class="modal-overlay" id="arrival-modal" style="display:flex">
+    <div class="modal" style="max-width:420px">
+      <h2>✅ 確認到貨</h2>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:0.9rem">
+        <div>補貨量：<strong>${rep.qty} 件</strong></div>
+        <div>ETA：<strong>${rep.eta||'—'}</strong></div>
+        <div>已到：<strong>${rep.receivedQty||0} 件</strong></div>
+      </div>
+      <div class="fg"><label>本次到貨數量 *</label><input id="arrival-qty" type="number" min="1" max="${rep.qty-(rep.receivedQty||0)}" placeholder="0"></div>
+      <div class="fg"><label>到貨日期</label><input id="arrival-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="fg"><label>備註</label><input id="arrival-note" placeholder="說明"></div>
+      <div class="modal-footer">
+        <button class="btn-sm" onclick="document.getElementById('arrival-modal').remove()">取消</button>
+        <button class="btn-green" onclick="confirmArrival()">確認到貨</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function confirmArrival() {
+  const qty=parseInt(document.getElementById('arrival-qty').value)||0;
+  const date=document.getElementById('arrival-date').value;
+  const note=document.getElementById('arrival-note').value.trim();
+  if(!qty||qty<1) { alert('請填入到貨數量'); return; }
+
+  const rep=(replenishments[_arrivalPid]||{})[_arrivalRepId]||{};
+  const newReceived=(rep.receivedQty||0)+qty;
+  const newStatus=newReceived>=rep.qty?'completed':'partial_arrived';
+  const arrivals=[...(rep.arrivals||[]),{date,qty,note,createdAt:new Date().toISOString()}];
+
+  await fbDB.ref(`replenishments/${_arrivalPid}/${_arrivalRepId}`).update({
+    receivedQty:newReceived, status:newStatus, arrivals
+  });
+
+  document.getElementById('arrival-modal')?.remove();
+  showToast('✅ 到貨已確認');
+}
+
+// ── 結算歸檔 ──────────────────────────────────────────────────────────────────
+function showArchiveModal() {
+  const week=winData.week||'—';
+  document.getElementById('archive-week').textContent=week;
+  const rows=allDemandRows.filter(r=>r.demand>0);
+  document.getElementById('archive-items').textContent=rows.length+' 項';
+  document.getElementById('archive-qty').textContent=rows.reduce((s,r)=>s+r.demand,0).toLocaleString()+' 件';
+  if(week&&week.includes('-W')) {
+    const [y,w]=week.split('-W').map(Number);
+    const nw=w>=52?1:w+1; const ny=w>=52?y+1:y;
+    document.getElementById('archive-next-week').value=`${ny}-W${String(nw).padStart(2,'0')}`;
+  }
+  openModal('archive-modal');
+}
+
+async function confirmArchive() {
+  const week=winData.week;
+  const nextWeek=document.getElementById('archive-next-week').value.trim();
+  if(!week||!nextWeek) { alert('請確認週次'); return; }
+  if(!confirm(`確定將 ${week} 的訂單歸檔並清空？`)) return;
+  const orderSnap=await fbDB.ref('orders').once('value');
+  await fbDB.ref(`orders_archive/${week}`).set({orders:orderSnap.val()||{},archivedAt:new Date().toISOString(),week});
+  await fbDB.ref('orders').remove();
+  await fbDB.ref('window').update({week:nextWeek,open:true});
+  orders={}; winData={...winData,week:nextWeek,open:true};
+  closeModal('archive-modal'); rebuildAndRender();
+  showToast(`✅ ${week} 已歸檔，開始 ${nextWeek}`);
+}
+
+// ── 通知 Modal ────────────────────────────────────────────────────────────────
+function showNotifyModal() { buildNotifyMsg(); openModal('notify-modal'); }
+function buildNotifyMsg() {
+  const salesFilter=document.getElementById('notify-sales').value;
+  const shortageRows=allDemandRows.filter(r=>r.shortage>0);
+  if(!shortageRows.length) { document.getElementById('notify-msg').value='目前無缺口品項 ✅'; return; }
+  let lines=[`📋 ${winData.week||''} 需求缺口通知`,`共 ${shortageRows.length} 個品項需要確認：`,``];
+  shortageRows.forEach(r=>{
+    lines.push(`• ${r.p.name}`);
+    lines.push(`  需求：${r.demand} 件，缺口：+${r.shortage} 件`);
+    if(r.eta) lines.push(`  ETA：${r.eta}`);
+  });
+  document.getElementById('notify-msg').value=lines.join('\n');
+}
+function copyNotifyMsg() { navigator.clipboard.writeText(document.getElementById('notify-msg').value); showToast('已複製'); }
+
+// ── TAB 切換 ──────────────────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  ['demand','inventory','allocation','links','window'].forEach(t=>{
+    document.getElementById('panel-'+t)?.classList.toggle('hidden',t!==tab);
+  });
+  if(tab==='demand') renderDemand();
+  else if(tab==='inventory') renderInventory();
+  else if(tab==='allocation') renderAllocation();
+  else if(tab==='links') renderLogLinks();
+  else if(tab==='window') renderWindowForm();
+}
+
+// ── 工具 ──────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).style.display='flex'; }
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.remove('hidden'); clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.add('hidden'),2500);
+}
+</script>
+</body>
+</html>

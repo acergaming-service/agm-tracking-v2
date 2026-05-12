@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PM 管理 — 遊戲片追貨平台 v2</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#d8dde6;
+  --text:#1a2030;--text2:#3d4a5c;--text3:#7a8699;
+  --accent:#1d6ef5;--accent-dim:#e8f0fe;--accent-b:#bfcffe;
+  --green:#16a34a;--green-dim:#dcfce7;--green-b:#bbf7d0;
+  --red:#dc2626;--red-dim:#fef2f2;--red-b:#fecaca;
+  --amber:#d97706;--amber-dim:#fef9c3;--amber-b:#fde68a;
+  --purple:#7c3aed;--purple-dim:#f5f3ff;--purple-b:#ddd6fe;
+  --font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono',monospace;
+  --radius:12px;--radius-sm:8px;--shadow:0 2px 8px rgba(0,0,0,0.07);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.nav-logo{font-weight:900;font-size:1rem;color:var(--accent)}
+.nav-tag{font-size:0.8rem;background:var(--purple-dim);color:var(--purple);border:2px solid var(--purple-b);border-radius:20px;padding:3px 12px;font-weight:700}
+.nav-right{margin-left:auto;display:flex;gap:8px}
+.btn-sm{background:#fff;border:2px solid var(--border);color:var(--text2);border-radius:var(--radius-sm);padding:6px 14px;font-family:var(--font);font-size:0.88rem;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.btn-green{background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-family:var(--font);font-size:0.88rem;font-weight:700;cursor:pointer}
+.container{max-width:1300px;margin:0 auto;padding:1.5rem}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem}
+.tab{padding:9px 20px;border-radius:var(--radius-sm);font-size:0.92rem;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--text2);font-family:var(--font);transition:all .15s}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-guide{background:var(--accent-dim);border:1px solid var(--accent-b);border-radius:var(--radius);padding:12px 18px;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text2);line-height:1.7}
+.step-guide strong{color:var(--accent)}
+.tbl-wrap{background:#fff;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.tbl-header{padding:12px 16px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);flex-wrap:wrap}
+.tbl-title{font-size:0.95rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:0.72rem;font-weight:700;color:var(--text3);text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.platform-tag{font-family:var(--mono);font-size:0.72rem;padding:2px 7px;border-radius:5px;font-weight:700;display:inline-block}
+.NS{color:#1d6ef5;background:#e8f0fe;border:1px solid #bfcffe}
+.NS2{color:#0d47a1;background:#dce5ff;border:1px solid #9ab0ff}
+.PS5{color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe}
+.PS4{color:#059669;background:#ecfdf5;border:1px solid #a7f3d0}
+.VR{color:#dc2626;background:#fef2f2;border:1px solid #fecaca}
+.status-badge{display:inline-flex;align-items:center;font-size:0.78rem;font-weight:700;border-radius:6px;padding:3px 10px;border:1px solid}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+.filter-select{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;cursor:pointer;-webkit-appearance:none}
+.filter-select:focus{border-color:var(--accent)}
+.search-box{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;width:200px}
+.search-box:focus{border-color:var(--accent)}
+.rep-timeline{display:flex;flex-direction:column;gap:5px}
+.rep-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:7px;border:1px solid;flex-wrap:wrap}
+.add-form{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+.add-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text2)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.2rem}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:0.8rem;font-weight:700;color:var(--text3)}
+.fg input,.fg select,.fg textarea{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.92rem;padding:7px 10px;outline:none;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius);padding:2rem;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal h2{font-size:1.05rem;font-weight:900;margin-bottom:1.4rem}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem}
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:9999}
+.loading-spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.toast{position:fixed;top:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:var(--radius-sm);font-weight:700;z-index:9999;box-shadow:var(--shadow);font-size:0.92rem}
+</style>
+</head>
+<body>
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-spinner"></div>
+  <p style="color:var(--text2);font-weight:500">連線中…</p>
+</div>
+
+<nav>
+  <div class="nav-logo">🎮 遊戲片追貨平台</div>
+  <span class="nav-tag">PM 管理</span>
+  <div class="nav-right">
+    <button class="btn-sm" onclick="location.href='index.html'">登出</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('products',this)">📦 商品清單</button>
+    <button class="tab" onclick="switchTab('replenishment',this)">🔄 補貨管理</button>
+  </div>
+
+  <!-- ══ 商品清單 ══ -->
+  <div id="panel-products">
+    <div class="step-guide">
+      <strong>商品清單</strong>：查看所有品項的基本資料、MOQ、價格。如需修改，請點擊 ✏️ 按鈕。新品上市前在下方新增品項。
+    </div>
+
+    <!-- 新增品項 -->
+    <div class="add-form">
+      <h3>＋ 新增品項</h3>
+      <div class="form-grid">
+        <div class="fg"><label>代理商</label>
+          <select id="np-vendor"><option value="BNE">BNE（萬代南夢宮）</option><option value="GS">GSE（Game Source）</option><option value="SONY">SONY</option></select></div>
+        <div class="fg"><label>平台</label>
+          <select id="np-platform"><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select></div>
+        <div class="fg"><label>類型</label>
+          <select id="np-category"><option>軟體</option><option>主機</option><option>周邊</option><option>女性向</option><option>誠翼</option><option>OLP</option><option>PS4 HITS</option><option>SEGA</option><option>VR</option></select></div>
+        <div class="fg"><label>AGBS P/N</label><input id="np-pn" placeholder="ZL.A00TZ.XXX"></div>
+        <div class="fg"><label>國際條碼 (EAN)</label><input id="np-barcode"></div>
+        <div class="fg" style="grid-column:1/-1"><label>中文品名 *</label><input id="np-name"></div>
+        <div class="fg"><label>SRP（含稅）</label><input id="np-srp" type="number" placeholder="1490"></div>
+        <div class="fg"><label>出貨價（未稅）</label><input id="np-price" type="number" placeholder="933"></div>
+        <div class="fg"><label>優惠出貨價（SONY）</label><input id="np-special" type="number"></div>
+        <div class="fg"><label>MOQ</label><input id="np-moq" type="number" placeholder="0"></div>
+        <div class="fg"><label>貨物狀態</label>
+          <select id="np-status">
+            <option value="">— 未設定</option><option value="instock">現貨</option>
+            <option value="preorder">追加中</option><option value="clearance">出清</option>
+            <option value="unavailable">停止供應</option>
+          </select></div>
+      </div>
+      <button class="btn-primary" onclick="addProduct()">＋ 新增品項</button>
+    </div>
+
+    <!-- 篩選 -->
+    <div class="filter-bar">
+      <select class="filter-select" id="prod-vendor" onchange="renderProducts()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="prod-platform" onchange="renderProducts()"><option value="">全部平台</option><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select>
+      <input class="search-box" id="prod-search" placeholder="🔍 搜尋品名或P/N…" oninput="renderProducts()">
+      <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="prod-count">—</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-header"><span class="tbl-title">所有品項清單</span></div>
+      <table><thead><tr>
+        <th style="width:48px">代理</th><th style="width:56px">平台</th><th style="width:65px">類型</th>
+        <th>品名 / P/N / 國際條碼</th>
+        <th style="width:55px;text-align:right">MOQ</th>
+        <th style="width:80px;text-align:right">SRP(含稅)</th>
+        <th style="width:80px;text-align:right">出貨(含稅)</th>
+        <th style="width:80px;text-align:right">出貨(未稅)</th>
+        <th style="width:100px">狀態</th>
+        <th style="width:110px">到貨日</th>
+        <th style="width:42px;text-align:center">編輯</th>
+      </tr></thead><tbody id="prod-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ 補貨管理 ══ -->
+  <div id="panel-replenishment" class="hidden">
+    <div class="step-guide">
+      <strong>補貨管理</strong>：後勤統計發現缺口後通知 PM。PM 向原廠下單後，在此新增補貨記錄（批次、數量、ETA）。後勤確認到貨時更新實際到貨量。
+    </div>
+
+    <div class="filter-bar">
+      <select class="filter-select" id="rep-vendor" onchange="renderReplenishment()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="rep-status" onchange="renderReplenishment()">
+        <option value="">全部狀態</option>
+        <option value="pending">待下單</option>
+        <option value="incoming">追加中</option>
+        <option value="partial_arrived">部分到貨</option>
+        <option value="completed">已完成</option>
+      </select>
+      <input class="search-box" id="rep-search" placeholder="🔍 搜尋品名…" oninput="renderReplenishment()">
+      <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="rep-hide-done" onchange="renderReplenishment()" checked> 隱藏已完成
+      </label>
+      <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="rep-count">—</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-header">
+        <span class="tbl-title">補貨記錄</span>
+        <button class="btn-primary" style="margin-left:auto" onclick="showAddRepModal()">＋ 新增補貨</button>
+      </div>
+      <table><thead><tr>
+        <th style="width:48px">代理</th>
+        <th style="width:56px">平台</th>
+        <th>品名</th>
+        <th style="width:75px;text-align:right">需求量</th>
+        <th style="width:160px">補貨批次</th>
+        <th style="width:130px;text-align:center">狀態</th>
+        <th style="width:80px;text-align:center">操作</th>
+      </tr></thead><tbody id="rep-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- 新增補貨 Modal -->
+<div class="modal-overlay" id="rep-modal">
+  <div class="modal">
+    <h2 id="rep-modal-title">＋ 新增補貨記錄</h2>
+    <div class="fg" style="margin-bottom:12px">
+      <label>搜尋品項 *</label>
+      <input id="rep-m-search" placeholder="輸入品名或P/N搜尋…" oninput="searchRepProduct()">
+    </div>
+    <div id="rep-m-result" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px"></div>
+    <div id="rep-m-selected-label" class="hidden" style="background:var(--accent-dim);border:1px solid var(--accent-b);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;font-size:0.88rem;font-weight:600"></div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label>補貨數量 *</label><input id="rep-m-qty" type="number" min="1" placeholder="0"></div>
+      <div class="fg"><label>ETA（預計到貨日）*</label><input id="rep-m-eta" type="date"></div>
+      <div class="fg" style="grid-column:1/-1"><label>備註</label><input id="rep-m-note" placeholder="例：第一批、向SONY追加"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeRepModal()">取消</button>
+      <button class="btn-primary" onclick="saveReplenishment()">儲存補貨記錄</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編輯品項 Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>✏️ 編輯品項</h2>
+    <div style="font-size:0.8rem;color:var(--text3);margin-bottom:1.2rem">所有欄位均可修改。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg" style="grid-column:1/-1"><label>中文品名</label><input id="ep-name"></div>
+      <div class="fg"><label>平台</label>
+        <select id="ep-platform"><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select></div>
+      <div class="fg"><label>類型</label>
+        <select id="ep-category"><option>軟體</option><option>主機</option><option>周邊</option><option>女性向</option><option>誠翼</option><option>OLP</option><option>PS4 HITS</option><option>SEGA</option><option>VR</option></select></div>
+      <div class="fg"><label>AGBS P/N</label><input id="ep-pn"></div>
+      <div class="fg"><label>國際條碼</label><input id="ep-barcode"></div>
+      <div class="fg"><label>SRP（含稅）</label><input id="ep-srp" type="number"></div>
+      <div class="fg"><label>出貨價（未稅）</label><input id="ep-price" type="number"></div>
+      <div class="fg"><label>MOQ</label><input id="ep-moq" type="number"></div>
+      <div class="fg"><label>貨物狀態</label>
+        <select id="ep-status">
+          <option value="">— 未設定</option><option value="instock">現貨</option>
+          <option value="preorder">追加中</option><option value="clearance">出清</option>
+          <option value="unavailable">停止供應</option>
+        </select></div>
+      <div class="fg"><label>到貨日</label><input id="ep-arrival" placeholder="2025/7/24"></div>
+      <div class="fg"><label>促銷標籤</label>
+        <select id="ep-tag">
+          <option value="">— 無</option><option value="特價">特價</option>
+          <option value="庫存出清">庫存出清</option><option value="買1送1">買1送1</option>
+          <option value="附贈品">附贈品</option><option value="價格調整">價格調整</option>
+        </select></div>
+      <div class="fg" style="grid-column:1/-1"><label>備註（前台顯示）</label><input id="ep-note"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('edit-modal')">取消</button>
+      <button class="btn-primary" onclick="saveEdit()">儲存變更</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="firebase.js"></script>
+<script>
+let fbDB, products={}, replenishments={}, orders={};
+let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
+
+window.addEventListener('DOMContentLoaded', async () => {
+  if(!['pm','superadmin'].includes(sessionStorage.getItem('role'))) { location.href='index.html'; return; }
+  try {
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDB=firebase.database();
+    const [pSnap,rSnap,oSnap]=await Promise.all([
+      fbDB.ref('products').once('value'),
+      fbDB.ref('replenishments').once('value'),
+      fbDB.ref('orders').once('value'),
+    ]);
+    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{};
+    fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();});
+    fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
+    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};});
+    renderProducts();
+    document.getElementById('loading-screen').classList.add('hidden');
+  } catch(err) {
+    document.getElementById('loading-screen').innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem"><div style="font-size:3rem">⚠️</div><div style="margin-top:1rem;font-weight:600">${err.message}</div></div>`;
+  }
+});
+
+function switchTab(tab, el) {
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  ['products','replenishment'].forEach(t=>document.getElementById('panel-'+t).classList.toggle('hidden',t!==tab));
+  if(tab==='products') renderProducts();
+  if(tab==='replenishment') renderReplenishment();
+}
+
+function getAllProds() {
+  const rows=[];
+  Object.entries(products).forEach(([v,ps])=>{Object.values(ps||{}).forEach(p=>{if(p&&p.name)rows.push({...p,vendor:v});});});
+  return rows;
+}
+
+function getTotalDemand(pid) {
+  return Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
+}
+
+// ── 商品清單 ──────────────────────────────────────────────────────────────────
+function renderProducts() {
+  const vendor=document.getElementById('prod-vendor').value;
+  const platform=document.getElementById('prod-platform').value;
+  const search=(document.getElementById('prod-search').value||'').toLowerCase();
+
+  const rows=getAllProds().filter(p=>{
+    if(vendor&&p.vendor!==vendor) return false;
+    if(platform&&p.platform!==platform) return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!(p.pn||'').toLowerCase().includes(search)&&!(p.barcode||'').includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('prod-count').textContent=rows.length+' 項';
+
+  const statusLabel={instock:'現貨',preorder:'追加中',clearance:'出清',unavailable:'停止供應'};
+  const statusColor={instock:'var(--green)',preorder:'var(--accent)',clearance:'var(--amber)',unavailable:'var(--red)'};
+
+  document.getElementById('prod-tbody').innerHTML=rows.map(p=>{
+    const status=p.status||'';
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
+      <td style="font-size:0.75rem;color:var(--text3)">${p.category||''}</td>
+      <td>
+        <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);margin-top:1px">
+          ${p.pn&&p.pn!=='—'?p.pn:''}${p.barcode?' · '+p.barcode:''}
+        </div>
+      </td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text2)">${p.moq||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono)">${p.srp?p.srp.toLocaleString():'—'}</td>
+      <td style="text-align:right;font-family:var(--mono)">${p.priceTax?p.priceTax.toLocaleString():'—'}</td>
+      <td style="text-align:right;font-family:var(--mono)">${p.price?p.price.toLocaleString():'—'}</td>
+      <td style="font-size:0.82rem;font-weight:600;color:${statusColor[status]||'var(--text3)'}">${statusLabel[status]||'—'}</td>
+      <td style="font-size:0.82rem;color:var(--amber);font-weight:600">${p.arrival||'—'}</td>
+      <td style="text-align:center">
+        <button onclick="openEditModal('${p.vendor}','${p.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">✏️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 補貨管理 ──────────────────────────────────────────────────────────────────
+function renderReplenishment() {
+  const vendor=document.getElementById('rep-vendor').value;
+  const statusF=document.getElementById('rep-status').value;
+  const search=(document.getElementById('rep-search').value||'').toLowerCase();
+  const hideDone=document.getElementById('rep-hide-done').checked;
+
+  // 收集有補貨記錄的品項
+  const pidSet=new Set(Object.keys(replenishments));
+  const rows=getAllProds().filter(p=>{
+    if(!pidSet.has(p.id)) return false;
+    if(vendor&&p.vendor!==vendor) return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!(p.pn||'').toLowerCase().includes(search)) return false;
+    const reps=Object.values(replenishments[p.id]||{});
+    if(hideDone&&reps.every(r=>r.status==='completed')) return false;
+    if(statusF&&!reps.some(r=>r.status===statusF)) return false;
+    return true;
+  });
+
+  document.getElementById('rep-count').textContent=rows.length+' 個品項';
+
+  document.getElementById('rep-tbody').innerHTML=rows.map(p=>{
+    const reps=Object.entries(replenishments[p.id]||{}).sort((a,b)=>a[1].createdAt>b[1].createdAt?1:-1);
+    const demand=getTotalDemand(p.id);
+    const totalRep=reps.reduce((s,[,r])=>s+(r.qty||0),0);
+    const totalRcv=reps.reduce((s,[,r])=>s+(r.receivedQty||0),0);
+
+    // 整體狀態
+    const allDone=reps.length>0&&reps.every(([,r])=>r.status==='completed');
+    const hasPartial=reps.some(([,r])=>r.receivedQty>0&&r.receivedQty<r.qty);
+    const overallStatus=allDone?'completed':hasPartial?'partial_arrived':'incoming';
+    const sd=REPLENISHMENT_STATUS[overallStatus]||{};
+
+    const repHtml=reps.map(([repId,rep],i)=>{
+      const rsd=REPLENISHMENT_STATUS[rep.status||'incoming']||{};
+      return `<div class="rep-item" style="background:${rsd.bg};border-color:${rsd.bd};margin-bottom:4px">
+        <span style="font-size:0.7rem;font-weight:700;color:var(--text3);min-width:18px">第${i+1}批</span>
+        <span style="font-family:var(--mono);font-weight:700;color:var(--accent);font-size:0.88rem">＋${rep.qty}</span>
+        <span style="font-size:0.82rem;color:var(--amber);font-weight:600">ETA ${rep.eta||'—'}</span>
+        ${rep.receivedQty?`<span style="font-size:0.78rem;color:var(--green);font-weight:600">已到 ${rep.receivedQty}/${rep.qty}</span>`:''}
+        ${rep.note?`<span style="font-size:0.75rem;color:var(--text3)">${rep.note}</span>`:''}
+        <span style="font-size:0.75rem;font-weight:700;color:${rsd.color};margin-left:auto">${rsd.l}</span>
+        <button onclick="deleteRep('${p.id}','${repId}')" style="background:var(--red-dim);border:1px solid var(--red-b);color:var(--red);border-radius:4px;padding:2px 6px;font-family:var(--font);font-size:0.72rem;cursor:pointer">刪除</button>
+      </div>`;
+    }).join('');
+
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
+      <td>
+        <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
+        <div style="font-size:0.72rem;color:var(--text3);font-family:var(--mono)">${p.pn&&p.pn!=='—'?p.pn:''}</div>
+      </td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--accent)">${demand||'—'}</td>
+      <td style="padding:8px 12px">${repHtml}</td>
+      <td style="text-align:center">
+        <span class="status-badge" style="color:${sd.color};background:${sd.bg};border-color:${sd.bd}">${sd.l||'—'}</span>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">追加 ${totalRep} / 已到 ${totalRcv}</div>
+      </td>
+      <td style="text-align:center">
+        <button onclick="showAddRepModal('${p.id}','${p.vendor}')" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">＋批次</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if(!rows.length) {
+    document.getElementById('rep-tbody').innerHTML=`<tr><td colspan="7" style="padding:2rem;text-align:center;color:var(--text3)">
+      目前無補貨記錄<br><small>點右上角「＋ 新增補貨」建立第一筆記錄</small>
+    </td></tr>`;
+  }
+}
+
+// ── 補貨 Modal ────────────────────────────────────────────────────────────────
+function showAddRepModal(pid, vendor) {
+  _repPid=pid||''; _repVendor=vendor||'';
+  document.getElementById('rep-modal-title').textContent='＋ 新增補貨記錄';
+  document.getElementById('rep-m-search').value='';
+  document.getElementById('rep-m-result').innerHTML='';
+  document.getElementById('rep-m-qty').value='';
+  document.getElementById('rep-m-eta').value='';
+  document.getElementById('rep-m-note').value='';
+  document.getElementById('rep-m-selected-label').classList.add('hidden');
+  if(pid) {
+    let p=null;
+    Object.values(products[vendor]||{}).forEach(pr=>{if(pr.id===pid)p=pr;});
+    if(p) {
+      document.getElementById('rep-m-selected-label').textContent=p.name+(p.pn&&p.pn!=='—'?' ('+p.pn+')':'');
+      document.getElementById('rep-m-selected-label').classList.remove('hidden');
+    }
+  }
+  document.getElementById('rep-modal').style.display='flex';
+}
+
+function closeRepModal() { document.getElementById('rep-modal').style.display='none'; }
+
+function searchRepProduct() {
+  const q=(document.getElementById('rep-m-search').value||'').toLowerCase();
+  if(!q) { document.getElementById('rep-m-result').innerHTML=''; return; }
+  const results=getAllProds().filter(p=>p.name.toLowerCase().includes(q)||(p.pn||'').toLowerCase().includes(q)).slice(0,8);
+  document.getElementById('rep-m-result').innerHTML=results.map(p=>`
+    <div onclick="selectRepProduct('${p.id}','${p.vendor}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:0.88rem;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <span class="platform-tag ${p.platform}" style="flex-shrink:0">${p.platform}</span>
+      <span style="font-weight:600">${p.name}</span>
+      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--text3)">${p.pn&&p.pn!=='—'?p.pn:''}</span>
+    </div>`).join('');
+}
+
+function selectRepProduct(pid, vendor) {
+  _repPid=pid; _repVendor=vendor;
+  let p=null;
+  Object.values(products[vendor]||{}).forEach(pr=>{if(pr.id===pid)p=pr;});
+  if(!p) return;
+  document.getElementById('rep-m-result').innerHTML='';
+  document.getElementById('rep-m-selected-label').textContent=p.name+(p.pn&&p.pn!=='—'?' ('+p.pn+')':'');
+  document.getElementById('rep-m-selected-label').classList.remove('hidden');
+}
+
+async function saveReplenishment() {
+  if(!_repPid) { alert('請先選擇品項'); return; }
+  const qty=parseInt(document.getElementById('rep-m-qty').value)||0;
+  const eta=document.getElementById('rep-m-eta').value;
+  const note=document.getElementById('rep-m-note').value.trim();
+  if(!qty||qty<1) { alert('請填入補貨數量'); return; }
+  if(!eta) { alert('請填入預計到貨日'); return; }
+  const repId='rep_'+Date.now();
+  const rep={qty,eta,receivedQty:0,status:'incoming',note,createdBy:'pm',createdAt:new Date().toISOString(),arrivals:[]};
+  await fbDB.ref(`replenishments/${_repPid}/${repId}`).set(rep);
+  if(!replenishments[_repPid]) replenishments[_repPid]={};
+  replenishments[_repPid][repId]=rep;
+  closeRepModal(); renderReplenishment(); showToast('✅ 補貨記錄已新增');
+}
+
+async function deleteRep(pid, repId) {
+  if(!confirm('確定刪除此補貨批次？')) return;
+  await fbDB.ref(`replenishments/${pid}/${repId}`).remove();
+  delete replenishments[pid]?.[repId];
+  renderReplenishment(); showToast('已刪除');
+}
+
+// ── 新增品項 ──────────────────────────────────────────────────────────────────
+async function addProduct() {
+  const vendor=document.getElementById('np-vendor').value;
+  const name=document.getElementById('np-name').value.trim();
+  if(!name) { alert('品名為必填'); return; }
+  const id=vendor+'_'+Date.now();
+  const prod={
+    id,pn:document.getElementById('np-pn').value||'—',
+    platform:document.getElementById('np-platform').value,
+    category:document.getElementById('np-category').value,
+    barcode:document.getElementById('np-barcode').value.trim(),
+    spec:'',name,
+    srp:parseInt(document.getElementById('np-srp').value)||0,
+    priceTax:0,
+    price:parseInt(document.getElementById('np-price').value)||0,
+    priceSpecial:parseInt(document.getElementById('np-special').value)||0,
+    moq:parseInt(document.getElementById('np-moq').value)||0,
+    maxOrder:0,
+    status:document.getElementById('np-status').value,
+    arrival:'',priceTag:'',displayNote:'',giftItem:'',isAllocation:false,
+  };
+  await fbDB.ref(`products/${vendor}/${id}`).set(prod);
+  if(!products[vendor]) products[vendor]={};
+  products[vendor][id]=prod;
+  renderProducts();
+  ['np-pn','np-barcode','np-name','np-srp','np-price','np-special','np-moq'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  showToast('✅ 品項已新增');
+}
+
+// ── 編輯 Modal ────────────────────────────────────────────────────────────────
+function openEditModal(vendor, pid) {
+  _editVendor=vendor; _editPid=pid;
+  let p=(products[vendor]||{})[pid];
+  if(!p){for(const[v,ps]of Object.entries(products)){if(ps[pid]){p=ps[pid];_editVendor=v;break;}}}
+  if(!p){showToast('找不到品項');return;}
+  document.getElementById('ep-name').value=p.name||'';
+  document.getElementById('ep-platform').value=p.platform||'NS';
+  document.getElementById('ep-category').value=p.category||'軟體';
+  document.getElementById('ep-pn').value=p.pn&&p.pn!=='—'?p.pn:'';
+  document.getElementById('ep-barcode').value=p.barcode||'';
+  document.getElementById('ep-srp').value=p.srp||0;
+  document.getElementById('ep-price').value=p.price||0;
+  document.getElementById('ep-moq').value=p.moq||0;
+  document.getElementById('ep-status').value=p.status||'';
+  document.getElementById('ep-arrival').value=p.arrival||'';
+  document.getElementById('ep-tag').value=p.priceTag||'';
+  document.getElementById('ep-note').value=p.displayNote||'';
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+async function saveEdit(){
+  const vendor=_editVendor,pid=_editPid;
+  if(!vendor||!pid)return;
+  const updates={
+    name:document.getElementById('ep-name').value.trim(),
+    platform:document.getElementById('ep-platform').value,
+    category:document.getElementById('ep-category').value,
+    pn:document.getElementById('ep-pn').value.trim()||'—',
+    barcode:document.getElementById('ep-barcode').value.trim(),
+    srp:parseInt(document.getElementById('ep-srp').value)||0,
+    price:parseInt(document.getElementById('ep-price').value)||0,
+    moq:parseInt(document.getElementById('ep-moq').value)||0,
+    status:document.getElementById('ep-status').value,
+    arrival:document.getElementById('ep-arrival').value.trim(),
+    priceTag:document.getElementById('ep-tag').value,
+    displayNote:document.getElementById('ep-note').value.trim(),
+  };
+  if(!updates.name){alert('品名不能為空');return;}
+  await fbDB.ref(`products/${vendor}/${pid}`).update(updates);
+  if(products[vendor]&&products[vendor][pid])Object.assign(products[vendor][pid],updates);
+  closeModal('edit-modal'); renderProducts(); showToast('✅ 品項已更新');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.classList.remove('hidden');clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.add('hidden'),2500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>業務 — 遊戲片追貨平台 v2</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#d8dde6;--text:#1a2030;--text2:#3d4a5c;--text3:#7a8699;--accent:#1d6ef5;--accent-dim:#e8f0fe;--accent-b:#bfcffe;--green:#16a34a;--green-dim:#dcfce7;--green-b:#bbf7d0;--red:#dc2626;--red-dim:#fef2f2;--red-b:#fecaca;--amber:#d97706;--amber-dim:#fef9c3;--amber-b:#fde68a;--font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono',monospace;--radius:12px;--radius-sm:8px;--shadow:0 2px 8px rgba(0,0,0,0.07)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.nav-logo{font-weight:900;font-size:1rem;color:var(--accent)}
+.nav-tag{font-size:0.8rem;background:var(--green-dim);color:var(--green);border:2px solid var(--green-b);border-radius:20px;padding:3px 12px;font-weight:700}
+.nav-right{margin-left:auto;display:flex;gap:8px}
+.btn-sm{background:#fff;border:2px solid var(--border);color:var(--text2);border-radius:var(--radius-sm);padding:6px 14px;font-family:var(--font);font-size:0.88rem;font-weight:600;cursor:pointer}
+.container{max-width:1200px;margin:0 auto;padding:1.5rem}
+.tbl-wrap{background:#fff;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.tbl-header{padding:12px 16px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);flex-wrap:wrap}
+.tbl-title{font-size:0.95rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:0.72rem;font-weight:700;color:var(--text3);text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.platform-tag{font-family:var(--mono);font-size:0.72rem;padding:2px 7px;border-radius:5px;font-weight:700;display:inline-block}
+.NS{color:#1d6ef5;background:#e8f0fe;border:1px solid #bfcffe}
+.NS2{color:#0d47a1;background:#dce5ff;border:1px solid #9ab0ff}
+.PS5{color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe}
+.PS4{color:#059669;background:#ecfdf5;border:1px solid #a7f3d0}
+.VR{color:#dc2626;background:#fef2f2;border:1px solid #fecaca}
+.status-badge{display:inline-flex;align-items:center;font-size:0.78rem;font-weight:700;border-radius:6px;padding:3px 10px;border:1px solid}
+.rep-item{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;border:1px solid;margin-bottom:4px;flex-wrap:wrap}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+.filter-select{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;cursor:pointer;-webkit-appearance:none}
+.search-box{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;width:200px}
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:9999}
+.loading-spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-spinner"></div>
+  <p style="color:var(--text2);font-weight:500">連線中…</p>
+</div>
+<nav>
+  <div class="nav-logo">🎮 遊戲片追貨平台</div>
+  <span class="nav-tag" id="sales-name-tag">業務</span>
+  <div class="nav-right"><button class="btn-sm" onclick="location.href='index.html'">登出</button></div>
+</nav>
+<div class="container">
+  <!-- 摘要 -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:1.5rem">
+    <div style="background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)">
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text3);margin-bottom:6px">轄區通路</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--accent)" id="st-dealers">—</div>
+      <div style="font-size:0.78rem;color:var(--text3)">個通路</div>
+    </div>
+    <div style="background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)">
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text3);margin-bottom:6px">已填單通路</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--green)" id="st-filled">—</div>
+      <div style="font-size:0.78rem;color:var(--text3)">個通路有填單</div>
+    </div>
+    <div style="background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)">
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text3);margin-bottom:6px">有缺口品項</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--red)" id="st-shortage">—</div>
+      <div style="font-size:0.78rem;color:var(--text3)">個品項需追加</div>
+    </div>
+  </div>
+
+  <!-- 訂單進度 -->
+  <div class="tbl-wrap">
+    <div class="tbl-header"><span class="tbl-title">📋 轄區訂單進度</span></div>
+    <table><thead><tr>
+      <th>通路名稱</th>
+      <th style="width:160px">品項</th>
+      <th style="width:75px;text-align:right">需求量</th>
+      <th style="width:75px;text-align:right">分配量</th>
+      <th style="width:130px">ETA</th>
+      <th style="width:120px;text-align:center">狀態</th>
+    </tr></thead><tbody id="order-tbody"></tbody></table>
+  </div>
+
+  <!-- 補貨進度 -->
+  <div class="tbl-wrap">
+    <div class="tbl-header"><span class="tbl-title">🔄 補貨到貨進度</span><span style="font-size:0.82rem;color:var(--text3);margin-left:auto">轄區有訂單的品項</span></div>
+    <table><thead><tr>
+      <th style="width:48px">代理</th>
+      <th style="width:56px">平台</th>
+      <th>品名</th>
+      <th style="width:75px;text-align:right">我的需求</th>
+      <th>補貨批次 / ETA</th>
+      <th style="width:120px;text-align:center">到貨進度</th>
+    </tr></thead><tbody id="rep-tbody"></tbody></table>
+  </div>
+</div>
+
+<script src="firebase.js"></script>
+<script>
+let fbDB, mySales='', products={}, dealers={}, orders={}, replenishments={}, allocations={}, inventory={};
+let myDealerIds=[];
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  if(sessionStorage.getItem('role')!=='sales'){location.href='index.html';return;}
+  mySales=sessionStorage.getItem('sales')||'';
+  document.getElementById('sales-name-tag').textContent=mySales+' 業務';
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    fbDB=firebase.database();
+    const[pSnap,dSnap,oSnap,rSnap,aSnap]=await Promise.all([
+      fbDB.ref('products').once('value'),
+      fbDB.ref('dealers').once('value'),
+      fbDB.ref('orders').once('value'),
+      fbDB.ref('replenishments').once('value'),
+      fbDB.ref('allocations').once('value'),
+    ]);
+    products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
+    orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{};
+    myDealerIds=Object.entries(dealers).filter(([,d])=>d.sales===mySales).map(([id])=>id);
+    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};render();});
+    fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};render();});
+    fbDB.ref('allocations').on('value',s=>{allocations=s.val()||{};render();});
+    render();
+    document.getElementById('loading-screen').classList.add('hidden');
+  }catch(err){
+    document.getElementById('loading-screen').innerHTML='<div style="text-align:center;color:#dc2626;padding:2rem"><div style="font-size:3rem">⚠️</div><div style="margin-top:1rem;font-weight:600">'+err.message+'</div></div>';
+  }
+});
+
+function getAllProds(){
+  const rows=[];
+  Object.entries(products).forEach(([v,ps])=>{Object.values(ps||{}).forEach(p=>{if(p&&p.name)rows.push({...p,vendor:v});});});
+  return rows;
+}
+
+function render(){
+  renderStats(); renderOrders(); renderReplenishments();
+}
+
+function renderStats(){
+  const filled=myDealerIds.filter(did=>Object.keys(orders[did]||{}).some(pid=>(orders[did][pid]?.qty||0)>0)).length;
+  document.getElementById('st-dealers').textContent=myDealerIds.length;
+  document.getElementById('st-filled').textContent=filled;
+  // 缺口品項（我的通路有訂單但缺貨）
+  const pids=new Set();
+  myDealerIds.forEach(did=>Object.entries(orders[did]||{}).forEach(([pid,o])=>{if(o.qty>0)pids.add(pid);}));
+  let shortage=0;
+  pids.forEach(pid=>{
+    const inv=inventory[pid]||{};
+    const initial=inv.initialStock||0;
+    const totalDemand=Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
+    const repQty=Object.values(replenishments[pid]||{}).reduce((s,r)=>s+(r.qty||0),0);
+    if(totalDemand>(initial+repQty))shortage++;
+  });
+  document.getElementById('st-shortage').textContent=shortage;
+}
+
+function renderOrders(){
+  const rows=[];
+  myDealerIds.forEach(did=>{
+    const dealerOrders=orders[did]||{};
+    Object.entries(dealerOrders).forEach(([pid,o])=>{
+      if(!o.qty)return;
+      let p=null;
+      Object.values(products).forEach(ps=>{if(ps[pid])p=ps[pid];});
+      if(!p)return;
+      const allocQty=(allocations[pid]||{})[did]?.allocatedQty||0;
+      const eta=getLatestETA(pid);
+      const status=getDemandStatus(pid);
+      const sd=DEMAND_STATUS[status]||{};
+      rows.push({dealer:dealers[did]?.name||did,p,qty:o.qty,allocQty,eta,status,sd});
+    });
+  });
+  document.getElementById('order-tbody').innerHTML=rows.map(r=>`<tr>
+    <td style="font-weight:600">${r.dealer}</td>
+    <td>
+      <span class="platform-tag ${r.p.platform}">${r.p.platform}</span>
+      <span style="margin-left:6px;font-size:0.88rem">${r.p.name.slice(0,18)}</span>
+    </td>
+    <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--accent)">${r.qty}</td>
+    <td style="text-align:right;font-family:var(--mono);color:${r.allocQty>0?'var(--green)':'var(--text3)'}">${r.allocQty||'—'}</td>
+    <td style="font-size:0.85rem;color:var(--amber);font-weight:600">${r.eta||'—'}</td>
+    <td style="text-align:center">${r.status?`<span class="status-badge" style="color:${r.sd.color};background:${r.sd.bg};border-color:${r.sd.bd}">${r.sd.l}</span>`:'—'}</td>
+  </tr>`).join('')||'<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text3)">轄區尚無訂單</td></tr>';
+}
+
+function renderReplenishments(){
+  const pids=new Set();
+  myDealerIds.forEach(did=>Object.entries(orders[did]||{}).forEach(([pid,o])=>{if(o.qty>0)pids.add(pid);}));
+  const rows=[];
+  pids.forEach(pid=>{
+    if(!replenishments[pid])return;
+    let p=null; let vendor='';
+    Object.entries(products).forEach(([v,ps])=>{if(ps[pid]){p=ps[pid];vendor=v;}});
+    if(!p)return;
+    const reps=Object.values(replenishments[pid]).sort((a,b)=>a.createdAt>b.createdAt?1:-1);
+    const myQty=myDealerIds.reduce((s,did)=>s+((orders[did]||{})[pid]?.qty||0),0);
+    const totalRcv=reps.reduce((s,r)=>s+(r.receivedQty||0),0);
+    const totalRep=reps.reduce((s,r)=>s+(r.qty||0),0);
+    rows.push({vendor,p,reps,myQty,totalRcv,totalRep});
+  });
+  const repHtml=rows.map(r=>{
+    const repItems=r.reps.map((rep,i)=>{
+      const sd=REPLENISHMENT_STATUS[rep.status||'incoming']||{};
+      const pct=rep.qty>0?Math.min(100,Math.round((rep.receivedQty||0)/rep.qty*100)):0;
+      return `<div class="rep-item" style="background:${sd.bg};border-color:${sd.bd}">
+        <span style="font-size:0.7rem;color:var(--text3)">第${i+1}批</span>
+        <span style="font-family:var(--mono);font-weight:700;color:var(--accent)">＋${rep.qty}</span>
+        <span style="color:var(--amber);font-weight:600;font-size:0.82rem">ETA ${rep.eta||'—'}</span>
+        ${rep.receivedQty?`<span style="color:var(--green);font-size:0.78rem">已到 ${rep.receivedQty}/${rep.qty}</span>`:''}
+        <span style="color:${sd.color};font-weight:700;font-size:0.75rem;margin-left:auto">${sd.l}</span>
+      </div>`;
+    }).join('');
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:700">${r.vendor==='GS'?'GSE':r.vendor}</td>
+      <td><span class="platform-tag ${r.p.platform}">${r.p.platform}</span></td>
+      <td><div style="font-weight:600;font-size:0.88rem">${r.p.name}</div></td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--accent)">${r.myQty}</td>
+      <td style="padding:8px 12px">${repItems}</td>
+      <td style="text-align:center;font-family:var(--mono)">
+        <div style="font-size:1rem;font-weight:700;color:${r.totalRcv>=r.totalRep?'var(--green)':'var(--amber)'}">
+          ${r.totalRcv} / ${r.totalRep}
+        </div>
+        <div style="font-size:0.72rem;color:var(--text3)">已到 / 追加總量</div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('rep-tbody').innerHTML=repHtml||'<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text3)">轄區有訂單品項目前無補貨記錄</td></tr>';
+}
+
+function getLatestETA(pid){
+  const reps=replenishments[pid]||{};
+  const active=Object.values(reps).filter(r=>r.status!=='completed'&&r.eta);
+  if(!active.length)return '';
+  return active.sort((a,b)=>a.eta>b.eta?1:-1)[0].eta;
+}
+
+function getDemandStatus(pid){
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
+  const demand=Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
+  if(demand===0)return '';
+  const reps=Object.values(replenishments[pid]||{});
+  const repQty=reps.reduce((s,r)=>s+(r.qty||0),0);
+  if(initial>=demand)return 'ok';
+  if(reps.length===0&&demand>initial+repQty)return 'shortage_pending';
+  const allDone=reps.length>0&&reps.every(r=>r.status==='completed');
+  if(allDone)return 'completed';
+  const hasPartial=reps.some(r=>r.receivedQty>0&&r.receivedQty<r.qty);
+  if(hasPartial)return 'partial_arrived';
+  return 'replenishing';
+}
+</script>
+</body>
+</html>
