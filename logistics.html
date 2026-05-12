@@ -593,7 +593,7 @@ function renderDemand() {
   document.getElementById('d-count').textContent=rows.length+' 項';
 
   document.getElementById('demand-tbody').innerHTML=rows.map(r=>{
-    const {p,demand,currentStock,repQty,shortage,eta,status,reps}=r;
+    const {p,demand,initial,arrived,availableStock,repQty,realShortage,plannedShortage,eta,status,reps}=r;
     const sd=DEMAND_STATUS[status]||{l:'—',color:'var(--text3)',bg:'#fff',bd:'var(--border)'};
     const repList=Object.values(reps);
     const latestRep=repList.filter(r=>r.status!=='completed').sort((a,b)=>a.eta>b.eta?1:-1)[0];
@@ -632,7 +632,7 @@ function renderDemand() {
 }
 
 function buildExpandContent(p, r) {
-  const {demand,initial,arrived,currentStock,repQty,shortage,reps}=r;
+  const {demand,initial,arrived,availableStock,repQty,realShortage,plannedShortage,reps}=r;
   const inv=inventory[p.id]||{};
   const allDids=Object.keys(dealers);
   const dealerQtys={};
