@@ -209,9 +209,9 @@ tr.expand-row td{background:var(--surface2)}
           <th style="width:48px">代理</th>
           <th style="width:56px">平台</th>
           <th>品名</th>
-          <th style="width:75px;text-align:right">現庫存</th>
+          <th style="width:75px;text-align:right" title="可用庫存 = 初始庫存 + 已到貨 − 總需求">可用庫存</th>
           <th style="width:75px;text-align:right">總需求</th>
-          <th style="width:75px;text-align:right">缺口</th>
+          <th style="width:95px;text-align:right" title="實際缺口 / 計畫缺口">缺口</th>
           <th style="width:80px;text-align:right">PM追加</th>
           <th style="width:130px">ETA</th>
           <th style="width:130px;text-align:center">狀態</th>
@@ -249,7 +249,7 @@ tr.expand-row td{background:var(--surface2)}
           <th style="width:130px;text-align:right">當前庫存</th>
           <th style="width:100px">設定日期</th>
           <th style="width:140px">備註</th>
-          <th style="width:50px;text-align:center">調整</th>
+          <th style="width:80px;text-align:center" title="直接輸入數字設定初始庫存，Enter 或點其他地方自動儲存">初始庫存<br><span style="font-size:0.68rem;font-weight:400;color:var(--accent)">直接輸入</span></th>
         </tr></thead>
         <tbody id="inventory-tbody"></tbody>
       </table>
@@ -276,7 +276,7 @@ tr.expand-row td{background:var(--surface2)}
           <th style="width:56px">平台</th>
           <th>品名</th>
           <th style="width:75px;text-align:right">總需求</th>
-          <th style="width:75px;text-align:right">缺口</th>
+          <th style="width:95px;text-align:right" title="實際缺口 / 計畫缺口">缺口</th>
           <th>通路分配（各通路可分配量）</th>
         </tr></thead>
         <tbody id="allocation-tbody"></tbody>
@@ -340,13 +340,21 @@ tr.expand-row td{background:var(--surface2)}
 <div class="modal-overlay" id="batch-modal">
   <div class="modal" style="max-width:640px">
     <h2>📥 批次匯入庫存</h2>
-    <p style="font-size:0.88rem;color:var(--text2);margin-bottom:1rem;line-height:1.7">
-      貼上庫存資料，每行一筆，格式：<code style="background:var(--surface2);padding:2px 6px;border-radius:4px">P/N 或國際條碼, 數量</code><br>
-      例如：<code style="background:var(--surface2);padding:2px 6px;border-radius:4px">ZL.A00TZ.17Q, 200</code>
-    </p>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:0.85rem;line-height:1.8">
+      <div style="font-weight:700;color:var(--text2);margin-bottom:4px">📋 使用說明</div>
+      <div>① 先下載範本 CSV（庫存欄預設為 0）</div>
+      <div>② 在 Excel 填入各品項的初始庫存數量</div>
+      <div>③ 儲存後選擇 CSV 檔上傳，或直接貼上文字</div>
+      <div style="color:var(--text3);font-size:0.82rem;margin-top:4px">格式：AGBS P/N, 數量（每行一筆）</div>
+    </div>
+    <div class="fg" style="margin-bottom:10px">
+      <label>方式一：上傳 CSV 檔</label>
+      <input type="file" id="batch-file" accept=".csv" onchange="loadCSVFile(this)"
+        style="border:2px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-family:var(--font);font-size:0.88rem;cursor:pointer">
+    </div>
     <div class="fg" style="margin-bottom:12px">
-      <label>庫存資料（每行一筆）</label>
-      <textarea id="batch-input" rows="10" placeholder="ZL.A00TZ.17Q, 200&#10;ZL.A00TZ.17S, 50&#10;4713014356068, 30" style="font-family:var(--mono);font-size:0.85rem;resize:vertical"></textarea>
+      <label>方式二：直接貼上文字（P/N 或國際條碼, 數量）</label>
+      <textarea id="batch-input" rows="8" placeholder="ZL.A00TZ.17Q, 200&#10;ZL.A00TZ.17S, 50&#10;ZL.A00TZ.18Z, 30" style="font-family:var(--mono);font-size:0.85rem;resize:vertical"></textarea>
     </div>
     <div id="batch-preview" style="max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
     <div class="modal-footer">
@@ -413,7 +421,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const [pSnap,dSnap,oSnap,iSnap,rSnap,aSnap,wSnap] = await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('dealers').once('value'),
-      fbDB.ref('orders').once('value'),
+      fbDB.ref(`orders/${winData.week||'current'}`).once('value'),
       fbDB.ref('inventory').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('allocations').once('value'),
@@ -425,7 +433,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     winData=wSnap.val()||{};
 
     // 即時監聽
-    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};rebuildAndRender();});
+    fbDB.ref('window').on('value',s=>{
+      winData=s.val()||{};renderWindowCtrl();
+      // 週次變更時重新訂閱 orders
+      fbDB.ref(`orders/${winData.week||'current'}`).on('value',s2=>{orders=s2.val()||{};rebuildAndRender();});
+    });
     fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};rebuildAndRender();});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};rebuildAndRender();});
     fbDB.ref('allocations').on('value',s=>{allocations=s.val()||{};});
@@ -456,12 +468,30 @@ function getTotalDemand(pid) {
   return Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
 }
 
-function getCurrentStock(pid) {
+function getAvailableStock(pid) {
   const inv=inventory[pid]||{};
   const initial=inv.initialStock||0;
   const demand=getTotalDemand(pid);
   const arrived=getArrivedQty(pid);
-  return Math.max(0, initial - demand + arrived);
+  return initial + arrived - demand;  // 可為負數（代表缺貨）
+}
+
+function getRealShortage(pid) {
+  // 實際缺口：需求 − (初始庫存 + 已到貨)，反映當下真實缺貨
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
+  const demand=getTotalDemand(pid);
+  const arrived=getArrivedQty(pid);
+  return Math.max(0, demand - (initial + arrived));
+}
+
+function getPlannedShortage(pid) {
+  // 計畫缺口：需求 − (初始庫存 + 已追加量)，反映補貨計畫是否足夠
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
+  const demand=getTotalDemand(pid);
+  const repQty=getTotalReplenishment(pid);
+  return Math.max(0, demand - (initial + repQty));
 }
 
 function getArrivedQty(pid) {
@@ -482,20 +512,21 @@ function getLatestETA(pid) {
 }
 
 function getDemandStatus(pid) {
-  const inv=inventory[pid]||{};
-  const initial=inv.initialStock||0;
   const demand=getTotalDemand(pid);
   if(demand===0) return '';
+  const inv=inventory[pid]||{};
+  const initial=inv.initialStock||0;
   const arrived=getArrivedQty(pid);
   const reps=Object.values(replenishments[pid]||{});
-  const shortage=demand-(initial+getTotalReplenishment(pid));
+  const realShortage=getRealShortage(pid);
+  const plannedShortage=getPlannedShortage(pid);
 
-  if(initial>=demand&&arrived===0) return 'ok';
-  if(reps.length===0&&shortage>0) return 'shortage_pending';
+  if(realShortage===0) return 'ok';                              // 實際庫存已足夠
+  if(reps.length===0) return 'shortage_pending';                  // 無補貨計畫
   const allComplete=reps.length>0&&reps.every(r=>r.status==='completed');
-  if(allComplete) return 'completed';
-  const hasPartial=reps.some(r=>r.receivedQty>0&&r.receivedQty<r.qty);
-  if(hasPartial) return 'partial_arrived';
+  if(allComplete&&realShortage===0) return 'completed';
+  const hasArrived=reps.some(r=>(r.receivedQty||0)>0);
+  if(hasArrived) return 'partial_arrived';
   return 'replenishing';
 }
 
@@ -506,13 +537,14 @@ function buildDemandRows() {
     const inv=inventory[p.id]||{};
     const initial=inv.initialStock||0;
     const arrived=getArrivedQty(p.id);
-    const currentStock=getCurrentStock(p.id);
+    const availableStock=getAvailableStock(p.id);
     const repQty=getTotalReplenishment(p.id);
-    const shortage=Math.max(0,demand-(initial+repQty));
+    const realShortage=getRealShortage(p.id);
+    const plannedShortage=getPlannedShortage(p.id);
     const eta=getLatestETA(p.id);
     const status=getDemandStatus(p.id);
     const reps=replenishments[p.id]||{};
-    rows.push({p,demand,initial,arrived,currentStock,repQty,shortage,eta,status,reps});
+    rows.push({p,demand,initial,arrived,availableStock,repQty,realShortage,plannedShortage,eta,status,reps});
   });
   allDemandRows=rows;
   return rows;
@@ -570,10 +602,16 @@ function renderDemand() {
         <div style="font-weight:600;font-size:0.9rem">${p.name}</div>
         <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);margin-top:1px">${p.pn&&p.pn!=='—'?p.pn:''}</div>
       </td>
-      <td class="num" style="text-align:right;color:${currentStock>0?'var(--green)':'var(--text3)'}">${demand>0?(inventory[p.id]?.initialStock||0):'—'}</td>
+      <td class="num" style="text-align:right;color:${demand>0?(availableStock>=0?'var(--green)':'var(--red)'):'var(--text3)'}">
+        ${demand>0?(availableStock>=0?availableStock:''+availableStock):'—'}
+      </td>
       <td class="num" style="text-align:right;color:${demand>0?'var(--text)':'var(--text3)'};font-weight:700">${demand||'—'}</td>
-      <td class="num" style="text-align:right;color:${shortage>0?'var(--red)':'var(--green)'}">
-        ${demand>0?(shortage>0?'+'+shortage:'✓'):'—'}
+      <td style="text-align:right">
+        ${demand>0?`<div class="num" style="color:${realShortage>0?'var(--red)':'var(--green)'}">
+          ${realShortage>0?'缺'+realShortage:'✓'}
+        </div>
+        ${plannedShortage>0?`<div style="font-size:0.72rem;color:var(--amber)">計畫缺 ${plannedShortage}</div>`:''}
+        `:'—'}
       </td>
       <td class="num" style="text-align:right;color:${repQty>0?'var(--accent)':'var(--text3)'}">${repQty||'—'}</td>
       <td style="font-size:0.85rem;color:var(--amber);font-weight:600">${eta||'—'}</td>
@@ -633,9 +671,23 @@ function buildExpandContent(p, r) {
         <div class="hint">補貨實際到貨累計</div>
       </div>
       <div class="expand-item">
-        <div class="label">缺口</div>
-        <div class="value" style="color:${shortage>0?'var(--red)':'var(--green)'}">
-          ${shortage>0?'+'+shortage+'　需補':'✓ 足夠'}
+        <div class="label">可用庫存</div>
+        <div class="value" style="color:${availableStock>=0?'var(--green)':'var(--red)'}">
+          ${availableStock}
+        </div>
+        <div class="hint">${initial}+${arrived}−${demand}</div>
+      </div>
+      <div class="expand-item">
+        <div class="label">實際缺口</div>
+        <div class="value" style="color:${realShortage>0?'var(--red)':'var(--green)'}">
+          ${realShortage>0?'缺 '+realShortage:'✓ 足夠'}
+        </div>
+        <div class="hint">需求${demand} − (初始${initial}+到貨${arrived})</div>
+      </div>
+      <div class="expand-item">
+        <div class="label">計畫缺口</div>
+        <div class="value" style="color:${plannedShortage>0?'var(--amber)':'var(--green)'}">
+          ${plannedShortage>0?'缺 '+plannedShortage:'✓ 計畫足夠'}
         </div>
         <div class="hint">需求${demand} − (初始${initial}+追加${repQty})</div>
       </div>
@@ -697,10 +749,11 @@ function renderInventory() {
       <td class="num" style="text-align:right;color:${demand>0?'var(--accent)':'var(--text3)'}">${demand||'—'}</td>
       <td class="num" style="text-align:right;color:${arrived>0?'var(--green)':'var(--text3)'}">${arrived||'—'}</td>
       <td style="text-align:right">
-        ${initial>0?`
-          <div style="font-family:var(--mono);font-weight:700;font-size:0.95rem;color:${current>0?'var(--green)':current===0?'var(--amber)':'var(--red)'}">${current}</div>
-          <div style="font-size:0.7rem;color:var(--text3);margin-top:2px">${initial} − ${demand} ＋ ${arrived}</div>
-        `:'<span style="color:var(--text3)">—</span>'}
+        ${initial>0?(()=>{
+          const avail=initial+arrived-demand;
+          return `<div style="font-family:var(--mono);font-weight:700;font-size:0.95rem;color:${avail>0?'var(--green)':avail===0?'var(--amber)':'var(--red)'}">${avail}</div>
+          <div style="font-size:0.7rem;color:var(--text3);margin-top:2px">${initial}＋${arrived}−${demand}</div>`;
+        })():'<span style="color:var(--text3)">—</span>'}
       </td>
       <td style="font-size:0.82rem;color:var(--text3);font-family:var(--mono)">${inv.updatedAt?inv.updatedAt.slice(0,10):'—'}</td>
       <td style="font-size:0.85rem;color:var(--text2)">${inv.note||'—'}</td>
@@ -946,9 +999,9 @@ async function confirmArchive() {
   const nextWeek=document.getElementById('archive-next-week').value.trim();
   if(!week||!nextWeek) { alert('請確認週次'); return; }
   if(!confirm(`確定將 ${week} 的訂單歸檔並清空？`)) return;
-  const orderSnap=await fbDB.ref('orders').once('value');
+  const orderSnap=await fbDB.ref(`orders/${week}`).once('value');
   await fbDB.ref(`orders_archive/${week}`).set({orders:orderSnap.val()||{},archivedAt:new Date().toISOString(),week});
-  await fbDB.ref('orders').remove();
+  await fbDB.ref(`orders/${week}`).remove();
   await fbDB.ref('window').update({week:nextWeek,open:true});
   orders={}; winData={...winData,week:nextWeek,open:true};
   closeModal('archive-modal'); rebuildAndRender();
@@ -991,6 +1044,30 @@ function closeModal(id) { document.getElementById(id).style.display='none'; }
 
 // ── 批次匯入庫存 ────────────────────────────────────────────────────────────
 let _batchData = [];
+
+function downloadTemplate(){
+  const lines=['﻿AGBS P/N,初始庫存'];
+  Object.values(products).forEach(prods=>{
+    Object.values(prods||{}).forEach(p=>{
+      if(p.pn&&p.pn!=='—') lines.push(`${p.pn},0`);
+    });
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='庫存匯入範本.csv'; a.click();
+  showToast('範本下載完成');
+}
+
+function loadCSVFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('batch-input').value=e.target.result;
+    showToast('檔案已載入，請點預覽確認');
+  };
+  reader.readAsText(file,'UTF-8');
+}
 
 function showBatchImportModal(){
   document.getElementById('batch-input').value='';

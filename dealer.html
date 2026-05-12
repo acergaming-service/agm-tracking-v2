@@ -581,7 +581,17 @@ function onQtyInput(pid,rawVal){
 
 async function saveOne(pid,qty){
   try{
-    await fbDB.ref(`orders/${DEALER_ID}/${pid}`).update({qty,updatedAt:new Date().toISOString(),submitted:false});
+    // 找到品項以快照當下價格
+    let p=null;
+    Object.values(config.products||{}).forEach(prods=>{if(prods[pid])p=prods[pid];});
+    const priceSnapshot=p?{
+      srpAtOrder:p.srp||0,
+      priceTaxAtOrder:p.priceTax||0,
+      priceAtOrder:p.price||0,
+    }:{};
+    await fbDB.ref(`orders/${winData?.week||'current'}/${DEALER_ID}/${pid}`).update({
+      qty, updatedAt:new Date().toISOString(), submitted:false, ...priceSnapshot
+    });
     document.getElementById('saving-ring').classList.remove('show');
     document.getElementById('sum-sync').textContent='已同步 '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
