@@ -425,6 +425,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       fbDB.ref('inventory').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref(`allocations/${winData.week||'current'}`).once('value'),
+      fbDB.ref('replenishmentArrivals').once('value'),
       fbDB.ref('window').once('value'),
     ]);
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
