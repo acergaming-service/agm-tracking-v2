@@ -296,7 +296,10 @@ window.addEventListener('DOMContentLoaded', async()=>{
     if(!DEALER_ID){showInvalidCode(RAW_CODE);return;}
 
     config={products};
-    isWindowOpen=winData.open!==false;
+    const now=new Date();
+    const inTime=(!winData.startTime||now>=new Date(winData.startTime))&&
+                 (!winData.endTime||now<=new Date(winData.endTime));
+    isWindowOpen=winData.open===true&&!!winData.week&&inTime;
 
     // 讀本通路訂單
     const allOrders=orderSnap.val()||{};
@@ -305,7 +308,10 @@ window.addEventListener('DOMContentLoaded', async()=>{
     // 即時監聽
     fbDB.ref('window').on('value',snap=>{
       const w=snap.val()||{};
-      isWindowOpen=w.open!==false;
+      const now2=new Date();
+      const inTime2=(!w.startTime||now2>=new Date(w.startTime))&&
+                    (!w.endTime||now2<=new Date(w.endTime));
+      isWindowOpen=w.open===true&&!!w.week&&inTime2;
       document.getElementById('nav-week').textContent=w.week||'';
       updateWindowUI();
       updateWindowTimeBanner(w);
@@ -568,6 +574,17 @@ function renderProducts(){
 
 // ── 訂單操作 ──────────────────────────────────────────────────────────────
 function onQtyInput(pid,rawVal){
+  if(!isWindowOpen){
+    showToast('收單視窗已關閉，無法修改訂單','red');
+    const inp=document.getElementById('qty-'+pid);
+    if(inp) inp.value=localOrders[pid]?.qty||'';
+    return;
+  }
+  if(!isWindowOpen){
+    const inp=document.getElementById('qty-'+pid);
+    if(inp){inp.value='';showToast('收單視窗已關閉，無法填單','red');}
+    return;
+  }
   const qty=Math.max(0,parseInt(rawVal)||0);
   const inp=document.getElementById('qty-'+pid);
   if(inp){inp.value=qty;inp.classList.toggle('has-value',qty>0);}
@@ -581,15 +598,19 @@ function onQtyInput(pid,rawVal){
 
 async function saveOne(pid,qty){
   try{
-    // 找到品項以快照當下價格
-    let p=null;
-    Object.values(config.products||{}).forEach(prods=>{if(prods[pid])p=prods[pid];});
-    const priceSnapshot=p?{
-      srpAtOrder:p.srp||0,
-      priceTaxAtOrder:p.priceTax||0,
-      priceAtOrder:p.price||0,
-    }:{};
-    await fbDB.ref(`orders/${winData?.week||'current'}/${DEALER_ID}/${pid}`).update({
+    const week=winData?.week||'current';
+    const ref=fbDB.ref(`orders/${week}/${DEALER_ID}/${pid}`);
+
+    // 價格快照：只在第一次建立時寫入，後續修改 qty 不覆蓋
+    const existing=(await ref.once('value')).val();
+    const priceSnapshot=(existing?.srpAtOrder!=null)?{}:{
+      // 第一次建立才寫入價格快照
+      srpAtOrder:(()=>{let p=null;Object.values(config.products||{}).forEach(ps=>{if(ps[pid])p=ps[pid];});return p?.srp||0;})(),
+      priceTaxAtOrder:(()=>{let p=null;Object.values(config.products||{}).forEach(ps=>{if(ps[pid])p=ps[pid];});return p?.priceTax||0;})(),
+      priceAtOrder:(()=>{let p=null;Object.values(config.products||{}).forEach(ps=>{if(ps[pid])p=ps[pid];});return p?.price||0;})(),
+    };
+
+    await ref.update({
       qty, updatedAt:new Date().toISOString(), submitted:false, ...priceSnapshot
     });
     document.getElementById('saving-ring').classList.remove('show');

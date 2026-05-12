@@ -263,12 +263,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const [pSnap,rSnap,oSnap]=await Promise.all([
+    const [pSnap,rSnap,oSnap,raSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('orders').once('value'),
+      fbDB.ref('replenishmentArrivals').once('value'),
     ]);
-    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{};
+    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{};
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();});
     fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
     fbDB.ref('orders').on('value',s=>{orders=s.val()||{};});
@@ -465,7 +466,7 @@ async function saveReplenishment() {
   if(!qty||qty<1) { alert('請填入補貨數量'); return; }
   if(!eta) { alert('請填入預計到貨日'); return; }
   const repId='rep_'+Date.now();
-  const rep={qty,eta,receivedQty:0,status:'incoming',note,createdBy:'pm',createdAt:new Date().toISOString(),arrivals:[]};
+  const rep={qty,eta,receivedQty:0,status:'incoming',note,createdBy:'pm',createdAt:new Date().toISOString()};
   await fbDB.ref(`replenishments/${_repPid}/${repId}`).set(rep);
   if(!replenishments[_repPid]) replenishments[_repPid]={};
   replenishments[_repPid][repId]=rep;

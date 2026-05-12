@@ -115,7 +115,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
       fbDB.ref('dealers').once('value'),
       fbDB.ref(`orders/${(await fbDB.ref('window/week').once('value')).val()||'current'}`).once('value'),
       fbDB.ref('replenishments').once('value'),
-      fbDB.ref('allocations').once('value'),
+      fbDB.ref('window/week').once('value').then(ws=>fbDB.ref(`allocations/${ws.val()||'current'}`).once('value')),
     ]);
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
     orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{};
@@ -167,7 +167,7 @@ function renderOrders(){
       let p=null;
       Object.values(products).forEach(ps=>{if(ps[pid])p=ps[pid];});
       if(!p)return;
-      const allocQty=(allocations[pid]||{})[did]?.allocatedQty||0;
+      const allocQty=((allocations[pid]||{})[did])?.allocatedQty||0;
       const eta=getLatestETA(pid);
       const status=getDemandStatus(pid);
       const sd=DEMAND_STATUS[status]||{};

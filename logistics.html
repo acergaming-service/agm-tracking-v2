@@ -167,7 +167,7 @@ tr.expand-row td{background:var(--surface2)}
   <div class="stat-grid">
     <div class="stat-card"><div class="stat-label">有需求品項</div><div class="stat-val c-blue" id="st-items">—</div><div class="stat-sub">個品項</div></div>
     <div class="stat-card"><div class="stat-label">合計需求量</div><div class="stat-val c-green" id="st-qty">—</div><div class="stat-sub">件</div></div>
-    <div class="stat-card clickable" onclick="filterStatus('shortage_pending')"><div class="stat-label">⚠ 待補貨</div><div class="stat-val c-red" id="st-shortage">—</div><div class="stat-sub">個品項（點擊篩選）</div></div>
+    <div class="stat-card clickable" onclick="filterStatus('shortage_pending')"><div class="stat-label">⚠ 待補貨</div><div class="stat-val c-red" id="st-shortage">—</div><div class="stat-sub">個品項目前實缺（點擊篩選）</div></div>
     <div class="stat-card"><div class="stat-label">已填單通路</div><div class="stat-val c-amber" id="st-dealers">—</div><div class="stat-sub">/ 全部通路</div></div>
   </div>
 
@@ -211,7 +211,7 @@ tr.expand-row td{background:var(--surface2)}
           <th>品名</th>
           <th style="width:75px;text-align:right" title="可用庫存 = 初始庫存 + 已到貨 − 總需求">可用庫存</th>
           <th style="width:75px;text-align:right">總需求</th>
-          <th style="width:95px;text-align:right" title="實際缺口 / 計畫缺口">缺口</th>
+          <th style="width:110px;text-align:right">缺口</th>
           <th style="width:80px;text-align:right">PM追加</th>
           <th style="width:130px">ETA</th>
           <th style="width:130px;text-align:center">狀態</th>
@@ -276,7 +276,7 @@ tr.expand-row td{background:var(--surface2)}
           <th style="width:56px">平台</th>
           <th>品名</th>
           <th style="width:75px;text-align:right">總需求</th>
-          <th style="width:95px;text-align:right" title="實際缺口 / 計畫缺口">缺口</th>
+          <th style="width:110px;text-align:right">缺口</th>
           <th>通路分配（各通路可分配量）</th>
         </tr></thead>
         <tbody id="allocation-tbody"></tbody>
@@ -408,7 +408,7 @@ tr.expand-row td{background:var(--surface2)}
 <script src="firebase.js"></script>
 <script>
 // ── 狀態 ────────────────────────────────────────────────────────────────────
-let fbDB, products={}, dealers={}, orders={}, inventory={}, replenishments={}, allocations={}, winData={};
+let fbDB, products={}, dealers={}, orders={}, inventory={}, replenishments={}, allocations={}, replenishmentArrivals={}, winData={};
 let activeTab='demand', _invPid='', _invVendor='';
 let allDemandRows=[];
 
@@ -418,18 +418,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB = firebase.database();
-    const [pSnap,dSnap,oSnap,iSnap,rSnap,aSnap,wSnap] = await Promise.all([
+    const [pSnap,dSnap,oSnap,iSnap,rSnap,aSnap,raSnap,wSnap] = await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('dealers').once('value'),
       fbDB.ref(`orders/${winData.week||'current'}`).once('value'),
       fbDB.ref('inventory').once('value'),
       fbDB.ref('replenishments').once('value'),
-      fbDB.ref('allocations').once('value'),
+      fbDB.ref(`allocations/${winData.week||'current'}`).once('value'),
       fbDB.ref('window').once('value'),
     ]);
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
     orders=oSnap.val()||{}; inventory=iSnap.val()||{};
     replenishments=rSnap.val()||{}; allocations=aSnap.val()||{};
+    replenishmentArrivals=raSnap.val()||{};
     winData=wSnap.val()||{};
 
     // 即時監聽
@@ -440,7 +441,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
     fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};rebuildAndRender();});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};rebuildAndRender();});
-    fbDB.ref('allocations').on('value',s=>{allocations=s.val()||{};});
+    fbDB.ref(`allocations/${winData.week||'current'}`).on('value',s=>{allocations=s.val()||{};});
     fbDB.ref('window').on('value',s=>{winData=s.val()||{};renderWindowCtrl();});
 
     // 通知業務下拉
@@ -495,6 +496,7 @@ function getPlannedShortage(pid) {
 }
 
 function getArrivedQty(pid) {
+  // 從 replenishments 的 receivedQty 累計（由 replenishmentArrivals 同步累加而來）
   const reps=replenishments[pid]||{};
   return Object.values(reps).reduce((s,r)=>s+(r.receivedQty||0),0);
 }
@@ -608,9 +610,9 @@ function renderDemand() {
       <td class="num" style="text-align:right;color:${demand>0?'var(--text)':'var(--text3)'};font-weight:700">${demand||'—'}</td>
       <td style="text-align:right">
         ${demand>0?`<div class="num" style="color:${realShortage>0?'var(--red)':'var(--green)'}">
-          ${realShortage>0?'缺'+realShortage:'✓'}
+          ${realShortage>0?'實缺 '+realShortage:'✓'}
         </div>
-        ${plannedShortage>0?`<div style="font-size:0.72rem;color:var(--amber)">計畫缺 ${plannedShortage}</div>`:''}
+        ${plannedShortage>0?`<div style="font-size:0.72rem;color:var(--amber)">追加後仍缺 ${plannedShortage}</div>`:''}
         `:'—'}
       </td>
       <td class="num" style="text-align:right;color:${repQty>0?'var(--accent)':'var(--text3)'}">${repQty||'—'}</td>
@@ -635,7 +637,7 @@ function buildExpandContent(p, r) {
   const dealerQtys={};
   allDids.forEach(did=>{const q=(orders[did]||{})[p.id]?.qty||0;if(q>0)dealerQtys[did]=q;});
   const repList=Object.values(reps).sort((a,b)=>a.createdAt>b.createdAt?1:-1);
-  const allocMap=allocations[p.id]||{};
+  const allocMap=(allocations[p.id]||{});
 
   const repHtml=repList.length?repList.map((rep,i)=>{
     const sd=REPLENISHMENT_STATUS[rep.status]||{};
@@ -678,16 +680,16 @@ function buildExpandContent(p, r) {
         <div class="hint">${initial}+${arrived}−${demand}</div>
       </div>
       <div class="expand-item">
-        <div class="label">實際缺口</div>
+        <div class="label">目前實缺</div>
         <div class="value" style="color:${realShortage>0?'var(--red)':'var(--green)'}">
-          ${realShortage>0?'缺 '+realShortage:'✓ 足夠'}
+          ${realShortage>0?'實缺 '+realShortage:'✓ 足夠'}
         </div>
         <div class="hint">需求${demand} − (初始${initial}+到貨${arrived})</div>
       </div>
       <div class="expand-item">
-        <div class="label">計畫缺口</div>
+        <div class="label">追加後仍缺</div>
         <div class="value" style="color:${plannedShortage>0?'var(--amber)':'var(--green)'}">
-          ${plannedShortage>0?'缺 '+plannedShortage:'✓ 計畫足夠'}
+          ${plannedShortage>0?'仍缺 '+plannedShortage:'✓ 計畫足夠'}
         </div>
         <div class="hint">需求${demand} − (初始${initial}+追加${repQty})</div>
       </div>
@@ -783,7 +785,7 @@ function renderAllocation() {
 
   document.getElementById('allocation-tbody').innerHTML=rows.map(r=>{
     const {p,demand,shortage}=r;
-    const allocMap=allocations[p.id]||{};
+    const allocMap=(allocations[p.id]||{});
     const allDids=Object.keys(dealers).filter(did=>(orders[did]||{})[p.id]?.qty>0);
     const totalAlloc=Object.values(allocMap).reduce((s,a)=>s+(a.allocatedQty||0),0);
 
@@ -819,9 +821,10 @@ function renderAllocation() {
 async function saveAllocation(pid, dealerId, qty) {
   if(!allocations[pid]) allocations[pid]={};
   if(!allocations[pid][dealerId]) allocations[pid][dealerId]={};
-  allocations[pid][dealerId].allocatedQty=qty;
+  allocations[pid][dealerId]={allocatedQty:qty,updatedAt:new Date().toISOString()};
   allocations[pid][dealerId].updatedAt=new Date().toISOString();
-  await fbDB.ref(`allocations/${pid}/${dealerId}`).update({allocatedQty:qty,updatedAt:new Date().toISOString()});
+  const wk=winData.week||'current';
+  await fbDB.ref(`allocations/${wk}/${pid}/${dealerId}`).update({allocatedQty:qty,updatedAt:new Date().toISOString()});
   showToast('分配已儲存');
 }
 
@@ -965,17 +968,36 @@ async function confirmArrival() {
   const date=document.getElementById('arrival-date').value;
   const note=document.getElementById('arrival-note').value.trim();
   if(!qty||qty<1) { alert('請填入到貨數量'); return; }
+  if(!date) { alert('請填入到貨日期'); return; }
 
   const rep=(replenishments[_arrivalPid]||{})[_arrivalRepId]||{};
   const newReceived=(rep.receivedQty||0)+qty;
   const newStatus=newReceived>=rep.qty?'completed':'partial_arrived';
-  const arrivals=[...(rep.arrivals||[]),{date,qty,note,createdAt:new Date().toISOString()}];
+  const now=new Date().toISOString();
+  const arrivalId='arr_'+Date.now();
 
-  await fbDB.ref(`replenishments/${_arrivalPid}/${_arrivalRepId}`).update({
-    receivedQty:newReceived, status:newStatus, arrivals
+  // 1. 新增獨立到貨記錄
+  await fbDB.ref(`replenishmentArrivals/${_arrivalRepId}/${arrivalId}`).set({
+    productId:_arrivalPid,
+    qty,date,note,
+    createdAt:now,
+    createdBy:'logistics',
   });
 
+  // 2. 累加 receivedQty 並更新 status（不再存 arrivals array）
+  await fbDB.ref(`replenishments/${_arrivalPid}/${_arrivalRepId}`).update({
+    receivedQty:newReceived,
+    status:newStatus,
+  });
+
+  // 3. 更新記憶體
+  if(!replenishments[_arrivalPid]) replenishments[_arrivalPid]={};
+  if(!replenishments[_arrivalPid][_arrivalRepId]) replenishments[_arrivalPid][_arrivalRepId]={};
+  replenishments[_arrivalPid][_arrivalRepId].receivedQty=newReceived;
+  replenishments[_arrivalPid][_arrivalRepId].status=newStatus;
+
   document.getElementById('arrival-modal')?.remove();
+  rebuildAndRender();
   showToast('✅ 到貨已確認');
 }
 

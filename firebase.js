@@ -39,12 +39,15 @@ const FIREBASE_CONFIG = {
 //   note
 //   createdBy       - 'pm'
 //   createdAt
-//   arrivals[]      - 到貨記錄 [{date, qty, note}]
+//   receivedQty     累計到貨量（由 replenishmentArrivals 累加而來）
 //
-// allocations/{pid}/{dealerId}
+// allocations/{week}/{productId}/{dealerId}
 //   allocatedQty    - 後勤分配量
 //   note
 //   updatedAt
+//
+// replenishmentArrivals/{repId}/{arrivalId}
+//   productId, qty, date, note, createdAt, createdBy
 //
 // window
 //   open, week, startTime, endTime
