@@ -225,8 +225,7 @@ tr.expand-row td{background:var(--surface2)}
   <!-- ══ 庫存管理 ══ -->
   <div id="panel-inventory" class="hidden">
     <div style="display:flex;gap:10px;margin-bottom:1.2rem;align-items:center;flex-wrap:wrap">
-      <button class="btn-primary" onclick="showInitInventoryModal()">＋ 單筆設定庫存</button>
-      <button class="btn-green" onclick="showBatchImportModal()">📥 批次匯入庫存</button>
+<button class="btn-green" onclick="showBatchImportModal()">📥 批次匯入庫存</button>
       <span style="font-size:0.85rem;color:var(--text3)">當前庫存 ＝ 初始庫存 − 已登記需求量 ＋ 已到貨量</span>
     </div>
     <div class="filter-bar">
@@ -706,7 +705,10 @@ function renderInventory() {
       <td style="font-size:0.82rem;color:var(--text3);font-family:var(--mono)">${inv.updatedAt?inv.updatedAt.slice(0,10):'—'}</td>
       <td style="font-size:0.85rem;color:var(--text2)">${inv.note||'—'}</td>
       <td style="text-align:center">
-        <button onclick="showAdjustInventory('${p.id}','${p.vendor}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">調整</button>
+        <input type="number" min="0" value="${initial||''}" placeholder="0"
+          style="width:70px;text-align:right;font-family:var(--mono);font-size:0.88rem;border:2px solid ${initial>0?'var(--green-b)':'var(--border)'};border-radius:6px;padding:4px 6px;outline:none;background:${initial>0?'var(--green-dim)':'#fff'}"
+          onchange="quickSetInventory('${p.id}',parseInt(this.value)||0,this)"
+          onfocus="this.select()">
       </td>
     </tr>`;
   }).join('');
@@ -986,6 +988,78 @@ function switchTab(tab, el) {
 // ── 工具 ──────────────────────────────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
+
+// ── 批次匯入庫存 ────────────────────────────────────────────────────────────
+let _batchData = [];
+
+function showBatchImportModal(){
+  document.getElementById('batch-input').value='';
+  document.getElementById('batch-preview').innerHTML='';
+  document.getElementById('batch-confirm-btn').style.display='none';
+  openModal('batch-modal');
+}
+
+function previewBatchImport(){
+  const text=document.getElementById('batch-input').value.trim();
+  if(!text){alert('請貼上庫存資料');return;}
+  const lines=text.split('\n').filter(l=>l.trim());
+  _batchData=[];
+  const pnMap={}, barcodeMap={};
+  getAllProds().forEach(p=>{
+    if(p.pn&&p.pn!=='—') pnMap[p.pn.trim().toLowerCase()]=p;
+    if(p.barcode) barcodeMap[p.barcode.trim()]=p;
+  });
+  const matched=[], unmatched=[];
+  lines.forEach(line=>{
+    const parts=line.split(/[,\t]/).map(s=>s.trim());
+    if(parts.length<2)return;
+    const key=parts[0]; const qty=parseInt(parts[1])||0;
+    const p=pnMap[key.toLowerCase()]||barcodeMap[key];
+    if(p&&qty>0){matched.push({p,qty});_batchData.push({pid:p.id,vendor:p.vendor,qty});}
+    else{unmatched.push({key,qty,reason:p?'數量無效':'找不到品項'});}
+  });
+  let html='';
+  if(matched.length){
+    html+=`<div style="font-size:0.8rem;font-weight:700;color:var(--green);margin-bottom:6px">✅ 可匯入 ${matched.length} 筆：</div>`;
+    html+=matched.map(m=>`<div style="font-size:0.82rem;padding:4px 8px;background:var(--green-dim);border:1px solid var(--green-b);border-radius:5px;margin-bottom:3px;display:flex;justify-content:space-between">
+      <span>${m.p.name.slice(0,28)}</span>
+      <span style="font-family:var(--mono);font-weight:700;color:var(--green)">庫存 ${m.qty}</span>
+    </div>`).join('');
+  }
+  if(unmatched.length){
+    html+=`<div style="font-size:0.8rem;font-weight:700;color:var(--red);margin-top:10px;margin-bottom:6px">❌ 無法匯入 ${unmatched.length} 筆：</div>`;
+    html+=unmatched.map(u=>`<div style="font-size:0.82rem;padding:4px 8px;background:var(--red-dim);border:1px solid var(--red-b);border-radius:5px;margin-bottom:3px;display:flex;justify-content:space-between">
+      <span>${u.key}</span><span style="color:var(--red)">${u.reason}</span>
+    </div>`).join('');
+  }
+  document.getElementById('batch-preview').innerHTML=html;
+  document.getElementById('batch-confirm-btn').style.display=matched.length?'block':'none';
+}
+
+async function confirmBatchImport(){
+  if(!_batchData.length)return;
+  const today=new Date().toISOString();
+  const updates={};
+  _batchData.forEach(({pid,qty})=>{updates[`inventory/${pid}`]={initialStock:qty,updatedAt:today,note:'批次匯入'};});
+  await fbDB.ref().update(updates);
+  _batchData.forEach(({pid,qty})=>{inventory[pid]={initialStock:qty,updatedAt:today,note:'批次匯入'};});
+  closeModal('batch-modal');
+  rebuildAndRender();
+  showToast('✅ 已匯入 '+_batchData.length+' 筆庫存資料');
+}
+
+async function quickSetInventory(pid, qty, el){
+  el.style.border=`2px solid ${qty>0?'var(--green-b)':'var(--border)'}`;
+  el.style.background=qty>0?'var(--green-dim)':'#fff';
+  const today=new Date().toISOString();
+  await fbDB.ref(`inventory/${pid}`).update({initialStock:qty,updatedAt:today});
+  if(!inventory[pid])inventory[pid]={};
+  inventory[pid].initialStock=qty;
+  inventory[pid].updatedAt=today;
+  rebuildAndRender();
+  showToast('庫存已更新');
+}
+
 function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg;
   t.classList.remove('hidden'); clearTimeout(t._t);
