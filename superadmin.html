@@ -72,6 +72,7 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
     <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">只讀取，不修改任何資料。</p>
     <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkIntegrity()">執行一致性檢查</button>
     <div id="ci-result"></div>
+    <button id="btn-clear-orphan-ra" class="btn-danger" style="display:none;margin-top:8px" onclick="clearOrphanArrivals()">🗑 清除 orphan 到貨紀錄（依上方檢查結果）</button>
   </div>
   <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
     <h3 style="color:var(--red)">⚠ 危險操作</h3>
@@ -83,7 +84,7 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
 <div class="toast hidden" id="toast"></div>
 <script src="firebase.js"></script>
 <script>
-let fbDB;
+let fbDB, _orphanRaKeys=[];
 window.addEventListener('DOMContentLoaded',async()=>{
   if(sessionStorage.getItem('role')!=='superadmin'){location.href='index.html';return;}
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
@@ -207,6 +208,7 @@ async function checkIntegrity(){
   Object.values(repsAll).forEach(pReps=>Object.keys(pReps||{}).forEach(rid=>repIds.add(rid)));
   // checks
   const orphanRa=Object.keys(raAll).filter(rid=>!repIds.has(rid));
+  _orphanRaKeys=orphanRa;
   const orphanRepPids=Object.keys(repsAll).filter(pid=>!productIds.has(pid));
   const orphanInvPids=Object.keys(invAll).filter(pid=>!productIds.has(pid));
   const hasOrdersCurrent=oCS.exists();
@@ -236,6 +238,20 @@ async function checkIntegrity(){
     row('庫存記錄（inventory）productId 皆有效',orphanInvPids.length===0,
       orphanInvPids.length?'孤立 productId：'+fmtKeys(orphanInvPids):''),
   ].join('');
+  const repairBtn=document.getElementById('btn-clear-orphan-ra');
+  if(repairBtn) repairBtn.style.display=orphanRa.length>0?'block':'none';
+}
+
+async function clearOrphanArrivals(){
+  if(!_orphanRaKeys.length){showToast('沒有可清除的 orphan 紀錄');return;}
+  if(!confirm('確定刪除 '+_orphanRaKeys.length+' 筆 orphan 到貨批次？\n這些 repId 在 replenishments 已無對應記錄，刪除後無法復原。'))return;
+  if(prompt('請輸入 CONFIRM 確認執行（區分大小寫）')!=='CONFIRM')return;
+  for(const rid of _orphanRaKeys){
+    await fbDB.ref('replenishmentArrivals/'+rid).remove();
+  }
+  showToast('已清除 '+_orphanRaKeys.length+' 筆 orphan 到貨紀錄');
+  _orphanRaKeys=[];
+  await checkIntegrity();
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),3000);}
