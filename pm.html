@@ -72,6 +72,20 @@ tr:hover td{background:var(--surface2)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
 .toast{position:fixed;top:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:var(--radius-sm);font-weight:700;z-index:9999;box-shadow:var(--shadow);font-size:0.92rem}
+/* PRODUCT VENDOR TABS */
+.prod-vendor-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--bg)}
+.prod-vtab{padding:10px 22px;font-size:0.95rem;font-weight:700;cursor:pointer;border:2px solid transparent;border-bottom:none;background:transparent;color:var(--text3);font-family:var(--font);border-radius:10px 10px 0 0;transition:all .15s;position:relative;bottom:-2px}
+.prod-vtab:hover{color:var(--text);background:var(--surface2)}
+.prod-vtab.active{background:#fff;border-color:var(--border);border-bottom-color:#fff;color:var(--accent)}
+.prod-vtab-badge{display:inline-block;background:var(--accent-dim);color:var(--accent);border-radius:10px;padding:1px 7px;font-size:0.72rem;margin-left:5px;font-weight:700}
+.prod-vtab.active .prod-vtab-badge{background:var(--accent);color:#fff}
+/* PRODUCT PLATFORM SUB TABS */
+.prod-sub-bar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.prod-stab{padding:5px 14px;border-radius:6px;font-size:0.83rem;font-weight:600;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--text2);font-family:var(--font);transition:all .15s}
+.prod-stab:hover{border-color:var(--accent);color:var(--accent)}
+.prod-stab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.prod-stab-badge{display:inline-block;font-size:0.7rem;margin-left:3px;padding:1px 5px;border-radius:8px;background:var(--accent-dim);color:var(--accent)}
+.prod-stab.active .prod-stab-badge{background:rgba(255,255,255,0.25);color:#fff}
 </style>
 </head>
 <body>
@@ -127,32 +141,48 @@ tr:hover td{background:var(--surface2)}
       <button class="btn-primary" onclick="addProduct()">＋ 新增品項</button>
     </div>
 
-    <!-- 篩選 -->
-    <div class="filter-bar">
-      <select class="filter-select" id="prod-vendor" onchange="renderProducts()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
-      <select class="filter-select" id="prod-platform" onchange="renderProducts()"><option value="">全部平台</option><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select>
-      <input class="search-box" id="prod-search" placeholder="🔍 搜尋品名或P/N…" oninput="renderProducts()">
-      <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="prod-count">—</span>
+    <!-- 代理商 Tab -->
+    <div class="prod-vendor-tabs">
+      <button class="prod-vtab active" onclick="setProdVendor('',this)">全部<span class="prod-vtab-badge" id="pvbadge-all">—</span></button>
+      <button class="prod-vtab" onclick="setProdVendor('BNE',this)">BNE<span class="prod-vtab-badge" id="pvbadge-BNE">—</span></button>
+      <button class="prod-vtab" onclick="setProdVendor('GS',this)">GSE<span class="prod-vtab-badge" id="pvbadge-GS">—</span></button>
+      <button class="prod-vtab" onclick="setProdVendor('SONY',this)">SONY<span class="prod-vtab-badge" id="pvbadge-SONY">—</span></button>
     </div>
 
-    <div class="tbl-wrap">
-      <div class="tbl-header"><span class="tbl-title">所有品項清單</span></div>
-      <table><thead><tr>
-        <th style="width:48px">代理</th><th style="width:56px">平台</th><th style="width:65px">類型</th>
-        <th>品名 / P/N / 國際條碼</th>
-        <th style="width:55px;text-align:right">MOQ</th>
-        <th style="width:80px;text-align:right">SRP(含稅)</th>
-        <th style="width:80px;text-align:right">出貨(含稅)</th>
-        <th style="width:80px;text-align:right">出貨(未稅)</th>
-        <th style="width:100px">狀態</th>
-        <th style="width:110px">到貨日</th>
-        <th style="width:60px;text-align:right">本週需求</th>
-        <th style="width:60px;text-align:right">初始庫存</th>
-        <th style="width:60px;text-align:right">已到貨</th>
-        <th style="width:60px;text-align:right;color:var(--red)">目前實缺</th>
-        <th style="width:60px;text-align:right">PM追加</th>
-        <th style="width:60px;text-align:right;color:var(--amber)">追加後仍缺</th>
-        <th style="width:42px;text-align:center">編輯</th>
+    <div class="tbl-wrap" style="overflow-x:auto;border-top:none;border-radius:0 0 var(--radius) var(--radius)">
+      <!-- 平台 Sub Tab -->
+      <div class="prod-sub-bar">
+        <button class="prod-stab active" onclick="setProdPlatform('',this)">全部<span class="prod-stab-badge" id="psbadge-all">—</span></button>
+        <button class="prod-stab" onclick="setProdPlatform('NS',this)">NS<span class="prod-stab-badge" id="psbadge-NS">—</span></button>
+        <button class="prod-stab" onclick="setProdPlatform('NS2',this)">NS2<span class="prod-stab-badge" id="psbadge-NS2">—</span></button>
+        <button class="prod-stab" onclick="setProdPlatform('PS5',this)">PS5<span class="prod-stab-badge" id="psbadge-PS5">—</span></button>
+        <button class="prod-stab" onclick="setProdPlatform('PS4',this)">PS4<span class="prod-stab-badge" id="psbadge-PS4">—</span></button>
+        <button class="prod-stab" onclick="setProdPlatform('VR',this)">VR<span class="prod-stab-badge" id="psbadge-VR">—</span></button>
+      </div>
+      <!-- 搜尋 + 篩選 + 計數 -->
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <input class="search-box" id="prod-search" placeholder="🔍 搜尋品名或P/N…" oninput="renderProducts()">
+        <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="prod-only-shortage" onchange="renderProducts()"> 只看需補貨
+        </label>
+        <span style="font-size:0.85rem;color:var(--text3);margin-left:auto" id="prod-count">—</span>
+      </div>
+      <table style="min-width:1100px"><thead><tr>
+        <th style="width:56px">平台</th><th style="width:56px">類型</th>
+        <th style="min-width:180px">品名 / P/N / 國際條碼</th>
+        <th style="width:46px;text-align:right">MOQ</th>
+        <th style="width:72px;text-align:right">SRP(含稅)</th>
+        <th style="width:72px;text-align:right">出貨(含稅)</th>
+        <th style="width:72px;text-align:right">出貨(未稅)</th>
+        <th style="width:80px">狀態</th>
+        <th style="width:90px">到貨日</th>
+        <th style="width:52px;text-align:right">本週需求</th>
+        <th style="width:52px;text-align:right">初始庫存</th>
+        <th style="width:52px;text-align:right">已到貨</th>
+        <th style="width:52px;text-align:right;color:var(--red)">目前實缺</th>
+        <th style="width:52px;text-align:right">PM追加</th>
+        <th style="width:52px;text-align:right;color:var(--amber)">追加後仍缺</th>
+        <th style="width:72px;text-align:center;position:sticky;right:0;background:#fff;box-shadow:-2px 0 4px rgba(0,0,0,0.07)">操作</th>
       </tr></thead><tbody id="prod-tbody"></tbody></table>
     </div>
   </div>
@@ -262,6 +292,7 @@ tr:hover td{background:var(--surface2)}
 <script src="firebase.js"></script>
 <script>
 let fbDB, products={}, replenishments={}, orders={}, currentWeek='', inventory={};
+let _prodVendor='', _prodPlatform='';
 let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -308,20 +339,50 @@ function getTotalDemand(pid) {
   return Object.values(weekOrders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
 }
 
+function setProdVendor(v, el) {
+  _prodVendor=v; _prodPlatform='';
+  document.querySelectorAll('.prod-vtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.prod-stab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  renderProducts();
+}
+function setProdPlatform(p, el) {
+  _prodPlatform=p;
+  document.querySelectorAll('.prod-stab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts();
+}
+function updateProdTabBadges() {
+  const all=getAllProds();
+  const byVendor=_prodVendor?all.filter(p=>p.vendor===_prodVendor):all;
+  document.getElementById('pvbadge-all').textContent=all.length;
+  ['BNE','GS','SONY'].forEach(v=>{const el=document.getElementById('pvbadge-'+v);if(el)el.textContent=all.filter(p=>p.vendor===v).length;});
+  document.getElementById('psbadge-all').textContent=byVendor.length;
+  ['NS','NS2','PS5','PS4','VR'].forEach(pl=>{const el=document.getElementById('psbadge-'+pl);if(el)el.textContent=byVendor.filter(p=>p.platform===pl).length;});
+}
+
 // ── 商品清單 ──────────────────────────────────────────────────────────────────
 function renderProducts() {
-  const vendor=document.getElementById('prod-vendor').value;
-  const platform=document.getElementById('prod-platform').value;
   const search=(document.getElementById('prod-search').value||'').toLowerCase();
+  const onlyShortage=document.getElementById('prod-only-shortage').checked;
 
   const rows=getAllProds().filter(p=>{
-    if(vendor&&p.vendor!==vendor) return false;
-    if(platform&&p.platform!==platform) return false;
+    if(_prodVendor&&p.vendor!==_prodVendor) return false;
+    if(_prodPlatform&&p.platform!==_prodPlatform) return false;
     if(search&&!p.name.toLowerCase().includes(search)&&!(p.pn||'').toLowerCase().includes(search)&&!(p.barcode||'').includes(search)) return false;
+    if(onlyShortage) {
+      const d=getTotalDemand(p.id);
+      const s=(inventory[p.id]?.initialStock)||0;
+      const r=replenishments[p.id]?Object.values(replenishments[p.id]):[];
+      const arrived=r.reduce((a,x)=>a+(x.receivedQty||0),0);
+      const pmAdded=r.reduce((a,x)=>a+(x.qty||0),0);
+      if(Math.max(0,d-(s+arrived))===0&&Math.max(0,d-(s+pmAdded))===0) return false;
+    }
     return true;
   });
 
   document.getElementById('prod-count').textContent=rows.length+' 項';
+  updateProdTabBadges();
 
   const statusLabel={instock:'現貨',preorder:'追加中',clearance:'出清',unavailable:'停止供應'};
   const statusColor={instock:'var(--green)',preorder:'var(--accent)',clearance:'var(--amber)',unavailable:'var(--red)'};
@@ -336,7 +397,6 @@ function renderProducts() {
     const realShortage=Math.max(0,demand-(initStock+arrivedQty));
     const plannedShortage=Math.max(0,demand-(initStock+pmQty));
     return `<tr>
-      <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${p.vendor==='GS'?'GSE':p.vendor}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td style="font-size:0.75rem;color:var(--text3)">${p.category||''}</td>
       <td>
@@ -357,11 +417,18 @@ function renderProducts() {
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${realShortage>0?'var(--red)':'var(--text3)'}">${realShortage>0?realShortage:'—'}</td>
       <td style="text-align:right;font-family:var(--mono);color:var(--text2)">${pmQty||'—'}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${plannedShortage>0?'var(--amber)':'var(--text3)'}">${plannedShortage>0?plannedShortage:'—'}</td>
-      <td style="text-align:center">
+      <td style="text-align:center;position:sticky;right:0;background:#fff;box-shadow:-2px 0 4px rgba(0,0,0,0.07)">
+        ${(realShortage>0||plannedShortage>0)?`<button onclick="goToAddRep('${p.id}','${p.vendor}')" style="background:var(--green-dim);border:1px solid var(--green-b);color:var(--green);border-radius:6px;padding:3px 8px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;display:block;width:100%;margin-bottom:4px">＋補貨</button>`:''}
         <button onclick="openEditModal('${p.vendor}','${p.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">✏️</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+function goToAddRep(pid, vendor) {
+  const tabEl=[...document.querySelectorAll('.tab')].find(t=>t.textContent.includes('補貨管理'));
+  if(tabEl) switchTab('replenishment',tabEl);
+  showAddRepModal(pid,vendor);
 }
 
 // ── 補貨管理 ──────────────────────────────────────────────────────────────────
