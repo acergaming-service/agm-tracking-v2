@@ -778,22 +778,26 @@ function renderAllocation() {
   const rows=allDemandRows.filter(r=>{
     if(vendor&&r.p.vendor!==vendor) return false;
     if(search&&!r.p.name.toLowerCase().includes(search)) return false;
-    if(onlyShortage&&r.shortage<=0) return false;
+    if(onlyShortage&&r.realShortage<=0) return false;
     if(r.demand===0) return false;
     return true;
   });
+  rows.sort((a,b)=>b.realShortage-a.realShortage);
 
   document.getElementById('allocation-tbody').innerHTML=rows.map(r=>{
-    const {p,demand,shortage}=r;
+    const {p,demand,realShortage:shortage}=r;
+    const canShip=demand-Math.max(0,shortage);
     const allocMap=(allocations[p.id]||{});
     const allDids=Object.keys(dealers).filter(did=>(orders[did]||{})[p.id]?.qty>0);
     const totalAlloc=Object.values(allocMap).reduce((s,a)=>s+(a.allocatedQty||0),0);
+    const allocColor=totalAlloc>canShip?'var(--red)':totalAlloc===canShip&&canShip>0?'var(--green)':'var(--text3)';
 
     return `<tr>
       <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
+        ${p.pn&&p.pn!=='—'?`<div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);margin-top:1px">${p.pn}</div>`:''}
       </td>
       <td class="num" style="text-align:right;font-weight:700">${demand}</td>
       <td class="num" style="text-align:right;color:${shortage>0?'var(--red)':'var(--green)'};font-weight:700">
@@ -807,15 +811,30 @@ function renderAllocation() {
             return `<div class="alloc-item">
               <span style="font-size:0.82rem;font-weight:600">${dealers[did]?.name||did}<br><span style="font-size:0.75rem;color:var(--text3)">需求 ${reqQty}</span></span>
               <input class="inline-num" type="number" min="0" max="${reqQty}" value="${alloc||''}" placeholder="0"
-                style="width:70px"
+                style="width:70px" data-alloc-pid="${p.id}"
+                oninput="updateAllocTotal('${p.id}',${canShip})"
                 onchange="saveAllocation('${p.id}','${did}',parseInt(this.value)||0)">
             </div>`;
           }).join('')}
         </div>
-        ${shortage>0?`<div style="font-size:0.78rem;color:var(--text3);margin-top:6px">已分配 ${totalAlloc} / 需求 ${demand}，尚有缺口 ${shortage}</div>`:''}
+        <div id="alloc-total-${p.id}" style="font-size:0.78rem;font-weight:600;margin-top:6px;color:${allocColor}">
+          已分配 ${totalAlloc} / 可出貨 ${canShip}${shortage>0?' (缺口 +'+shortage+')':''}
+        </div>
       </td>
     </tr>`;
   }).join('');
+}
+
+function updateAllocTotal(pid, canShip) {
+  const total=[...document.querySelectorAll('[data-alloc-pid]')]
+    .filter(inp=>inp.dataset.allocPid===pid)
+    .reduce((s,inp)=>s+(parseInt(inp.value)||0),0);
+  const el=document.getElementById('alloc-total-'+pid);
+  if(!el) return;
+  const over=total-canShip;
+  const color=total>canShip?'var(--red)':total===canShip&&canShip>0?'var(--green)':'var(--text3)';
+  el.style.color=color;
+  el.textContent=`已分配 ${total} / 可出貨 ${canShip}${over>0?' ⚠️ 超出 '+over:''}`;
 }
 
 async function saveAllocation(pid, dealerId, qty) {
