@@ -146,6 +146,12 @@ tr:hover td{background:var(--surface2)}
         <th style="width:80px;text-align:right">出貨(未稅)</th>
         <th style="width:100px">狀態</th>
         <th style="width:110px">到貨日</th>
+        <th style="width:60px;text-align:right">本週需求</th>
+        <th style="width:60px;text-align:right">初始庫存</th>
+        <th style="width:60px;text-align:right">已到貨</th>
+        <th style="width:60px;text-align:right;color:var(--red)">目前實缺</th>
+        <th style="width:60px;text-align:right">PM追加</th>
+        <th style="width:60px;text-align:right;color:var(--amber)">追加後仍缺</th>
         <th style="width:42px;text-align:center">編輯</th>
       </tr></thead><tbody id="prod-tbody"></tbody></table>
     </div>
@@ -255,7 +261,7 @@ tr:hover td{background:var(--surface2)}
 
 <script src="firebase.js"></script>
 <script>
-let fbDB, products={}, replenishments={}, orders={}, currentWeek='';
+let fbDB, products={}, replenishments={}, orders={}, currentWeek='', inventory={};
 let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -263,17 +269,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const [pSnap,rSnap,oSnap,raSnap,wkSnap]=await Promise.all([
+    const [pSnap,rSnap,oSnap,raSnap,wkSnap,iSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('orders').once('value'),
       fbDB.ref('replenishmentArrivals').once('value'),
       fbDB.ref('window/week').once('value'),
+      fbDB.ref('inventory').once('value'),
     ]);
-    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{}; currentWeek=wkSnap.val()||'';
-    fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();});
+    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{}; currentWeek=wkSnap.val()||''; inventory=iSnap.val()||{};
+    fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();else if(activeTab==='products')renderProducts();});
     fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
-    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};});
+    fbDB.ref('orders').on('value',s=>{orders=s.val()||{};if(activeTab==='products')renderProducts();});
+    fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};if(activeTab==='products')renderProducts();});;
     renderProducts();
     document.getElementById('loading-screen').classList.add('hidden');
   } catch(err) {
@@ -320,6 +328,13 @@ function renderProducts() {
 
   document.getElementById('prod-tbody').innerHTML=rows.map(p=>{
     const status=p.status||'';
+    const demand=getTotalDemand(p.id);
+    const initStock=(inventory[p.id]?.initialStock)||0;
+    const reps=replenishments[p.id]?Object.values(replenishments[p.id]):[];
+    const arrivedQty=reps.reduce((s,r)=>s+(r.receivedQty||0),0);
+    const pmQty=reps.reduce((s,r)=>s+(r.qty||0),0);
+    const realShortage=Math.max(0,demand-(initStock+arrivedQty));
+    const plannedShortage=Math.max(0,demand-(initStock+pmQty));
     return `<tr>
       <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${p.vendor==='GS'?'GSE':p.vendor}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
@@ -336,6 +351,12 @@ function renderProducts() {
       <td style="text-align:right;font-family:var(--mono)">${p.price?p.price.toLocaleString():'—'}</td>
       <td style="font-size:0.82rem;font-weight:600;color:${statusColor[status]||'var(--text3)'}">${statusLabel[status]||'—'}</td>
       <td style="font-size:0.82rem;color:var(--amber);font-weight:600">${p.arrival||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:600">${demand||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text2)">${initStock||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text2)">${arrivedQty||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${realShortage>0?'var(--red)':'var(--text3)'}">${realShortage>0?realShortage:'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text2)">${pmQty||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${plannedShortage>0?'var(--amber)':'var(--text3)'}">${plannedShortage>0?plannedShortage:'—'}</td>
       <td style="text-align:center">
         <button onclick="openEditModal('${p.vendor}','${p.id}')" style="background:var(--accent-dim);border:1px solid var(--accent-b);color:var(--accent);border-radius:6px;padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer">✏️</button>
       </td>
