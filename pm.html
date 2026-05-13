@@ -255,7 +255,7 @@ tr:hover td{background:var(--surface2)}
 
 <script src="firebase.js"></script>
 <script>
-let fbDB, products={}, replenishments={}, orders={};
+let fbDB, products={}, replenishments={}, orders={}, currentWeek='';
 let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -263,13 +263,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const [pSnap,rSnap,oSnap,raSnap]=await Promise.all([
+    const [pSnap,rSnap,oSnap,raSnap,wkSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('orders').once('value'),
       fbDB.ref('replenishmentArrivals').once('value'),
+      fbDB.ref('window/week').once('value'),
     ]);
-    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{};
+    products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{}; currentWeek=wkSnap.val()||'';
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();});
     fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
     fbDB.ref('orders').on('value',s=>{orders=s.val()||{};});
@@ -295,7 +296,8 @@ function getAllProds() {
 }
 
 function getTotalDemand(pid) {
-  return Object.values(orders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
+  const weekOrders=orders[currentWeek]||{};
+  return Object.values(weekOrders).reduce((s,dO)=>s+((dO||{})[pid]?.qty||0),0);
 }
 
 // ── 商品清單 ──────────────────────────────────────────────────────────────────
