@@ -316,18 +316,10 @@ window.addEventListener('DOMContentLoaded', async()=>{
       updateWindowUI();
       updateWindowTimeBanner(w);
     });
-    // 監聽所有通路訂單，計算全域已登記量
-    fbDB.ref('orders').on('value',snap=>{
-      const allOrders=snap.val()||{};
-      // 計算每個品項的全域總量
-      window._globalTotals={};
-      Object.entries(allOrders).forEach(([did,dOrders])=>{
-        Object.entries(dOrders||{}).forEach(([pid,o])=>{
-          if(o?.qty>0) window._globalTotals[pid]=(window._globalTotals[pid]||0)+o.qty;
-        });
-      });
-      // 更新自己的訂單
-      localOrders=allOrders[DEALER_ID]||{};
+    // 監聽當週本通路訂單
+    const _week=winData.week||'current';
+    fbDB.ref(`orders/${_week}/${DEALER_ID}`).on('value',snap=>{
+      localOrders=snap.val()||{};
       updateSummary(); renderVendorTabs(); renderSubTabs(); renderProducts();
     });
     fbDB.ref('pmData').on('value',snap=>{
@@ -574,6 +566,8 @@ function renderProducts(){
 
 // ── 訂單操作 ──────────────────────────────────────────────────────────────
 function onQtyInput(pid,rawVal){
+  const qty=Math.max(0,parseInt(rawVal)||0);
+  console.log('[onQtyInput]', { pid, rawVal, parsedQty: qty, isWindowOpen });
   if(!isWindowOpen){
     showToast('收單視窗已關閉，無法修改訂單','red');
     const inp=document.getElementById('qty-'+pid);
@@ -585,7 +579,6 @@ function onQtyInput(pid,rawVal){
     if(inp){inp.value='';showToast('收單視窗已關閉，無法填單','red');}
     return;
   }
-  const qty=Math.max(0,parseInt(rawVal)||0);
   const inp=document.getElementById('qty-'+pid);
   if(inp){inp.value=qty;inp.classList.toggle('has-value',qty>0);}
   if(!localOrders[pid])localOrders[pid]={};
@@ -599,6 +592,7 @@ function onQtyInput(pid,rawVal){
 async function saveOne(pid,qty){
   try{
     const week=(document.getElementById('nav-week')?.textContent||'').trim()||'current';
+    console.log('[saveOne]', { pid, qty, week, DEALER_ID });
     const ref=fbDB.ref(`orders/${week}/${DEALER_ID}/${pid}`);
 
     // 價格快照：只在第一次建立時寫入，後續修改 qty 不覆蓋
@@ -610,12 +604,13 @@ async function saveOne(pid,qty){
       priceAtOrder:(()=>{let p=null;Object.values(config.products||{}).forEach(ps=>{if(ps[pid])p=ps[pid];});return p?.price||0;})(),
     };
 
-    await ref.update({
-      qty, updatedAt:new Date().toISOString(), submitted:false, ...priceSnapshot
-    });
+    const payload={qty, updatedAt:new Date().toISOString(), submitted:false, ...priceSnapshot};
+    console.log('[saveOne] Firebase update', { path: ref.toString(), payload });
+    await ref.update(payload);
     document.getElementById('saving-ring').classList.remove('show');
     document.getElementById('sum-sync').textContent='已同步 '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
+    console.error('[saveOne] error', e);
     document.getElementById('saving-ring').classList.remove('show');
     showToast('同步失敗，請檢查網路','red');
   }
