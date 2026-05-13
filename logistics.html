@@ -740,7 +740,6 @@ function renderInventory() {
     const initial=inv.initialStock||0;
     const demand=getTotalDemand(p.id);
     const arrived=getArrivedQty(p.id);
-    const current=getCurrentStock(p.id);
     return `<tr>
       <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
