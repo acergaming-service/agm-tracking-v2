@@ -67,6 +67,12 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
     </div>
     <div id="sv-v1" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85rem"></div>
   </div>
+  <div class="section">
+    <h3>🔍 資料一致性檢查</h3>
+    <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">只讀取，不修改任何資料。</p>
+    <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkIntegrity()">執行一致性檢查</button>
+    <div id="ci-result"></div>
+  </div>
   <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
     <h3 style="color:var(--red)">⚠ 危險操作</h3>
     <button class="btn-danger" onclick="clearAllOrders()">🗑 清除所有週次訂單（無法復原）</button>
@@ -177,6 +183,59 @@ async function clearInventory(){
   if(prompt('請輸入 CONFIRM 確認執行（區分大小寫）')!=='CONFIRM')return;
   await fbDB.ref('inventory').remove();
   showToast('已清除所有庫存記錄');
+}
+
+async function checkIntegrity(){
+  const ciEl=document.getElementById('ci-result');
+  ciEl.innerHTML='<div style="color:var(--text3);font-size:0.88rem">檢查中…</div>';
+  const [pS,rS,raS,oCS,aCS,iS]=await Promise.all([
+    fbDB.ref('products').once('value'),
+    fbDB.ref('replenishments').once('value'),
+    fbDB.ref('replenishmentArrivals').once('value'),
+    fbDB.ref('orders/current').once('value'),
+    fbDB.ref('allocations/current').once('value'),
+    fbDB.ref('inventory').once('value'),
+  ]);
+  const prods=pS.val()||{};
+  const repsAll=rS.val()||{};
+  const raAll=raS.val()||{};
+  const invAll=iS.val()||{};
+  // build sets
+  const productIds=new Set();
+  Object.values(prods).forEach(ps=>Object.keys(ps||{}).forEach(pid=>productIds.add(pid)));
+  const repIds=new Set();
+  Object.values(repsAll).forEach(pReps=>Object.keys(pReps||{}).forEach(rid=>repIds.add(rid)));
+  // checks
+  const orphanRa=Object.keys(raAll).filter(rid=>!repIds.has(rid));
+  const orphanRepPids=Object.keys(repsAll).filter(pid=>!productIds.has(pid));
+  const orphanInvPids=Object.keys(invAll).filter(pid=>!productIds.has(pid));
+  const hasOrdersCurrent=oCS.exists();
+  const hasAllocsCurrent=aCS.exists();
+  function fmtKeys(keys){
+    if(!keys.length)return '';
+    return (keys.length<=4?keys:keys.slice(0,4).concat(['…等共 '+keys.length+' 筆'])).join('、');
+  }
+  function row(label,ok,detail){
+    const clr=ok?'var(--green)':'var(--red)';
+    const bg=ok?'var(--green-dim)':'var(--red-dim)';
+    const bd=ok?'var(--green-b)':'var(--red-b)';
+    return `<div style="padding:7px 12px;border-radius:var(--radius-sm);background:${bg};border:1px solid ${bd};color:${clr};margin-bottom:6px;font-size:0.85rem">
+      <span style="font-weight:700">${ok?'✓':'⚠'} ${label}</span>
+      ${detail?`<div style="margin-top:3px;font-size:0.75rem;font-family:var(--mono);word-break:break-all">${detail}</div>`:''}
+    </div>`;
+  }
+  ciEl.innerHTML=[
+    row('orphan 到貨批次（replenishmentArrivals）',orphanRa.length===0,
+      orphanRa.length?'孤立 repId：'+fmtKeys(orphanRa):''),
+    row('orders/current 節點不存在',!hasOrdersCurrent,
+      hasOrdersCurrent?'/orders/current 節點存在，可能有 fallback key 寫入':''),
+    row('allocations/current 節點不存在',!hasAllocsCurrent,
+      hasAllocsCurrent?'/allocations/current 節點存在，可能有 fallback key 寫入':''),
+    row('補貨記錄（replenishments）productId 皆有效',orphanRepPids.length===0,
+      orphanRepPids.length?'孤立 productId：'+fmtKeys(orphanRepPids):''),
+    row('庫存記錄（inventory）productId 皆有效',orphanInvPids.length===0,
+      orphanInvPids.length?'孤立 productId：'+fmtKeys(orphanInvPids):''),
+  ].join('');
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),3000);}
