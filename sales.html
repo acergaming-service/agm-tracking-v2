@@ -75,8 +75,8 @@ tr:hover td{background:var(--surface2)}
   <div class="tbl-wrap">
     <div class="tbl-header"><span class="tbl-title">📋 轄區訂單進度</span></div>
     <table><thead><tr>
-      <th>通路名稱</th>
-      <th style="width:160px">品項</th>
+      <th style="width:110px">通路名稱</th>
+      <th style="min-width:220px">品項</th>
       <th style="width:75px;text-align:right">需求量</th>
       <th style="width:75px;text-align:right">分配量</th>
       <th style="width:130px">ETA</th>
@@ -90,7 +90,7 @@ tr:hover td{background:var(--surface2)}
     <table><thead><tr>
       <th style="width:48px">代理</th>
       <th style="width:56px">平台</th>
-      <th>品名</th>
+      <th style="min-width:200px">品名</th>
       <th style="width:75px;text-align:right">我的需求</th>
       <th>補貨批次 / ETA</th>
       <th style="width:120px;text-align:center">到貨進度</th>
@@ -180,7 +180,7 @@ function renderOrders(){
     <td style="font-weight:600">${r.dealer}</td>
     <td>
       <span class="platform-tag ${r.p.platform}">${r.p.platform}</span>
-      <span style="margin-left:6px;font-size:0.88rem">${r.p.name.slice(0,18)}</span>
+      <span style="margin-left:6px;font-size:0.88rem">${r.p.name}</span>
       ${r.p.pn&&r.p.pn!=='—'?`<div style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);margin-top:1px">${r.p.pn}</div>`:''}
     </td>
     <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--accent)">${r.qty}</td>
