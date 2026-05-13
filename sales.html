@@ -110,19 +110,21 @@ window.addEventListener('DOMContentLoaded',async()=>{
   try{
     if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const[pSnap,dSnap,oSnap,rSnap,aSnap]=await Promise.all([
+    const[pSnap,dSnap,oSnap,rSnap,aSnap,iSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('dealers').once('value'),
       fbDB.ref(`orders/${(await fbDB.ref('window/week').once('value')).val()||'current'}`).once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('window/week').once('value').then(ws=>fbDB.ref(`allocations/${ws.val()||'current'}`).once('value')),
+      fbDB.ref('inventory').once('value'),
     ]);
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
-    orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{};
+    orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{}; inventory=iSnap.val()||{};
     myDealerIds=Object.entries(dealers).filter(([,d])=>d.sales===mySales).map(([id])=>id);
     fbDB.ref('window/week').once('value').then(ws=>{const wk=ws.val()||'current';fbDB.ref(`orders/${wk}`).on('value',s=>{orders=s.val()||{};render();});});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};render();});
     fbDB.ref('allocations').on('value',s=>{allocations=s.val()||{};render();});
+    fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};render();});
     render();
     document.getElementById('loading-screen').classList.add('hidden');
   }catch(err){
