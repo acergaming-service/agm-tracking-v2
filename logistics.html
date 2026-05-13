@@ -442,7 +442,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
     fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};rebuildAndRender();});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};rebuildAndRender();});
-    fbDB.ref(`allocations/${winData.week||'current'}`).on('value',s=>{allocations=s.val()||{};});
+    fbDB.ref(`allocations/${winData.week||'current'}`).on('value',s=>{allocations=s.val()||{};rebuildAndRender();});
     fbDB.ref('window').on('value',s=>{winData=s.val()||{};renderWindowCtrl();});
 
     // 通知業務下拉
