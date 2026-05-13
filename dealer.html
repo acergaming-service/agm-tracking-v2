@@ -598,7 +598,7 @@ function onQtyInput(pid,rawVal){
 
 async function saveOne(pid,qty){
   try{
-    const week=winData?.week||'current';
+    const week=(document.getElementById('nav-week')?.textContent||'').trim()||'current';
     const ref=fbDB.ref(`orders/${week}/${DEALER_ID}/${pid}`);
 
     // 價格快照：只在第一次建立時寫入，後續修改 qty 不覆蓋
@@ -653,14 +653,15 @@ async function submitOrder(){
   closeModal();
   try{
     const ts=new Date().toISOString(),updates={};
+    const week=(document.getElementById('nav-week')?.textContent||'').trim()||'current';
     Object.entries(localOrders).forEach(([pid,v])=>{
       if(v?.qty>0){
-        updates[`orders/${DEALER_ID}/${pid}/submitted`]=true;
-        updates[`orders/${DEALER_ID}/${pid}/submittedAt`]=ts;
+        updates[`orders/${week}/${DEALER_ID}/${pid}/submitted`]=true;
+        updates[`orders/${week}/${DEALER_ID}/${pid}/submittedAt`]=ts;
       }
     });
     // 備註存在通路層級
-    if(note) updates[`orders/${DEALER_ID}/_note`]={text:note,submittedAt:ts};
+    if(note) updates[`orders/${week}/${DEALER_ID}/_note`]={text:note,submittedAt:ts};
     await fbDB.ref().update(updates);
     showToast('✓ 訂單已送出！後勤將於結算時匯整','green');
   }catch(e){showToast('送出失敗：'+e.message,'red');}
