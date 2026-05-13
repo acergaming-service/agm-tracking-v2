@@ -22,24 +22,30 @@ const FIREBASE_CONFIG = {
 // dealers/{dealerId}
 //   name, sales, code
 //
-// orders/{dealerId}/{pid}
-//   qty, note, updatedAt
+// orders/{week}/{dealerId}/{productId}
+//   qty               - 訂購數量
+//   note              - 備註
+//   srpAtOrder        - 下單時 SRP（價格快照，只在首次建立時寫入）
+//   priceTaxAtOrder   - 下單時出貨價含稅（價格快照）
+//   priceAtOrder      - 下單時出貨價未稅（價格快照）
+//   submitted         - boolean，經銷商確認送出後為 true
+//   submittedAt       - ISO timestamp
+//   updatedAt         - ISO timestamp
 //
 // inventory/{pid}
 //   initialStock    - 初始庫存（後勤設定）
-//   currentStock    - 可用庫存（自動計算）
-//   updatedAt
+//   updatedAt       - ISO timestamp
 //   note
+//   ※ availableStock 由 client 計算：initialStock + arrivedQty - totalDemandQty
 //
 // replenishments/{pid}/{repId}
 //   qty             - 補貨量
 //   eta             - 預計到貨日
-//   receivedQty     - 實際已到貨量
+//   receivedQty     - 實際累計到貨量（由後勤確認到貨時累加）
 //   status          - pending | incoming | partial_arrived | completed
 //   note
 //   createdBy       - 'pm'
 //   createdAt
-//   receivedQty     累計到貨量（由 replenishmentArrivals 累加而來）
 //
 // allocations/{week}/{productId}/{dealerId}
 //   allocatedQty    - 後勤分配量

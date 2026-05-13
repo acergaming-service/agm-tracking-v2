@@ -84,18 +84,21 @@
 /replenishments/{productId}/{repId}
   qty           number    補貨量
   eta           string    預計到貨日（YYYY-MM-DD）
-  receivedQty   number    實際已到貨量（累計）
+  receivedQty   number    實際累計到貨量（由後勤確認到貨時累加）
   status        string    pending | incoming | partial_arrived | completed
   note          string
   createdBy     string    'pm'
   createdAt     string    ISO timestamp
-  arrivals[]             到貨記錄陣列
-    date        string
-    qty         number
-    note        string
-    createdAt   string
 
-/allocations/{productId}/{dealerId}
+/replenishmentArrivals/{repId}/{arrivalId}
+  productId     string    對應品項 ID
+  qty           number    本次到貨數量
+  date          string    到貨日期
+  note          string
+  createdAt     string    ISO timestamp
+  createdBy     string    'logistics'
+
+/allocations/{week}/{productId}/{dealerId}
   allocatedQty  number    後勤分配量
   updatedAt     string
 
