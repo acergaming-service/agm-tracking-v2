@@ -129,7 +129,7 @@ tr:hover td{background:var(--surface2)}
         <div class="fg" style="grid-column:1/-1"><label>中文品名 *</label><input id="np-name"></div>
         <div class="fg"><label>SRP（含稅）</label><input id="np-srp" type="number" placeholder="1490"></div>
         <div class="fg"><label>出貨價（未稅）</label><input id="np-price" type="number" placeholder="933"></div>
-        <div class="fg"><label>優惠出貨價（SONY）</label><input id="np-special" type="number"></div>
+        <div class="fg"><label>出貨價（含稅）</label><input id="np-special" type="number"></div>
         <div class="fg"><label>MOQ</label><input id="np-moq" type="number" placeholder="0"></div>
         <div class="fg"><label>貨物狀態</label>
           <select id="np-status">
@@ -137,6 +137,8 @@ tr:hover td{background:var(--surface2)}
             <option value="preorder">追加中</option><option value="clearance">出清</option>
             <option value="unavailable">停止供應</option>
           </select></div>
+        <div class="fg"><label>促銷標籤</label>
+          <select id="np-tag"></select></div>
       </div>
       <button class="btn-primary" onclick="addProduct()">＋ 新增品項</button>
     </div>
@@ -273,11 +275,7 @@ tr:hover td{background:var(--surface2)}
         </select></div>
       <div class="fg"><label>到貨日</label><input id="ep-arrival" placeholder="2025/7/24"></div>
       <div class="fg"><label>促銷標籤</label>
-        <select id="ep-tag">
-          <option value="">— 無</option><option value="特價">特價</option>
-          <option value="庫存出清">庫存出清</option><option value="買1送1">買1送1</option>
-          <option value="附贈品">附贈品</option><option value="價格調整">價格調整</option>
-        </select></div>
+        <select id="ep-tag"></select></div>
       <div class="fg" style="grid-column:1/-1"><label>備註（前台顯示）</label><input id="ep-note"></div>
     </div>
     <div class="modal-footer">
@@ -293,6 +291,7 @@ tr:hover td{background:var(--surface2)}
 <script>
 let fbDB, products={}, replenishments={}, orders={}, currentWeek='', inventory={};
 let _prodVendor='', _prodPlatform='';
+let priceTags=['特價','庫存出清','買1送1','附贈品','價格調整'];
 let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -300,15 +299,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const [pSnap,rSnap,oSnap,raSnap,wkSnap,iSnap]=await Promise.all([
+    const [pSnap,rSnap,oSnap,raSnap,wkSnap,iSnap,ptSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('orders').once('value'),
       fbDB.ref('replenishmentArrivals').once('value'),
       fbDB.ref('window/week').once('value'),
       fbDB.ref('inventory').once('value'),
+      fbDB.ref('settings/productOptions/priceTags').once('value'),
     ]);
     products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{}; currentWeek=wkSnap.val()||''; inventory=iSnap.val()||{};
+    const ptVal=ptSnap.val(); if(Array.isArray(ptVal)&&ptVal.length) priceTags=ptVal;
+    buildPriceTagSelects();
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();else if(activeTab==='products')renderProducts();});
     fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
     fbDB.ref('orders').on('value',s=>{orders=s.val()||{};if(activeTab==='products')renderProducts();});
@@ -332,6 +334,11 @@ function getAllProds() {
   const rows=[];
   Object.entries(products).forEach(([v,ps])=>{Object.values(ps||{}).forEach(p=>{if(p&&p.name)rows.push({...p,vendor:v});});});
   return rows;
+}
+
+function buildPriceTagSelects() {
+  const opts='<option value="">— 無</option>'+priceTags.map(t=>`<option value="${t}">${t}</option>`).join('');
+  ['np-tag','ep-tag'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
 function getTotalDemand(pid) {
@@ -589,13 +596,13 @@ async function addProduct() {
     moq:parseInt(document.getElementById('np-moq').value)||0,
     maxOrder:0,
     status:document.getElementById('np-status').value,
-    arrival:'',priceTag:'',displayNote:'',giftItem:'',isAllocation:false,
+    arrival:'',priceTag:document.getElementById('np-tag').value,displayNote:'',giftItem:'',isAllocation:false,
   };
   await fbDB.ref(`products/${vendor}/${id}`).set(prod);
   if(!products[vendor]) products[vendor]={};
   products[vendor][id]=prod;
   renderProducts();
-  ['np-pn','np-barcode','np-name','np-srp','np-price','np-special','np-moq'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  ['np-pn','np-barcode','np-name','np-srp','np-price','np-special','np-moq','np-tag'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
   showToast('✅ 品項已新增');
 }
 
