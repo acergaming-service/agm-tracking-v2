@@ -39,6 +39,16 @@ tr:hover td{background:var(--surface2)}
 .loading-spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
+.dealer-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
+.dealer-tab{padding:8px 18px;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--text2);font-family:var(--font);transition:all .15s}
+.dealer-tab:hover{border-color:var(--accent);color:var(--accent)}
+.dealer-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.dealer-tab-badge{display:inline-block;font-size:0.7rem;margin-left:4px;padding:1px 5px;border-radius:8px;background:var(--accent-dim);color:var(--accent);font-weight:700}
+.dealer-tab.active .dealer-tab-badge{background:rgba(255,255,255,0.25);color:#fff}
+.vendor-stabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.vendor-stab{padding:5px 13px;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--text2);font-family:var(--font);transition:all .15s}
+.vendor-stab:hover{border-color:var(--accent);color:var(--accent)}
+.vendor-stab.active{background:var(--accent-dim);border-color:var(--accent-b);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -71,6 +81,17 @@ tr:hover td{background:var(--surface2)}
     </div>
   </div>
 
+  <!-- 通路 Tabs -->
+  <div id="dealer-tabs-bar" class="dealer-tabs"></div>
+
+  <!-- 代理商 Tabs -->
+  <div id="vendor-tabs-bar" class="vendor-stabs">
+    <button class="vendor-stab active" onclick="setSalesVendor('',this)">全部</button>
+    <button class="vendor-stab" onclick="setSalesVendor('BNE',this)">BNE</button>
+    <button class="vendor-stab" onclick="setSalesVendor('GS',this)">GSE</button>
+    <button class="vendor-stab" onclick="setSalesVendor('SONY',this)">SONY</button>
+  </div>
+
   <!-- 訂單進度 -->
   <div class="tbl-wrap">
     <div class="tbl-header"><span class="tbl-title">📋 轄區訂單進度</span></div>
@@ -101,7 +122,7 @@ tr:hover td{background:var(--surface2)}
 <script src="firebase.js"></script>
 <script>
 let fbDB, mySales='', products={}, dealers={}, orders={}, replenishments={}, allocations={}, inventory={};
-let myDealerIds=[];
+let myDealerIds=[], _salesDealer='', _salesVendor='';
 
 window.addEventListener('DOMContentLoaded',async()=>{
   if(sessionStorage.getItem('role')!=='sales'){location.href='index.html';return;}
@@ -121,6 +142,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
     orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{}; inventory=iSnap.val()||{};
     myDealerIds=Object.entries(dealers).filter(([,d])=>d.sales===mySales).map(([id])=>id);
+    buildDealerTabs();
     fbDB.ref('window/week').once('value').then(ws=>{const wk=ws.val()||'current';fbDB.ref(`orders/${wk}`).on('value',s=>{orders=s.val()||{};render();});});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};render();});
     fbDB.ref('window/week').once('value').then(ws=>{const wk=ws.val()||'current';fbDB.ref(`allocations/${wk}`).on('value',s=>{allocations=s.val()||{};render();});});
@@ -138,8 +160,40 @@ function getAllProds(){
   return rows;
 }
 
+function buildDealerTabs() {
+  const bar=document.getElementById('dealer-tabs-bar');
+  if(!bar) return;
+  let html=`<button class="dealer-tab${_salesDealer===''?' active':''}" onclick="setSalesDealer('',this)">全部<span class="dealer-tab-badge" id="dtbadge-all">—</span></button>`;
+  myDealerIds.forEach(did=>{
+    const name=dealers[did]?.name||did;
+    html+=`<button class="dealer-tab${_salesDealer===did?' active':''}" onclick="setSalesDealer('${did}',this)">${name}<span class="dealer-tab-badge" id="dtbadge-${did}">—</span></button>`;
+  });
+  bar.innerHTML=html;
+}
+function updateDealerTabBadges() {
+  const allEl=document.getElementById('dtbadge-all');
+  if(!allEl) return;
+  allEl.textContent=myDealerIds.reduce((s,did)=>s+Object.values(orders[did]||{}).filter(o=>o.qty>0).length,0);
+  myDealerIds.forEach(did=>{
+    const el=document.getElementById('dtbadge-'+did);
+    if(el) el.textContent=Object.values(orders[did]||{}).filter(o=>o.qty>0).length;
+  });
+}
+function setSalesDealer(did, el) {
+  _salesDealer=did;
+  document.querySelectorAll('.dealer-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders(); renderReplenishments();
+}
+function setSalesVendor(v, el) {
+  _salesVendor=v;
+  document.querySelectorAll('.vendor-stab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders(); renderReplenishments();
+}
+
 function render(){
-  renderStats(); renderOrders(); renderReplenishments();
+  renderStats(); updateDealerTabBadges(); renderOrders(); renderReplenishments();
 }
 
 function renderStats(){
@@ -162,13 +216,15 @@ function renderStats(){
 
 function renderOrders(){
   const rows=[];
-  myDealerIds.forEach(did=>{
+  const activeDids=_salesDealer?[_salesDealer]:myDealerIds;
+  activeDids.forEach(did=>{
     const dealerOrders=orders[did]||{};
     Object.entries(dealerOrders).forEach(([pid,o])=>{
       if(!o.qty)return;
-      let p=null;
-      Object.values(products).forEach(ps=>{if(ps[pid])p=ps[pid];});
+      let p=null, pVendor='';
+      Object.entries(products).forEach(([v,ps])=>{if(ps[pid]){p=ps[pid];pVendor=v;}});
       if(!p)return;
+      if(_salesVendor && pVendor!==_salesVendor) return;
       const allocQty=((allocations[pid]||{})[did])?.allocatedQty||0;
       const eta=getLatestETA(pid);
       const status=getDemandStatus(pid);
@@ -191,16 +247,18 @@ function renderOrders(){
 }
 
 function renderReplenishments(){
+  const activeDids=_salesDealer?[_salesDealer]:myDealerIds;
   const pids=new Set();
-  myDealerIds.forEach(did=>Object.entries(orders[did]||{}).forEach(([pid,o])=>{if(o.qty>0)pids.add(pid);}));
+  activeDids.forEach(did=>Object.entries(orders[did]||{}).forEach(([pid,o])=>{if(o.qty>0)pids.add(pid);}));
   const rows=[];
   pids.forEach(pid=>{
     if(!replenishments[pid])return;
     let p=null; let vendor='';
     Object.entries(products).forEach(([v,ps])=>{if(ps[pid]){p=ps[pid];vendor=v;}});
     if(!p)return;
+    if(_salesVendor && vendor!==_salesVendor) return;
     const reps=Object.values(replenishments[pid]).sort((a,b)=>a.createdAt>b.createdAt?1:-1);
-    const myQty=myDealerIds.reduce((s,did)=>s+((orders[did]||{})[pid]?.qty||0),0);
+    const myQty=activeDids.reduce((s,did)=>s+((orders[did]||{})[pid]?.qty||0),0);
     const totalRcv=reps.reduce((s,r)=>s+(r.receivedQty||0),0);
     const totalRep=reps.reduce((s,r)=>s+(r.qty||0),0);
     rows.push({vendor,p,reps,myQty,totalRcv,totalRep});
