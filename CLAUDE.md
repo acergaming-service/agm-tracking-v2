@@ -266,3 +266,49 @@ Dealers only see:
 
 
 
+
+
+\## Important Migration Rule
+
+
+
+This project has migrated from V1 to V2 Firebase structure.
+
+
+
+DO NOT use legacy V1 paths.
+
+
+
+Legacy paths that must NOT be used:
+
+
+
+\* /orders/{dealerId}/{productId}
+
+\* /allocations/{productId}/{dealerId}
+
+
+
+Always use:
+
+
+
+\* /orders/{week}/{dealerId}/{productId}
+
+\* /allocations/{week}/{productId}/{dealerId}
+
+
+
+Before modifying any Firebase logic:
+
+
+
+1\. Verify actual DB structure
+
+2\. Verify realtime listeners
+
+3\. Verify initial load path consistency
+
+
+

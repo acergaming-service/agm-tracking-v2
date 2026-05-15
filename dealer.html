@@ -294,6 +294,9 @@ window.addEventListener('DOMContentLoaded', async()=>{
       if(RAW_CODE===(d.code+'2025').toUpperCase()){DEALER_ID=id;DEALER_INFO=d;break;}
     }
     if(!DEALER_ID){showInvalidCode(RAW_CODE);return;}
+    if(DEALER_INFO.archived===true||DEALER_INFO.active===false){
+      showInvalidCode(RAW_CODE,'此通路連結已停用，請向業務確認。');return;
+    }
 
     config={products};
     const now=new Date();
@@ -792,13 +795,13 @@ function showToast(msg,type='green'){
   setTimeout(()=>t.classList.add('hidden'),3500);
 }
 
-function showInvalidCode(code){
+function showInvalidCode(code,msg){
   document.body.innerHTML=`
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:'Noto Sans TC',sans-serif;background:#f0f2f5">
     <div style="max-width:400px;text-align:center;background:#fff;border-radius:16px;padding:2.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
       <div style="font-size:4rem;margin-bottom:1rem">🔒</div>
       <h2 style="margin-bottom:.75rem;font-size:1.4rem;font-weight:900;color:#1a2030">連結無效或已過期</h2>
-      <p style="font-size:.95rem;color:#3d4a5c;line-height:1.7">請向您的業務確認最新的通路專屬連結。</p>
+      <p style="font-size:.95rem;color:#3d4a5c;line-height:1.7">${msg||'請向您的業務確認最新的通路專屬連結。'}</p>
       ${code&&code!=='未帶入通路代碼'?`<p style="margin-top:1rem;font-size:.8rem;font-family:monospace;color:#7a8699">code: ${code}</p>`:''}
     </div>
   </div>`;

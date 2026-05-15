@@ -30,6 +30,46 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px}
 .stat-label{font-size:0.73rem;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.03em}
 .stat-value{font-size:1.05rem;font-weight:900;color:var(--text);font-family:var(--mono)}
+.dealer-tbl{width:100%;border-collapse:collapse;margin-top:0.5rem;font-size:0.88rem}
+.dealer-tbl th{font-size:0.72rem;font-weight:700;color:var(--text3);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);background:var(--surface2);text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap}
+.dealer-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.dealer-tbl tr:last-child td{border-bottom:none}
+.dealer-tbl tr:hover td{background:var(--surface2)}
+.badge-active{display:inline-block;font-size:0.75rem;font-weight:700;padding:2px 9px;border-radius:10px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)}
+.badge-inactive{display:inline-block;font-size:0.75rem;font-weight:700;padding:2px 9px;border-radius:10px;background:var(--red-dim);color:var(--red);border:1px solid var(--red-b)}
+.dealer-input{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:0.88rem;padding:7px 10px;outline:none;width:100%}
+.dealer-input:focus{border-color:var(--accent)}
+.btn-xs{display:inline-block;border-radius:var(--radius-sm);padding:4px 10px;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-xs-edit{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)}
+.btn-xs-disable{background:var(--red-dim);color:var(--red);border:1px solid var(--red-b)}
+.btn-xs-enable{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)}
+.btn-xs-archive{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b)}
+.badge-archived{display:inline-block;font-size:0.75rem;font-weight:700;padding:2px 9px;border-radius:10px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b)}
+.tab-bar{background:var(--surface);border-bottom:2px solid var(--border);padding:0 1.5rem;display:flex;gap:2px;position:sticky;top:60px;z-index:90}
+.tab-btn{background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-family:var(--font);font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text3);margin-bottom:-2px;white-space:nowrap;transition:color .15s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.active){color:var(--text2)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto}
+.modal-hd{font-size:0.95rem;font-weight:700;margin-bottom:1.2rem;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.modal-field{margin-bottom:1rem}
+.modal-field .lbl{display:block;font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
+.status-opts{display:flex;gap:6px;flex-wrap:wrap}
+.status-opt{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text3);transition:all .12s;user-select:none}
+.status-opt input[type=radio]{display:none}
+.status-opt.checked.s-active{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+.status-opt.checked.s-inactive{border-color:var(--red);background:var(--red-dim);color:var(--red)}
+.status-opt.checked.s-archived{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
+.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:700px){.data-grid{grid-template-columns:1fr}}
+.data-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem;box-shadow:var(--shadow)}
+.data-card-hd{font-size:0.88rem;font-weight:700;color:var(--text2);margin-bottom:0.5rem;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.data-card-sub{font-size:0.75rem;color:var(--text3);margin-bottom:0.8rem}
+.pwd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:700px){.pwd-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -42,55 +82,325 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
   <span class="nav-tag">Super Admin</span>
   <div class="nav-right"><button class="btn-sm" onclick="location.href='index.html'">登出</button></div>
 </nav>
-<div class="container">
-  <div class="section">
-    <h3>✅ 初始化設定</h3>
-    <p>首次部署時依序執行以下步驟：</p>
-    <button class="btn-primary" onclick="seedProducts()">① 初始化產品資料庫（441 項）</button>
-    <button class="btn-green" onclick="seedDealers()">② 初始化通路資料（45 個通路）</button>
-    <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkData()">✓ 確認資料狀態</button>
-    <div id="check-result" style="font-size:0.88rem;color:var(--text2);margin-top:8px"></div>
-  </div>
-  <div class="section">
-    <h3>📊 系統狀態總覽</h3>
-    <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">點「確認資料狀態」更新</p>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">
-      <div class="stat-card"><div class="stat-label">目前週次</div><div class="stat-value" id="sv-week">—</div></div>
-      <div class="stat-card"><div class="stat-label">收單狀態</div><div class="stat-value" id="sv-open">—</div></div>
-      <div class="stat-card"><div class="stat-label">產品數</div><div class="stat-value" id="sv-prods">—</div></div>
-      <div class="stat-card"><div class="stat-label">通路數</div><div class="stat-value" id="sv-dealers">—</div></div>
-      <div class="stat-card"><div class="stat-label">本週訂單品項數</div><div class="stat-value" id="sv-orders">—</div></div>
-      <div class="stat-card"><div class="stat-label">庫存筆數</div><div class="stat-value" id="sv-inv">—</div></div>
-      <div class="stat-card"><div class="stat-label">補貨批次數</div><div class="stat-value" id="sv-reps">—</div></div>
-      <div class="stat-card"><div class="stat-label">到貨紀錄數</div><div class="stat-value" id="sv-ra">—</div></div>
-      <div class="stat-card"><div class="stat-label">本週分配紀錄數</div><div class="stat-value" id="sv-allocs">—</div></div>
+<!-- ─── Tab Bar ─── -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="status" onclick="switchTab('status')">系統狀態</button>
+  <button class="tab-btn" data-tab="sales" onclick="switchTab('sales')">業務 / 通路</button>
+  <button class="tab-btn" data-tab="data" onclick="switchTab('data')">資料匯入 / 匯出</button>
+  <button class="tab-btn" data-tab="ops" onclick="switchTab('ops')">維運工具</button>
+  <button class="tab-btn" data-tab="pwd" onclick="switchTab('pwd')">帳號權限管理</button>
+</div>
+
+<!-- ─── Tab 1: 系統狀態 ─── -->
+<div class="tab-content active" id="tab-status">
+  <div class="container">
+    <div class="section">
+      <h3>✅ 初始化設定</h3>
+      <p>首次部署時依序執行以下步驟：</p>
+      <button class="btn-primary" onclick="seedProducts()">① 初始化產品資料庫（441 項）</button>
+      <button class="btn-green" onclick="seedDealers()">② 初始化通路資料（45 個通路）</button>
+      <button class="btn-sm" style="width:100%;margin-bottom:10px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)" onclick="migrateSalesId()">③ Migration：dealers 補 salesId 欄位（首次升級執行）</button>
+      <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkData()">✓ 確認資料狀態</button>
+      <div id="check-result" style="font-size:0.88rem;color:var(--text2);margin-top:8px"></div>
     </div>
-    <div id="sv-v1" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85rem"></div>
-  </div>
-  <div class="section">
-    <h3>🔍 資料一致性檢查</h3>
-    <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">只讀取，不修改任何資料。</p>
-    <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkIntegrity()">執行一致性檢查</button>
-    <div id="ci-result"></div>
-    <button id="btn-clear-orphan-ra" class="btn-danger" style="display:none;margin-top:8px" onclick="clearOrphanArrivals()">🗑 清除 orphan 到貨紀錄（依上方檢查結果）</button>
-  </div>
-  <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
-    <h3 style="color:var(--red)">⚠ 危險操作</h3>
-    <button class="btn-danger" onclick="clearAllOrders()">🗑 清除所有週次訂單（無法復原）</button>
-    <button class="btn-danger" onclick="clearReplenishments()">🗑 清除所有補貨記錄（無法復原）</button>
-    <button class="btn-danger" onclick="clearInventory()">🗑 清除所有庫存記錄（無法復原）</button>
+    <div class="section">
+      <h3>📊 系統狀態總覽</h3>
+      <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">點「確認資料狀態」更新</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">
+        <div class="stat-card"><div class="stat-label">目前週次</div><div class="stat-value" id="sv-week">—</div></div>
+        <div class="stat-card"><div class="stat-label">收單狀態</div><div class="stat-value" id="sv-open">—</div></div>
+        <div class="stat-card"><div class="stat-label">產品數</div><div class="stat-value" id="sv-prods">—</div></div>
+        <div class="stat-card"><div class="stat-label">通路數</div><div class="stat-value" id="sv-dealers">—</div></div>
+        <div class="stat-card"><div class="stat-label">本週訂單品項數</div><div class="stat-value" id="sv-orders">—</div></div>
+        <div class="stat-card"><div class="stat-label">庫存筆數</div><div class="stat-value" id="sv-inv">—</div></div>
+        <div class="stat-card"><div class="stat-label">補貨批次數</div><div class="stat-value" id="sv-reps">—</div></div>
+        <div class="stat-card"><div class="stat-label">到貨紀錄數</div><div class="stat-value" id="sv-ra">—</div></div>
+        <div class="stat-card"><div class="stat-label">本週分配紀錄數</div><div class="stat-value" id="sv-allocs">—</div></div>
+      </div>
+      <div id="sv-v1" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85rem"></div>
+    </div>
+    <div class="section">
+      <h3>🔧 系統資訊</h3>
+      <div style="font-size:0.82rem;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-b);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:0.8rem">
+        ⚠ 目前為內部系統簡易認證，非 Firebase Auth。密碼以 plain text 儲存於 Firebase RTDB。
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+        <tbody id="sysinfo-table"></tbody>
+      </table>
+    </div>
   </div>
 </div>
+
+<!-- ─── Tab 2: 業務 / 通路 ─── -->
+<div class="tab-content" id="tab-sales">
+  <div class="container">
+    <div class="section" id="section-dealer-mgmt">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+        <h3 style="margin-bottom:0">業務 / 通路管理</h3>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--text2);cursor:pointer;font-weight:600">
+          <input type="checkbox" id="show-archived-chk" onchange="toggleShowArchived(this)">
+          顯示已停用 / 封存
+        </label>
+      </div>
+
+      <!-- 新增業務 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem">
+        <div style="font-size:0.88rem;font-weight:700;margin-bottom:0.8rem;color:var(--text2)">新增業務</div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px;max-width:200px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">業務姓名 *</div>
+            <input class="dealer-input" id="new-sales-name" placeholder="例：David" autocomplete="off">
+          </div>
+          <div style="flex:2;min-width:180px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">備註</div>
+            <input class="dealer-input" id="new-sales-note" placeholder="選填，例：負責中部區域" autocomplete="off">
+          </div>
+          <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;flex-shrink:0" onclick="addSalesUser()">新增業務</button>
+        </div>
+      </div>
+
+      <!-- 新增通路 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem">
+        <div style="font-size:0.88rem;font-weight:700;margin-bottom:0.8rem;color:var(--text2)">新增通路</div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div style="flex:1;min-width:110px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">DEALER ID * <span style="font-weight:400">（建立後不可改）</span></div>
+            <input class="dealer-input" id="new-dealer-id" placeholder="小寫英文/數字/_/-" autocomplete="off">
+          </div>
+          <div style="flex:1;min-width:110px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">通路名稱 *</div>
+            <input class="dealer-input" id="new-dealer-name" placeholder="例：ABC 電玩" autocomplete="off">
+          </div>
+          <div style="flex:1;min-width:110px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">負責業務 *</div>
+            <select class="dealer-input" id="new-dealer-sales" style="cursor:pointer">
+              <option value="">— 請選擇 —</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:110px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px">CODE * <span style="font-weight:400">（自動大寫）</span></div>
+            <input class="dealer-input" id="new-dealer-code" placeholder="例：ABCSTORE" autocomplete="off" style="text-transform:uppercase">
+          </div>
+          <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;flex-shrink:0" onclick="addDealer()">新增通路</button>
+        </div>
+      </div>
+
+      <!-- Accordion -->
+      <div id="dealer-mgmt-wrap">
+        <div style="color:var(--text3);font-size:0.88rem">載入中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tab 3: 資料匯入 / 匯出 ─── -->
+<div class="tab-content" id="tab-data">
+  <div class="container">
+    <div class="section">
+      <h3>📦 資料匯入 / 匯出</h3>
+      <p>匯出下載 CSV（UTF-8 with BOM）。匯入需先下載範本確認欄位格式，預覽確認後才寫入。</p>
+      <div class="data-grid">
+        <div class="data-card">
+          <div class="data-card-hd">產品資料</div>
+          <div class="data-card-sub">441 個品項（BNE / GSE / SONY）</div>
+          <input type="file" id="import-products-file" accept=".csv" style="display:none" onchange="handleProductsCsvFile(this)">
+          <button class="btn-sm" style="width:100%;margin-bottom:8px" onclick="downloadProductTemplate()">⬇ 下載 CSV 範本</button>
+          <button class="btn-green" style="display:block;width:100%;margin-bottom:8px" onclick="exportProductsCsv()">↑ 匯出產品資料</button>
+          <button class="btn-sm" style="width:100%;margin-bottom:0" onclick="importProductsCsvClick()">↑ 匯入產品資料</button>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hd">通路資料</div>
+          <div class="data-card-sub">dealerId / code / 業務對照</div>
+          <button class="btn-sm" style="width:100%;margin-bottom:8px" onclick="downloadDealerTemplate()">⬇ 下載 CSV 範本</button>
+          <button class="btn-green" style="display:block;width:100%;margin-bottom:8px" onclick="exportDealersCsv()">↑ 匯出通路資料</button>
+          <input type="file" id="import-dealers-file" accept=".csv" style="display:none" onchange="handleDealersCsvFile(this)">
+          <button class="btn-sm" style="width:100%;margin-bottom:0" onclick="importDealersCsvClick()">↑ 匯入通路資料</button>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hd">庫存資料</div>
+          <div class="data-card-sub">初始庫存（由後勤管理）</div>
+          <button class="btn-sm" style="width:100%;margin-bottom:8px" onclick="downloadInventoryTemplate()">⬇ 下載 CSV 範本</button>
+          <button class="btn-green" style="display:block;width:100%;margin-bottom:8px" onclick="exportInventoryCsv()">↑ 匯出庫存資料</button>
+          <input type="file" id="import-inventory-file" accept=".csv" style="display:none" onchange="handleInventoryCsvFile(this)">
+          <button class="btn-sm" style="width:100%;margin-bottom:0" onclick="importInventoryCsvClick()">↑ 匯入庫存資料</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 後勤報表 -->
+    <div class="section">
+      <h3>📊 後勤報表</h3>
+      <p>以目前週次資料即時匯出，CSV 含 UTF-8 BOM，可直接用 Excel 開啟。</p>
+      <div class="data-grid" style="grid-template-columns:repeat(2,1fr)">
+        <div class="data-card">
+          <div class="data-card-hd">本週需求總覽</div>
+          <div class="data-card-sub">所有有需求品項：需求量 / 庫存 / 已到貨 / PM追加 / 缺口 / ETA / 分配量 / 狀態</div>
+          <button class="btn-green" style="display:block;width:100%" onclick="exportDemandSummaryCsv()">↑ 匯出需求總覽</button>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hd">缺口報表</div>
+          <div class="data-card-sub">僅列目前實缺 &gt; 0 的品項</div>
+          <button class="btn-green" style="display:block;width:100%" onclick="exportShortageReportCsv()">↑ 匯出缺口報表</button>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hd">補貨進度</div>
+          <div class="data-card-sub">所有補貨批次：PM追加量 / 已到貨 / ETA / 狀態</div>
+          <button class="btn-green" style="display:block;width:100%" onclick="exportReplenishmentProgressCsv()">↑ 匯出補貨進度</button>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hd">分配結果</div>
+          <div class="data-card-sub">本週各通路訂購量與分配量明細</div>
+          <button class="btn-green" style="display:block;width:100%" onclick="exportAllocationResultCsv()">↑ 匯出分配結果</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tab 4: 維運工具 ─── -->
+<div class="tab-content" id="tab-ops">
+  <div class="container">
+    <div class="section">
+      <h3>🔍 資料一致性檢查</h3>
+      <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">只讀取，不修改任何資料。</p>
+      <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkIntegrity()">執行一致性檢查</button>
+      <div id="ci-result"></div>
+      <button id="btn-clear-orphan-ra" class="btn-danger" style="display:none;margin-top:8px" onclick="clearOrphanArrivals()">🗑 清除 orphan 到貨紀錄（依上方檢查結果）</button>
+    </div>
+    <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
+      <h3 style="color:var(--red)">⚠ 危險操作</h3>
+      <button class="btn-danger" onclick="clearAllOrders()">🗑 清除所有週次訂單（無法復原）</button>
+      <button class="btn-danger" onclick="clearReplenishments()">🗑 清除所有補貨記錄（無法復原）</button>
+      <button class="btn-danger" onclick="clearInventory()">🗑 清除所有庫存記錄（無法復原）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tab 5: 帳號權限管理 ─── -->
+<div class="tab-content" id="tab-pwd">
+  <div class="container">
+    <div class="section">
+      <h3>🔑 帳號權限管理</h3>
+      <p>管理各角色登入密碼。Sales 帳號不使用密碼，無需設定。顯示目前密碼前需二次確認，顯示後 30 秒自動隱藏，切換分頁或離開頁面時亦自動隱藏。</p>
+      <div id="pwd-cards" class="pwd-grid">
+        <div style="color:var(--text3);font-size:0.88rem">載入中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Dealer Edit Modal ─── -->
+<div class="modal-overlay hidden" id="dealer-modal" onclick="modalOverlayClick(event)">
+  <div class="modal" id="dealer-modal-box">
+    <div class="modal-hd">
+      <span id="modal-title">編輯通路</span>
+      <button class="btn-xs" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 9px" onclick="closeDealerModal()">✕</button>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">通路名稱 *</span>
+      <input class="dealer-input" id="modal-dealer-name" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <span class="lbl">所屬業務 *</span>
+      <select class="dealer-input" id="modal-dealer-sales" style="cursor:pointer">
+        <option value="">— 請選擇 —</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">Code <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.72rem">（修改後舊連結即失效）</span></span>
+      <input class="dealer-input" id="modal-dealer-code" autocomplete="off" style="text-transform:uppercase">
+    </div>
+    <div class="modal-field">
+      <span class="lbl">狀態</span>
+      <div class="status-opts">
+        <label class="status-opt s-active" data-val="active" onclick="selectDealerStatus(this)">
+          <input type="radio" name="d-status" value="active"> 啟用中
+        </label>
+        <label class="status-opt s-inactive" data-val="inactive" onclick="selectDealerStatus(this)">
+          <input type="radio" name="d-status" value="inactive"> 停用
+        </label>
+        <label class="status-opt s-archived" data-val="archived" onclick="selectDealerStatus(this)">
+          <input type="radio" name="d-status" value="archived"> 封存
+        </label>
+      </div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">Dealer URL</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <code id="modal-dealer-url" style="font-size:0.78rem;font-family:var(--mono);color:var(--text2);flex:1;word-break:break-all;background:var(--surface2);padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--border)"></code>
+        <button class="btn-xs btn-xs-edit" onclick="copyModalUrl()" style="flex-shrink:0">複製</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeDealerModal()">取消</button>
+      <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0" onclick="saveDealerModal()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Import Preview Modal ─── -->
+<div class="modal-overlay hidden" id="import-modal" onclick="importModalOverlayClick(event)">
+  <div class="modal" id="import-modal-box" style="max-width:680px">
+    <div class="modal-hd">
+      <span id="import-modal-title">匯入預覽</span>
+      <button class="btn-xs" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 9px" onclick="closeImportModal()">✕</button>
+    </div>
+    <div id="import-summary" style="margin-bottom:1rem"></div>
+    <div id="import-preview-wrap" style="overflow:auto;max-height:280px;margin-bottom:0.8rem;border:1px solid var(--border);border-radius:var(--radius-sm)"></div>
+    <div id="import-skip-detail" style="margin-bottom:0.8rem"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeImportModal()">取消</button>
+      <button class="btn-primary" id="import-confirm-btn" style="display:inline-block;width:auto;margin-bottom:0">確認匯入</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast hidden" id="toast"></div>
 <script src="firebase.js"></script>
 <script>
-let fbDB, _orphanRaKeys=[];
+const PROJECT_INFO = {
+  localPath: 'D:\\OneDrive - Acer\\追貨系統\\Local\\V2\\agm-tracking-v2',
+  githubRepo: 'https://github.com/acergaming-service/agm-tracking-v2',
+};
+
+let fbDB, _orphanRaKeys=[], _showArchived=false, _editingDealerId=null, _importProductData=null, _importInventoryData=null, _importDealerData=null;
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
+  if (typeof PWD_ROLES !== 'undefined') PWD_ROLES.forEach(({ role }) => _hidePwd(role));
+}
+
 window.addEventListener('DOMContentLoaded',async()=>{
   if(sessionStorage.getItem('role')!=='superadmin'){location.href='index.html';return;}
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   fbDB=firebase.database();
   document.getElementById('loading-screen').classList.add('hidden');
+  _renderSysInfo();
+  loadDealerMgmt();
+  initPasswordsIfNeeded();
 });
+
+function _renderSysInfo() {
+  const tbl = document.getElementById('sysinfo-table');
+  if (!tbl) return;
+  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+  const rows = [
+    ['Firebase Project ID', FIREBASE_CONFIG.projectId || '—'],
+    ['Firebase Database URL', FIREBASE_CONFIG.databaseURL || '—'],
+    ['GitHub 專案', PROJECT_INFO.githubRepo],
+    ['本機路徑', PROJECT_INFO.localPath],
+    ['目前頁面 URL', location.href],
+    ['部署 Base Path', base],
+  ];
+  const style = 'padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top';
+  tbl.innerHTML = rows.map(([label, val]) =>
+    `<tr>
+      <td style="${style};font-weight:700;color:var(--text3);white-space:nowrap;width:180px">${label}</td>
+      <td style="${style};font-family:var(--mono);font-size:0.82rem;word-break:break-all">${val}</td>
+    </tr>`
+  ).join('');
+}
 
 async function seedProducts(){
   if(!confirm('初始化 441 個產品資料？這會覆蓋現有資料。'))return;
@@ -252,6 +562,1376 @@ async function clearOrphanArrivals(){
   showToast('已清除 '+_orphanRaKeys.length+' 筆 orphan 到貨紀錄');
   _orphanRaKeys=[];
   await checkIntegrity();
+}
+
+// ── 業務 / 通路管理 ──────────────────────────────────────────────────────
+let _dealerCache = {}, _salesCache = {}, _salesLoaded = false, _dealersLoaded = false;
+
+function toSalesId(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+}
+
+function statusToFields(status) {
+  if (status === 'archived') return { active: false, archived: true };
+  if (status === 'inactive') return { active: false, archived: false };
+  return { active: true, archived: false };
+}
+
+function getDealerStatus(d) {
+  if (d.archived === true) return 'archived';
+  if (d.active === false) return 'inactive';
+  return 'active';
+}
+
+function toggleShowArchived(el) {
+  _showArchived = el.checked;
+  renderAccordion();
+}
+
+function loadDealerMgmt() {
+  fbDB.ref('settings/salesUsers').on('value', async snap => {
+    let data = snap.val() || {};
+    if (!Object.keys(data).length) {
+      const seed = {};
+      SALES_LIST.forEach(n => { seed[toSalesId(n)] = { name: n, active: true }; });
+      await fbDB.ref('settings/salesUsers').set(seed);
+      return;
+    }
+    const needsMigration = Object.values(data).some(
+      v => typeof v === 'object' && v !== null && !('name' in v)
+    );
+    if (needsMigration) {
+      const migrated = {};
+      Object.entries(data).forEach(([k, v]) => {
+        migrated[toSalesId(k)] = { name: k, active: v.active !== false };
+      });
+      await fbDB.ref('settings/salesUsers').set(migrated);
+      return;
+    }
+    _salesCache = data;
+    _salesLoaded = true;
+    if (_dealersLoaded) _renderAll();
+  });
+  fbDB.ref('dealers').on('value', snap => {
+    _dealerCache = snap.val() || {};
+    _dealersLoaded = true;
+    if (_salesLoaded) _renderAll();
+  }, err => {
+    const wrap = document.getElementById('dealer-mgmt-wrap');
+    if (wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:0.88rem">載入失敗：${err.message}</div>`;
+  });
+}
+
+function _renderAll() {
+  renderAccordion();
+  populateSalesSelects();
+}
+
+// ── 業務管理 ─────────────────────────────────────────────────────────────
+
+async function addSalesUser() {
+  const el = document.getElementById('new-sales-name');
+  const noteEl = document.getElementById('new-sales-note');
+  const name = el.value.trim();
+  const note = noteEl ? noteEl.value.trim() : '';
+  if (!name) { showToast('❌ 請輸入業務姓名'); return; }
+  const salesId = toSalesId(name);
+  if (!salesId) { showToast('❌ 姓名格式無效'); return; }
+  if (_salesCache[salesId]) { showToast(`❌ 業務「${name}」（${salesId}）已存在`); return; }
+  try {
+    const payload = { name, active: true, archived: false };
+    if (note) payload.note = note;
+    await fbDB.ref(`settings/salesUsers/${salesId}`).set(payload);
+    showToast(`✅ 已新增業務「${name}」`);
+    el.value = '';
+    if (noteEl) noteEl.value = '';
+  } catch(e) { showToast('❌ 新增失敗：' + e.message); }
+}
+
+async function editSalesUser(salesId) {
+  const s = _salesCache[salesId];
+  if (!s) return;
+  const newName = prompt(`業務顯示名稱（salesId：${salesId} 不變）：`, s.name || '');
+  if (newName === null) return;
+  const trimmedName = newName.trim();
+  if (!trimmedName) { showToast('❌ 名稱不可為空'); return; }
+  const newNote = prompt('備註（留空則清除）：', s.note || '');
+  if (newNote === null) return;
+  try {
+    const updates = { name: trimmedName };
+    updates.note = newNote.trim() || null;
+    await fbDB.ref(`settings/salesUsers/${salesId}`).update(updates);
+    showToast(`✅ 已更新業務「${trimmedName}」`);
+  } catch(e) { showToast('❌ 更新失敗：' + e.message); }
+}
+
+async function toggleSalesActive(salesId, currentActive) {
+  const s = _salesCache[salesId];
+  if (!s) return;
+  const name = s.name || salesId;
+  if (currentActive) {
+    const blocked = Object.values(_dealerCache).filter(d => {
+      const sid = d.salesId || toSalesId(d.sales || '');
+      return sid === salesId && d.active !== false && d.archived !== true;
+    });
+    if (blocked.length) {
+      alert(`無法停用，仍有 ${blocked.length} 個啟用中的通路掛在此業務底下，請先轉移或停用通路。`);
+      return;
+    }
+    if (!confirm(`確定要停用業務「${name}」？`)) return;
+  }
+  try {
+    await fbDB.ref(`settings/salesUsers/${salesId}/active`).set(!currentActive);
+    showToast(currentActive ? `⚠ 已停用業務「${name}」` : `✅ 已啟用業務「${name}」`);
+  } catch(e) { showToast('❌ 操作失敗：' + e.message); }
+}
+
+async function archiveSalesUser(salesId) {
+  const s = _salesCache[salesId];
+  if (!s) return;
+  const name = s.name || salesId;
+  const isArchived = s.archived === true;
+  if (!isArchived) {
+    const blocked = Object.values(_dealerCache).filter(d => {
+      const sid = d.salesId || toSalesId(d.sales || '');
+      return sid === salesId && d.active !== false && d.archived !== true;
+    });
+    if (blocked.length) {
+      alert(`無法封存，仍有 ${blocked.length} 個啟用中的通路掛在此業務底下，請先轉移或停用通路。`);
+      return;
+    }
+    if (!confirm(`確定封存業務「${name}」？封存後將從主要介面隱藏。`)) return;
+    await fbDB.ref(`settings/salesUsers/${salesId}`).update({ active: false, archived: true });
+    showToast(`⚠ 已封存業務「${name}」`);
+  } else {
+    if (!confirm(`解除封存業務「${name}」？`)) return;
+    await fbDB.ref(`settings/salesUsers/${salesId}/archived`).set(false);
+    showToast(`✅ 已解除封存業務「${name}」`);
+  }
+}
+
+// ── 通路管理 ─────────────────────────────────────────────────────────────
+
+function populateSalesSelects() {
+  const actives = Object.entries(_salesCache)
+    .filter(([, s]) => s.active !== false && s.archived !== true)
+    .sort((a, b) => (a[1].name || a[0]).localeCompare(b[1].name || b[0]));
+  const sel = document.getElementById('new-dealer-sales');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— 請選擇 —</option>' +
+    actives.map(([sid, s]) =>
+      `<option value="${sid}"${sid === cur ? ' selected' : ''}>${s.name || sid}</option>`
+    ).join('');
+}
+
+function renderAccordion() {
+  const wrap = document.getElementById('dealer-mgmt-wrap');
+  if (!wrap) return;
+  const allDealers = Object.entries(_dealerCache);
+
+  const groups = {};
+  allDealers.forEach(([id, d]) => {
+    const sid = d.salesId || toSalesId(d.sales || '') || '_unassigned';
+    if (!groups[sid]) groups[sid] = [];
+    groups[sid].push([id, d]);
+  });
+
+  const salesOrder = Object.entries(_salesCache)
+    .sort((a, b) => {
+      const aA = (a[1].active !== false && a[1].archived !== true) ? 0 : 1;
+      const bA = (b[1].active !== false && b[1].archived !== true) ? 0 : 1;
+      if (aA !== bA) return aA - bA;
+      return (a[1].name || a[0]).localeCompare(b[1].name || b[0]);
+    })
+    .map(([sid]) => sid);
+  Object.keys(groups).forEach(sid => { if (!salesOrder.includes(sid)) salesOrder.push(sid); });
+
+  if (!allDealers.length) {
+    wrap.innerHTML = '<div style="color:var(--text3);font-size:0.88rem">目前無通路資料</div>';
+    return;
+  }
+
+  const visibleTotal = allDealers.filter(([, d]) =>
+    _showArchived || (d.active !== false && d.archived !== true)
+  ).length;
+  const totalActive = allDealers.filter(([, d]) => d.active !== false && d.archived !== true).length;
+  let html = `<div style="font-size:0.82rem;color:var(--text3);margin-bottom:8px">共 ${allDealers.length} 個通路，啟用中 ${totalActive} 個${!_showArchived && visibleTotal < allDealers.length ? `（顯示 ${visibleTotal} 個，已過濾停用/封存）` : ''}</div>`;
+
+  let anyGroup = false;
+  salesOrder.forEach(sid => {
+    const group = groups[sid];
+    if (!group || !group.length) return;
+
+    const s = _salesCache[sid];
+    const salesIsActive = s ? (s.active !== false) : false;
+    const salesIsArchived = s ? (s.archived === true) : false;
+    const salesVisible = salesIsActive && !salesIsArchived;
+
+    if (!_showArchived && !salesVisible) return;
+
+    const visibleDealers = _showArchived
+      ? group
+      : group.filter(([, d]) => d.active !== false && d.archived !== true);
+    if (!visibleDealers.length && !_showArchived) return;
+
+    anyGroup = true;
+    const sortedDealers = [...visibleDealers].sort((a, b) => {
+      const aS = getDealerStatus(a[1]), bS = getDealerStatus(b[1]);
+      const order = { active: 0, inactive: 1, archived: 2 };
+      if (order[aS] !== order[bS]) return order[aS] - order[bS];
+      return a[0].localeCompare(b[0]);
+    });
+
+    const displayName = s ? (s.name || sid) : (sid === '_unassigned' ? '（未指定業務）' : sid);
+    const activeInGroup = group.filter(([, d]) => d.active !== false && d.archived !== true).length;
+
+    let hdrBg, hdrBd, hdrColor;
+    if (salesIsArchived) {
+      hdrBg = 'var(--amber-dim)'; hdrBd = 'var(--amber-b)'; hdrColor = 'var(--amber)';
+    } else if (!salesIsActive) {
+      hdrBg = 'var(--surface2)'; hdrBd = 'var(--border)'; hdrColor = 'var(--text3)';
+    } else {
+      hdrBg = 'var(--accent-dim)'; hdrBd = 'var(--accent-b)'; hdrColor = 'var(--accent)';
+    }
+
+    const rows = sortedDealers.map(([id, d]) => {
+      const dStatus = getDealerStatus(d);
+      const badgeCls = dStatus === 'active' ? 'badge-active' : dStatus === 'archived' ? 'badge-archived' : 'badge-inactive';
+      const badgeLabel = dStatus === 'active' ? '啟用中' : dStatus === 'archived' ? '封存' : '停用';
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:0.82rem;color:var(--text3)">${id}</td>
+        <td style="font-weight:600">${d.name || '—'}</td>
+        <td style="font-family:var(--mono);font-size:0.82rem">${d.code || '—'}</td>
+        <td>
+          <span class="${badgeCls}" style="cursor:pointer" title="${dStatus === 'archived' ? '在編輯框修改封存狀態' : '點擊切換啟用/停用'}"
+            onclick="${dStatus === 'archived' ? `openDealerModal('${id}')` : `toggleDealerStatus('${id}')`}">
+            ${badgeLabel}
+          </span>
+        </td>
+        <td>
+          <button class="btn-xs btn-xs-edit" onclick="openDealerModal('${id}')">編輯</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const hdrBtns = s ? `<div style="display:flex;gap:5px;flex-shrink:0">
+      <button class="btn-xs btn-xs-edit" onclick="editSalesUser('${sid}')">編輯</button>
+      ${salesIsArchived
+        ? `<button class="btn-xs btn-xs-archive" onclick="archiveSalesUser('${sid}')">解除封存</button>`
+        : salesIsActive
+          ? `<button class="btn-xs btn-xs-disable" onclick="toggleSalesActive('${sid}',true)">停用</button>
+             <button class="btn-xs btn-xs-archive" onclick="archiveSalesUser('${sid}')">封存</button>`
+          : `<button class="btn-xs btn-xs-enable" onclick="toggleSalesActive('${sid}',false)">啟用</button>
+             <button class="btn-xs btn-xs-archive" onclick="archiveSalesUser('${sid}')">封存</button>`
+      }
+    </div>` : '';
+
+    html += `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:0.8rem">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:${hdrBg};border-bottom:1px solid ${hdrBd}">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:0.85rem;font-weight:700;color:${hdrColor}">${displayName}</span>
+            ${salesIsArchived ? '<span style="font-size:0.75rem;font-weight:400;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:1px 7px">封存</span>' : ''}
+            <span style="font-size:0.75rem;font-weight:400;color:var(--text3)">（${activeInGroup}/${group.length} 通路）</span>
+            ${sid !== '_unassigned' ? `<span style="font-size:0.72rem;font-family:var(--mono);color:var(--text3)">${sid}</span>` : ''}
+          </div>
+          ${s && s.note ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">${s.note}</div>` : ''}
+        </div>
+        ${hdrBtns}
+      </div>
+      <table class="dealer-tbl">
+        <thead><tr>
+          <th>Dealer ID</th><th>通路名稱</th><th>Code</th><th>狀態</th><th>操作</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  });
+
+  if (!anyGroup) {
+    html += '<div style="color:var(--text3);font-size:0.88rem;padding:1rem 0">目前沒有可顯示的業務/通路（勾選「顯示已停用/封存」查看全部）</div>';
+  }
+  wrap.innerHTML = html;
+}
+
+// ── 通路 badge toggle ─────────────────────────────────────────────────────
+
+async function toggleDealerStatus(id) {
+  const d = _dealerCache[id];
+  if (!d) return;
+  const isActive = d.active !== false && d.archived !== true;
+  if (isActive && !confirm(`確定要停用「${d.name}」？`)) return;
+  try {
+    await fbDB.ref(`dealers/${id}/active`).set(!isActive);
+    showToast(isActive ? `⚠ 已停用「${d.name}」` : `✅ 已啟用「${d.name}」`);
+  } catch(e) { showToast('❌ 操作失敗：' + e.message); }
+}
+
+// ── 通路 Modal ────────────────────────────────────────────────────────────
+
+function selectDealerStatus(lbl) {
+  document.querySelectorAll('.status-opt').forEach(l => l.classList.remove('checked'));
+  lbl.classList.add('checked');
+  const radio = lbl.querySelector('input[type=radio]');
+  if (radio) radio.checked = true;
+}
+
+function openDealerModal(id) {
+  const d = _dealerCache[id];
+  if (!d) return;
+  _editingDealerId = id;
+  document.getElementById('modal-title').textContent = `編輯通路 · ${id}`;
+  document.getElementById('modal-dealer-name').value = d.name || '';
+  document.getElementById('modal-dealer-code').value = d.code || '';
+
+  const allSales = Object.entries(_salesCache)
+    .sort((a, b) => (a[1].name || a[0]).localeCompare(b[1].name || b[0]));
+  const curSid = d.salesId || toSalesId(d.sales || '');
+  document.getElementById('modal-dealer-sales').innerHTML =
+    '<option value="">— 請選擇 —</option>' +
+    allSales.map(([sid, s]) =>
+      `<option value="${sid}"${sid === curSid ? ' selected' : ''}>${s.name || sid}</option>`
+    ).join('');
+
+  const status = getDealerStatus(d);
+  document.querySelectorAll('.status-opt').forEach(lbl => {
+    lbl.classList.toggle('checked', lbl.dataset.val === status);
+    const r = lbl.querySelector('input[type=radio]');
+    if (r) r.checked = lbl.dataset.val === status;
+  });
+
+  const base = location.origin + location.pathname.replace('superadmin.html', '');
+  const url = `${base}dealer.html?code=${(d.code || '')}2025`;
+  const urlEl = document.getElementById('modal-dealer-url');
+  urlEl.textContent = url;
+  urlEl.dataset.url = url;
+
+  document.getElementById('dealer-modal').classList.remove('hidden');
+}
+
+function closeDealerModal() {
+  document.getElementById('dealer-modal').classList.add('hidden');
+  _editingDealerId = null;
+}
+
+function modalOverlayClick(e) {
+  if (e.target === document.getElementById('dealer-modal')) closeDealerModal();
+}
+
+function copyModalUrl() {
+  const url = document.getElementById('modal-dealer-url').dataset.url;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => showToast('✅ 已複製連結'));
+}
+
+async function saveDealerModal() {
+  const id = _editingDealerId;
+  if (!id) return;
+  const d = _dealerCache[id];
+  if (!d) return;
+
+  const newName   = document.getElementById('modal-dealer-name').value.trim();
+  const newCode   = document.getElementById('modal-dealer-code').value.trim().toUpperCase();
+  const newSalesId = document.getElementById('modal-dealer-sales').value;
+  const checkedOpt = document.querySelector('.status-opt.checked');
+  const newStatus = checkedOpt ? checkedOpt.dataset.val : 'active';
+
+  if (!newName)    { showToast('❌ 通路名稱不可為空'); return; }
+  if (!newCode)    { showToast('❌ Code 不可為空'); return; }
+  if (!newSalesId) { showToast('❌ 請選擇負責業務'); return; }
+
+  if (newCode !== (d.code || '').toUpperCase()) {
+    const conflict = Object.entries(_dealerCache)
+      .some(([eid, ed]) => eid !== id && (ed.code || '').toUpperCase() === newCode);
+    if (conflict) { showToast(`❌ Code「${newCode}」已被其他通路使用`); return; }
+    if (!confirm(`修改 Code 後，舊連結將失效，需重新提供新連結給通路。\n舊：${d.code}2025  →  新：${newCode}2025\n確定繼續？`)) return;
+  }
+
+  const { active, archived } = statusToFields(newStatus);
+  const s = _salesCache[newSalesId];
+  const newSalesName = s ? (s.name || newSalesId) : newSalesId;
+
+  try {
+    await fbDB.ref(`dealers/${id}`).update({
+      name: newName, code: newCode,
+      salesId: newSalesId, sales: newSalesName,
+      active, archived: archived || false,
+    });
+    showToast(`✅ 已更新「${newName}」`);
+    closeDealerModal();
+  } catch(e) { showToast('❌ 儲存失敗：' + e.message); }
+}
+
+// ── 新增通路 ──────────────────────────────────────────────────────────────
+
+async function addDealer() {
+  const id      = document.getElementById('new-dealer-id').value.trim();
+  const name    = document.getElementById('new-dealer-name').value.trim();
+  const salesId = document.getElementById('new-dealer-sales').value;
+  const code    = document.getElementById('new-dealer-code').value.trim().toUpperCase();
+  if (!id || !name || !salesId || !code) { showToast('❌ 所有欄位必填'); return; }
+  if (!/^[a-z0-9_-]+$/.test(id)) { showToast('❌ dealerId 只能使用小寫英文、數字、_ 或 -'); return; }
+  if (_dealerCache[id]) { showToast(`❌ dealerId「${id}」已存在`); return; }
+  if (Object.values(_dealerCache).some(d => (d.code || '').toUpperCase() === code)) {
+    showToast(`❌ code「${code}」已被其他通路使用`); return;
+  }
+  const s = _salesCache[salesId];
+  const salesName = s ? (s.name || salesId) : salesId;
+  try {
+    await fbDB.ref(`dealers/${id}`).set({
+      name, salesId, sales: salesName, code, active: true, archived: false
+    });
+    showToast(`✅ 已新增通路「${name}」(${id})`);
+    ['new-dealer-id', 'new-dealer-name', 'new-dealer-code'].forEach(eid =>
+      document.getElementById(eid).value = '');
+    document.getElementById('new-dealer-sales').value = '';
+  } catch(e) { showToast('❌ 新增失敗：' + e.message); }
+}
+
+async function migrateSalesId() {
+  const needs = Object.entries(_dealerCache).filter(([, d]) => !d.salesId && d.sales);
+  if (!needs.length) { showToast('✅ 所有通路已有 salesId，無需 migration'); return; }
+  if (!confirm(`將為 ${needs.length} 個通路補 salesId 欄位（依 sales 名稱推算），繼續？`)) return;
+  const updates = {};
+  needs.forEach(([id, d]) => { updates[`dealers/${id}/salesId`] = toSalesId(d.sales); });
+  try {
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已補 salesId：${needs.length} 個通路`);
+  } catch(e) { showToast('❌ Migration 失敗：' + e.message); }
+}
+
+// ── 資料匯出 ──────────────────────────────────────────────────────────────
+
+function _downloadCsv(filename, content) {
+  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadProductTemplate() {
+  const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,status,arrival,priceTag,displayNote';
+  const sample = '"BNE","BNE_EX_001","ZL.A00TZ.1FO","NS","軟體","4713014356037","","品名範例",1490,900,857,0,0,"instock","","特價",""';
+  _downloadCsv('products_template.csv', [header, sample].join('\n'));
+}
+
+function downloadDealerTemplate() {
+  const header = 'dealerId,name,code,salesId,active,archived,note';
+  const sample = '"abc_store","ABC 電玩","ABCSTORE","edward","true","false","備註範例"';
+  _downloadCsv('dealers_template.csv', [header, sample].join('\n'));
+}
+
+function downloadInventoryTemplate() {
+  const header = 'P/N,國際條碼,初始庫存,備註';
+  const sample = '"ZL.A00TZ.1FO","4713014356037","10","備註範例"';
+  _downloadCsv('inventory_template.csv', [header, sample].join('\n'));
+}
+
+function exportDealersCsv() {
+  const dealers = Object.entries(_dealerCache);
+  if (!dealers.length) { showToast('❌ 無通路資料'); return; }
+  const header = 'dealerId,name,code,salesId,active,archived,note';
+  const rows = dealers.map(([id, d]) => {
+    const archivedVal = d.archived === true ? 'true' : 'false';
+    const activeVal   = d.archived !== true && d.active !== false ? 'true' : 'false';
+    return [id, d.name || '', d.code || '', d.salesId || '', activeVal, archivedVal, d.note || '']
+      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  _downloadCsv('dealers.csv', [header, ...rows].join('\n'));
+  showToast(`✅ 通路資料已匯出（${rows.length} 筆）`);
+}
+
+async function exportProductsCsv() {
+  showToast('讀取產品資料中…');
+  try {
+    const snap = await fbDB.ref('products').once('value');
+    const products = snap.val() || {};
+    const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,status,arrival,priceTag,displayNote';
+    const rows = [];
+    Object.entries(products).forEach(([vendor, items]) => {
+      Object.entries(items || {}).forEach(([pid, p]) => {
+        rows.push([vendor, pid, p.pn||'', p.platform||'', p.category||'', p.barcode||'',
+          p.spec||'', p.name||'', p.srp||0, p.priceTax||0, p.price||0, p.priceSpecial||0,
+          p.moq||0, p.status||'', p.arrival||'', p.priceTag||'', p.displayNote||'']
+          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+      });
+    });
+    _downloadCsv('products.csv', [header, ...rows].join('\n'));
+    showToast(`✅ 產品資料已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportInventoryCsv() {
+  showToast('讀取庫存資料中…');
+  try {
+    const [invSnap, prodSnap] = await Promise.all([
+      fbDB.ref('inventory').once('value'),
+      fbDB.ref('products').once('value'),
+    ]);
+    const inv = invSnap.val() || {};
+    const prods = prodSnap.val() || {};
+    const prodMap = {};
+    Object.values(prods).forEach(items =>
+      Object.entries(items || {}).forEach(([pid, p]) => { prodMap[pid] = p; })
+    );
+    const header = 'productId,P/N,品名,初始庫存,備註,更新時間';
+    const rows = Object.entries(inv).map(([pid, iv]) => {
+      const p = prodMap[pid] || {};
+      return [pid, p.pn||'', p.name||'', iv.initialStock||0, iv.note||'', iv.updatedAt||'']
+        .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+    _downloadCsv('inventory.csv', [header, ...rows].join('\n'));
+    showToast(`✅ 庫存資料已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+// ── 後勤報表共用資料載入 ────────────────────────────────────────────────────
+
+async function _loadReportData() {
+  const weekSnap = await fbDB.ref('window/week').once('value');
+  const week = weekSnap.val() || 'current';
+
+  const [prodS, invS, repS, ordS, allocS, dealerS] = await Promise.all([
+    fbDB.ref('products').once('value'),
+    fbDB.ref('inventory').once('value'),
+    fbDB.ref('replenishments').once('value'),
+    fbDB.ref(`orders/${week}`).once('value'),
+    fbDB.ref(`allocations/${week}`).once('value'),
+    fbDB.ref('dealers').once('value'),
+  ]);
+
+  const productsRaw = prodS.val() || {};
+  const inventory   = invS.val() || {};
+  const repsRaw     = repS.val() || {};
+  const ordersRaw   = ordS.val() || {};
+  const allocsRaw   = allocS.val() || {};
+  const dealers     = dealerS.val() || {};
+
+  // Build flat productMap: { productId → {vendor, ...fields} }
+  const productMap = {};
+  Object.entries(productsRaw).forEach(([vendor, items]) => {
+    Object.entries(items || {}).forEach(([pid, p]) => {
+      productMap[pid] = { ...p, vendor };
+    });
+  });
+
+  // Aggregate per-product: totalDemandQty, arrivedQty, totalRepQty, nearestEta, allReps
+  const productStats = {};
+  const ensurePid = pid => {
+    if (!productStats[pid]) productStats[pid] = {
+      totalDemandQty: 0, arrivedQty: 0, totalRepQty: 0, nearestEta: '', allReps: [], allocatedQty: 0,
+    };
+  };
+
+  // Orders
+  Object.entries(ordersRaw).forEach(([dealerId, items]) => {
+    Object.entries(items || {}).forEach(([pid, o]) => {
+      if ((o.qty || 0) <= 0) return;
+      ensurePid(pid);
+      productStats[pid].totalDemandQty += (o.qty || 0);
+    });
+  });
+
+  // Replenishments
+  Object.entries(repsRaw).forEach(([pid, batches]) => {
+    ensurePid(pid);
+    Object.entries(batches || {}).forEach(([repId, rep]) => {
+      productStats[pid].arrivedQty  += (rep.receivedQty || 0);
+      productStats[pid].totalRepQty += (rep.qty || 0);
+      productStats[pid].allReps.push({ repId, ...rep });
+      if (rep.eta && (!productStats[pid].nearestEta || rep.eta < productStats[pid].nearestEta)) {
+        if (rep.status !== 'completed') productStats[pid].nearestEta = rep.eta;
+      }
+    });
+  });
+
+  // Allocations
+  Object.entries(allocsRaw).forEach(([pid, dealerAllocs]) => {
+    ensurePid(pid);
+    Object.values(dealerAllocs || {}).forEach(a => {
+      productStats[pid].allocatedQty += (a.allocatedQty || 0);
+    });
+  });
+
+  return { week, productMap, inventory, productStats, ordersRaw, allocsRaw, dealers, repsRaw };
+}
+
+function _csvRow(cells) {
+  return cells.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',');
+}
+
+// ── 四份後勤報表 ────────────────────────────────────────────────────────────
+
+async function exportDemandSummaryCsv() {
+  showToast('讀取報表資料中…');
+  try {
+    const { week, productMap, inventory, productStats } = await _loadReportData();
+    const header = '代理,平台,品名,AGM P/N,總需求,初始庫存,已到貨,PM追加量,目前實缺,追加後仍缺,ETA,分配量,狀態';
+    const rows = [];
+    Object.entries(productStats)
+      .filter(([, ps]) => ps.totalDemandQty > 0)
+      .forEach(([pid, ps]) => {
+        const p = productMap[pid] || {};
+        const inv = inventory[pid] || {};
+        const initStock = inv.initialStock || 0;
+        const realShortage = Math.max(0, ps.totalDemandQty - initStock - ps.arrivedQty);
+        const plannedShortage = Math.max(0, ps.totalDemandQty - initStock - ps.totalRepQty);
+        const demandStatus = initStock >= ps.totalDemandQty ? '現貨足夠'
+          : ps.allReps.length === 0 ? '待補貨'
+          : ps.allReps.every(r => r.status === 'completed') ? '已完成'
+          : ps.allReps.some(r => (r.receivedQty || 0) > 0) ? '部分到貨'
+          : '追加中';
+        rows.push(_csvRow([
+          p.vendor || '', p.platform || '', p.name || '', p.pn || '',
+          ps.totalDemandQty, initStock, ps.arrivedQty, ps.totalRepQty,
+          realShortage, plannedShortage, ps.nearestEta || '', ps.allocatedQty, demandStatus,
+        ]));
+      });
+    if (!rows.length) { showToast('⚠ 本週無需求資料'); return; }
+    _downloadCsv(`demand_${week}.csv`, [header, ...rows].join('\n'));
+    showToast(`✅ 需求總覽已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportShortageReportCsv() {
+  showToast('讀取報表資料中…');
+  try {
+    const { week, productMap, inventory, productStats } = await _loadReportData();
+    const header = '代理,平台,品名,AGM P/N,總需求,初始庫存,已到貨,目前實缺,追加後仍缺,最近ETA,狀態';
+    const rows = [];
+    Object.entries(productStats).forEach(([pid, ps]) => {
+      const inv = inventory[pid] || {};
+      const initStock = inv.initialStock || 0;
+      const realShortage = ps.totalDemandQty - initStock - ps.arrivedQty;
+      if (realShortage <= 0) return;
+      const p = productMap[pid] || {};
+      const plannedShortage = Math.max(0, ps.totalDemandQty - initStock - ps.totalRepQty);
+      const demandStatus = ps.allReps.length === 0 ? '待補貨'
+        : ps.allReps.some(r => (r.receivedQty || 0) > 0) ? '部分到貨'
+        : '追加中';
+      rows.push(_csvRow([
+        p.vendor || '', p.platform || '', p.name || '', p.pn || '',
+        ps.totalDemandQty, initStock, ps.arrivedQty, realShortage, plannedShortage,
+        ps.nearestEta || '', demandStatus,
+      ]));
+    });
+    if (!rows.length) { showToast('✅ 目前無缺口品項'); return; }
+    _downloadCsv(`shortage_${week}.csv`, [header, ...rows].join('\n'));
+    showToast(`✅ 缺口報表已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportReplenishmentProgressCsv() {
+  showToast('讀取報表資料中…');
+  try {
+    const { week, productMap, repsRaw } = await _loadReportData();
+    const header = '代理,平台,品名,AGM P/N,補貨批次,補貨數量,已到貨量,預計到貨日,狀態';
+    const rows = [];
+    Object.entries(repsRaw).forEach(([pid, batches]) => {
+      const p = productMap[pid] || {};
+      Object.entries(batches || {}).forEach(([repId, rep]) => {
+        const statusLabel = { pending:'待下單', incoming:'追加中', partial_arrived:'部分到貨', completed:'已完成' }[rep.status] || rep.status || '';
+        rows.push(_csvRow([
+          p.vendor || '', p.platform || '', p.name || '', p.pn || '',
+          repId, rep.qty || 0, rep.receivedQty || 0, rep.eta || '', statusLabel,
+        ]));
+      });
+    });
+    if (!rows.length) { showToast('⚠ 無補貨記錄'); return; }
+    _downloadCsv(`replenishment_${week}.csv`, [header, ...rows].join('\n'));
+    showToast(`✅ 補貨進度已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportAllocationResultCsv() {
+  showToast('讀取報表資料中…');
+  try {
+    const { week, productMap, ordersRaw, allocsRaw, dealers } = await _loadReportData();
+    const header = '通路ID,通路名稱,業務,代理,平台,品名,AGM P/N,訂購量,分配量';
+    const rows = [];
+
+    // Merge orders + allocations
+    const pidDealerPairs = new Set();
+    Object.entries(ordersRaw).forEach(([dealerId, items]) => {
+      Object.entries(items || {}).forEach(([pid, o]) => {
+        if ((o.qty || 0) > 0) pidDealerPairs.add(`${pid}||${dealerId}`);
+      });
+    });
+    Object.entries(allocsRaw).forEach(([pid, dealerAllocs]) => {
+      Object.keys(dealerAllocs || {}).forEach(dealerId => {
+        pidDealerPairs.add(`${pid}||${dealerId}`);
+      });
+    });
+
+    pidDealerPairs.forEach(key => {
+      const [pid, dealerId] = key.split('||');
+      const p = productMap[pid] || {};
+      const d = dealers[dealerId] || {};
+      const orderQty = ordersRaw[dealerId]?.[pid]?.qty || 0;
+      const allocQty = allocsRaw[pid]?.[dealerId]?.allocatedQty || 0;
+      if (orderQty === 0 && allocQty === 0) return;
+      rows.push(_csvRow([
+        dealerId, d.name || '', d.sales || '',
+        p.vendor || '', p.platform || '', p.name || '', p.pn || '',
+        orderQty, allocQty,
+      ]));
+    });
+
+    if (!rows.length) { showToast('⚠ 本週無訂購或分配資料'); return; }
+    _downloadCsv(`allocation_${week}.csv`, [header, ...rows].join('\n'));
+    showToast(`✅ 分配結果已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+// ── 產品資料 CSV 匯入 ────────────────────────────────────────────────────
+
+function _splitCsvRow(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else { inQ = !inQ; }
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function _parseCsv(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const headers = _splitCsvRow(lines[0]).map(h => h.trim());
+  const rows = lines.slice(1).map(line => {
+    const vals = _splitCsvRow(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+    return obj;
+  });
+  return { headers, rows };
+}
+
+function importProductsCsvClick() {
+  const fi = document.getElementById('import-products-file');
+  if (fi) fi.click();
+}
+
+async function handleProductsCsvFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('分析中…');
+  try {
+    const text = await file.text();
+    const { rows } = _parseCsv(text);
+
+    // Load current products for new/update comparison
+    const snap = await fbDB.ref('products').once('value');
+    const currentProds = snap.val() || {};
+
+    const toAdd = [], toUpdate = [], toSkip = [];
+
+    rows.forEach((row, idx) => {
+      const vendor    = (row['vendor'] || '').trim();
+      const productId = (row['productId'] || '').trim();
+      const name      = (row['name'] || '').trim();
+
+      if (!vendor || !productId || !name) {
+        toSkip.push({ rowNum: idx + 2, row, reason: '缺少必填欄位（vendor / productId / name）' });
+        return;
+      }
+      if (!/^[A-Za-z0-9_-]+$/.test(productId)) {
+        toSkip.push({ rowNum: idx + 2, row, reason: `productId「${productId}」格式無效` });
+        return;
+      }
+
+      const payload = {
+        id: productId,
+        pn:           row['P/N'] || '',
+        platform:     row['platform'] || '',
+        category:     row['category'] || '',
+        barcode:      row['barcode'] || '',
+        spec:         row['spec'] || '',
+        name,
+        srp:          Number(row['srp']) || 0,
+        priceTax:     Number(row['priceTax']) || 0,
+        price:        Number(row['price']) || 0,
+        priceSpecial: Number(row['priceSpecial']) || 0,
+        moq:          Number(row['moq']) || 0,
+        status:       row['status'] || 'instock',
+        arrival:      row['arrival'] || '',
+        priceTag:     row['priceTag'] || '',
+        displayNote:  row['displayNote'] || '',
+        isAllocation: false,
+        giftItem:     '',
+      };
+
+      if (currentProds[vendor]?.[productId]) {
+        toUpdate.push({ vendor, productId, payload });
+      } else {
+        toAdd.push({ vendor, productId, payload });
+      }
+    });
+
+    _importProductData = { toAdd, toUpdate, toSkip, type: 'product' };
+    _showProductImportPreview();
+  } catch(e) {
+    showToast('❌ 讀取失敗：' + e.message);
+  }
+  input.value = '';
+}
+
+function _showProductImportPreview() {
+  const { toAdd, toUpdate, toSkip } = _importProductData;
+  const total = toAdd.length + toUpdate.length;
+
+  // Summary badges
+  const badge = (n, color, bg, bd, label) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:var(--radius-sm);background:${bg};color:${color};border:1px solid ${bd};font-weight:700;font-size:0.88rem">${label}：${n} 筆</span>`;
+  document.getElementById('import-summary').innerHTML =
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0.8rem">
+      ${badge(toAdd.length, 'var(--green)', 'var(--green-dim)', 'var(--green-b)', '新增')}
+      ${badge(toUpdate.length, 'var(--accent)', 'var(--accent-dim)', 'var(--accent-b)', '更新')}
+      ${badge(toSkip.length, 'var(--text3)', 'var(--surface2)', 'var(--border)', '跳過')}
+    </div>
+    ${total === 0 ? '<div style="color:var(--red);font-size:0.88rem">無可匯入資料，請確認 CSV 格式。</div>' : ''}`;
+
+  // Preview table (first 8 rows of add+update)
+  const previewRows = [...toAdd, ...toUpdate].slice(0, 8);
+  const tblHtml = previewRows.length ? `
+    <table class="dealer-tbl" style="font-size:0.8rem;min-width:520px">
+      <thead><tr>
+        <th>類型</th><th>代理</th><th>Product ID</th><th>品名</th><th>平台</th><th>狀態</th>
+      </tr></thead>
+      <tbody>
+        ${previewRows.map(({ vendor, productId, payload, _isUpdate }) => {
+          const isUpd = toUpdate.some(r => r.productId === productId && r.vendor === vendor);
+          return `<tr>
+            <td><span style="font-size:0.75rem;font-weight:700;padding:1px 7px;border-radius:8px;${isUpd ? 'background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)' : 'background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)'}">${isUpd ? '更新' : '新增'}</span></td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${vendor}</td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${productId}</td>
+            <td>${payload.name}</td>
+            <td>${payload.platform}</td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${payload.status}</td>
+          </tr>`;
+        }).join('')}
+        ${total > 8 ? `<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:0.78rem;padding:6px">… 還有 ${total - 8} 筆</td></tr>` : ''}
+      </tbody>
+    </table>` : '';
+  document.getElementById('import-preview-wrap').innerHTML = tblHtml;
+
+  // Skip detail
+  const skipHtml = toSkip.length ? `
+    <div style="font-size:0.82rem;color:var(--text3);margin-bottom:4px;font-weight:700">跳過明細（前 5 筆）</div>
+    ${toSkip.slice(0, 5).map(s =>
+      `<div style="font-size:0.8rem;font-family:var(--mono);margin-bottom:2px">Row ${s.rowNum}：${s.reason}</div>`
+    ).join('')}` : '';
+  document.getElementById('import-skip-detail').innerHTML = skipHtml;
+
+  const btn = document.getElementById('import-confirm-btn');
+  if (btn) { btn.disabled = total === 0; btn.onclick = confirmProductImport; }
+  document.getElementById('import-modal-title').textContent = '產品資料匯入預覽';
+  document.getElementById('import-modal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.add('hidden');
+  _importProductData = null;
+  _importInventoryData = null;
+  _importDealerData = null;
+}
+
+function importModalOverlayClick(e) {
+  if (e.target === document.getElementById('import-modal')) closeImportModal();
+}
+
+async function confirmProductImport() {
+  if (!_importProductData) return;
+  const { toAdd, toUpdate } = _importProductData;
+  const total = toAdd.length + toUpdate.length;
+  if (!total) return;
+  if (!confirm(`確定匯入 ${total} 筆產品資料？\n新增 ${toAdd.length} 筆 / 更新 ${toUpdate.length} 筆`)) return;
+
+  showToast('寫入中…');
+  try {
+    const updates = {};
+    [...toAdd, ...toUpdate].forEach(({ vendor, productId, payload }) => {
+      updates[`products/${vendor}/${productId}`] = payload;
+    });
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已匯入 ${total} 筆產品資料（新增 ${toAdd.length} / 更新 ${toUpdate.length}）`);
+    closeImportModal();
+  } catch(e) {
+    showToast('❌ 匯入失敗：' + e.message);
+  }
+}
+
+// ── 庫存資料 CSV 匯入 ────────────────────────────────────────────────────
+
+function importInventoryCsvClick() {
+  const fi = document.getElementById('import-inventory-file');
+  if (fi) fi.click();
+}
+
+async function handleInventoryCsvFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('分析中…');
+  try {
+    const text = await file.text();
+    const { rows } = _parseCsv(text);
+
+    showToast('讀取產品對照表中…');
+    const [prodSnap, invSnap] = await Promise.all([
+      fbDB.ref('products').once('value'),
+      fbDB.ref('inventory').once('value'),
+    ]);
+    const currentProds = prodSnap.val() || {};
+    const currentInv   = invSnap.val() || {};
+
+    // Build lookup maps: P/N → product, barcode → product
+    const pnMap = {}, barcodeMap = {};
+    Object.entries(currentProds).forEach(([vendor, items]) => {
+      Object.entries(items || {}).forEach(([pid, p]) => {
+        const entry = { productId: pid, vendor, name: p.name || '', platform: p.platform || '', pn: p.pn || '' };
+        if (p.pn)      pnMap[p.pn.trim()]           = entry;
+        if (p.barcode) barcodeMap[p.barcode.trim()]  = entry;
+      });
+    });
+
+    const toAdd = [], toUpdate = [], toSkip = [];
+
+    rows.forEach((row, idx) => {
+      const pn      = (row['P/N'] || '').trim();
+      const barcode = (row['國際條碼'] || '').trim();
+      const qtyRaw  = (row['初始庫存'] || '').trim();
+      const note    = (row['備註'] || '').trim();
+
+      if (!pn && !barcode) {
+        toSkip.push({ rowNum: idx + 2, row, reason: '缺少 P/N 與國際條碼' });
+        return;
+      }
+      if (qtyRaw === '' || isNaN(Number(qtyRaw))) {
+        toSkip.push({ rowNum: idx + 2, row, reason: `初始庫存「${qtyRaw}」非數字` });
+        return;
+      }
+
+      const match = (pn && pnMap[pn]) || (barcode && barcodeMap[barcode]) || null;
+      if (!match) {
+        toSkip.push({ rowNum: idx + 2, row, reason: `找不到對應產品：P/N「${pn || '—'}」/ 條碼「${barcode || '—'}」` });
+        return;
+      }
+
+      const { productId, vendor, name, platform } = match;
+      const payload = {
+        initialStock: Number(qtyRaw),
+        note,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (currentInv[productId] !== undefined) {
+        toUpdate.push({ productId, vendor, name, platform, pn: match.pn, payload });
+      } else {
+        toAdd.push({ productId, vendor, name, platform, pn: match.pn, payload });
+      }
+    });
+
+    _importInventoryData = { toAdd, toUpdate, toSkip };
+    _showInventoryImportPreview();
+  } catch(e) {
+    showToast('❌ 讀取失敗：' + e.message);
+  }
+  input.value = '';
+}
+
+function _showInventoryImportPreview() {
+  const { toAdd, toUpdate, toSkip } = _importInventoryData;
+  const total = toAdd.length + toUpdate.length;
+
+  const badge = (n, color, bg, bd, label) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:var(--radius-sm);background:${bg};color:${color};border:1px solid ${bd};font-weight:700;font-size:0.88rem">${label}：${n} 筆</span>`;
+  document.getElementById('import-summary').innerHTML =
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0.8rem">
+      ${badge(toAdd.length,    'var(--green)',  'var(--green-dim)',  'var(--green-b)',  '新增')}
+      ${badge(toUpdate.length, 'var(--accent)', 'var(--accent-dim)', 'var(--accent-b)', '更新')}
+      ${badge(toSkip.length,   'var(--text3)',  'var(--surface2)',   'var(--border)',   '跳過')}
+    </div>
+    ${total === 0 ? '<div style="color:var(--red);font-size:0.88rem">無可匯入資料，請確認 CSV 格式及 P/N 是否存在。</div>' : ''}`;
+
+  const previewRows = [...toAdd, ...toUpdate].slice(0, 8);
+  const tblHtml = previewRows.length ? `
+    <table class="dealer-tbl" style="font-size:0.8rem;min-width:480px">
+      <thead><tr>
+        <th>類型</th><th>代理</th><th>P/N</th><th>品名</th><th>初始庫存</th><th>備註</th>
+      </tr></thead>
+      <tbody>
+        ${previewRows.map(({ vendor, pn, name, payload }) => {
+          const isUpd = toUpdate.some(r => r.pn === pn && r.vendor === vendor);
+          return `<tr>
+            <td><span style="font-size:0.75rem;font-weight:700;padding:1px 7px;border-radius:8px;${isUpd ? 'background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)' : 'background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)'}">${isUpd ? '更新' : '新增'}</span></td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${vendor}</td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${pn}</td>
+            <td>${name}</td>
+            <td style="font-family:var(--mono)">${payload.initialStock}</td>
+            <td style="color:var(--text3)">${payload.note || '—'}</td>
+          </tr>`;
+        }).join('')}
+        ${total > 8 ? `<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:0.78rem;padding:6px">… 還有 ${total - 8} 筆</td></tr>` : ''}
+      </tbody>
+    </table>` : '';
+  document.getElementById('import-preview-wrap').innerHTML = tblHtml;
+
+  const skipHtml = toSkip.length ? `
+    <div style="font-size:0.82rem;color:var(--text3);margin-bottom:4px;font-weight:700">跳過明細（前 5 筆）</div>
+    ${toSkip.slice(0, 5).map(s =>
+      `<div style="font-size:0.8rem;font-family:var(--mono);margin-bottom:2px">Row ${s.rowNum}：${s.reason}</div>`
+    ).join('')}` : '';
+  document.getElementById('import-skip-detail').innerHTML = skipHtml;
+
+  const btn = document.getElementById('import-confirm-btn');
+  if (btn) { btn.disabled = total === 0; btn.onclick = confirmInventoryImport; }
+  document.getElementById('import-modal-title').textContent = '庫存資料匯入預覽';
+  document.getElementById('import-modal').classList.remove('hidden');
+}
+
+async function confirmInventoryImport() {
+  if (!_importInventoryData) return;
+  const { toAdd, toUpdate } = _importInventoryData;
+  const total = toAdd.length + toUpdate.length;
+  if (!total) return;
+  if (!confirm(`確定匯入 ${total} 筆庫存資料？\n新增 ${toAdd.length} 筆 / 更新 ${toUpdate.length} 筆`)) return;
+
+  showToast('寫入中…');
+  try {
+    const updates = {};
+    [...toAdd, ...toUpdate].forEach(({ productId, payload }) => {
+      updates[`inventory/${productId}`] = payload;
+    });
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已匯入 ${total} 筆庫存資料（新增 ${toAdd.length} / 更新 ${toUpdate.length}）`);
+    closeImportModal();
+  } catch(e) {
+    showToast('❌ 匯入失敗：' + e.message);
+  }
+}
+
+// ── 通路資料 CSV 匯入 ────────────────────────────────────────────────────
+
+function importDealersCsvClick() {
+  const fi = document.getElementById('import-dealers-file');
+  if (fi) fi.click();
+}
+
+async function handleDealersCsvFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('分析中…');
+  try {
+    const text = await file.text();
+    const { rows } = _parseCsv(text);
+
+    // salesUsers must already be loaded in _salesCache
+    // dealers already in _dealerCache
+
+    // Build existing code set: code.toUpperCase() → dealerId
+    const existingCodeMap = {};
+    Object.entries(_dealerCache).forEach(([id, d]) => {
+      if (d.code) existingCodeMap[d.code.toUpperCase()] = id;
+    });
+
+    const toAdd = [], toUpdate = [], toSkip = [];
+    const seenDealerIds = new Set();
+    const seenCodes     = new Set();
+
+    rows.forEach((row, idx) => {
+      const dealerId = (row['dealerId'] || '').trim();
+      const name     = (row['name']     || '').trim();
+      const code     = (row['code']     || '').trim().toUpperCase();
+      const salesId  = (row['salesId']  || '').trim();
+      const note     = (row['note']     || '').trim();
+
+      // Parse three-state: active / archived（case-insensitive）
+      const activeRaw   = (row['active']   || 'true').trim().toLowerCase();
+      const archivedRaw = (row['archived'] || 'false').trim().toLowerCase();
+      const isArchived  = archivedRaw === 'true' || archivedRaw === 'yes' || archivedRaw === '1' || archivedRaw === '封存';
+      const isActive    = !isArchived && (activeRaw === 'true' || activeRaw === 'yes' || activeRaw === '1' || activeRaw === '啟用');
+
+      const rowNum = idx + 2;
+
+      // Required fields
+      if (!dealerId || !name || !code || !salesId) {
+        toSkip.push({ rowNum, dealerId, reason: '缺少必填欄位（dealerId / name / code / salesId）' }); return;
+      }
+      // dealerId format
+      if (!/^[a-z0-9_-]+$/.test(dealerId)) {
+        toSkip.push({ rowNum, dealerId, reason: `dealerId「${dealerId}」格式無效（限小寫英數 _-）` }); return;
+      }
+      // CSV 內 dealerId 重複
+      if (seenDealerIds.has(dealerId)) {
+        toSkip.push({ rowNum, dealerId, reason: `CSV 內 dealerId「${dealerId}」重複` }); return;
+      }
+      // salesId 必須存在且未封存
+      if (!_salesCache[salesId]) {
+        toSkip.push({ rowNum, dealerId, reason: `salesId「${salesId}」不存在於業務清單` }); return;
+      }
+      if (_salesCache[salesId].archived === true) {
+        toSkip.push({ rowNum, dealerId, reason: `salesId「${salesId}」已封存，無法指派` }); return;
+      }
+      // CSV 內 code 重複
+      if (seenCodes.has(code)) {
+        toSkip.push({ rowNum, dealerId, reason: `CSV 內 code「${code}」重複` }); return;
+      }
+      // code 與現有其他 dealer 衝突（排除自身更新）
+      const existingOwner = existingCodeMap[code];
+      if (existingOwner && existingOwner !== dealerId) {
+        toSkip.push({ rowNum, dealerId, reason: `code「${code}」已被通路「${existingOwner}」使用` }); return;
+      }
+
+      seenDealerIds.add(dealerId);
+      seenCodes.add(code);
+
+      const salesName = _salesCache[salesId]?.name || salesId;
+      const payload = {
+        name,
+        code,
+        salesId,
+        sales: salesName,   // backward compat
+        active:   isActive,
+        archived: isArchived,
+        note,
+      };
+
+      if (_dealerCache[dealerId] !== undefined) {
+        const oldCode = (_dealerCache[dealerId].code || '').toUpperCase();
+        const codeChanged = oldCode !== code;
+        const willArchive = isArchived && _dealerCache[dealerId].archived !== true;
+        toUpdate.push({ dealerId, payload: { ..._dealerCache[dealerId], ...payload }, codeChanged, oldCode, willArchive });
+      } else {
+        toAdd.push({ dealerId, payload });
+      }
+    });
+
+    _importDealerData = { toAdd, toUpdate, toSkip };
+    _showDealerImportPreview();
+  } catch(e) {
+    showToast('❌ 讀取失敗：' + e.message);
+  }
+  input.value = '';
+}
+
+function _showDealerImportPreview() {
+  const { toAdd, toUpdate, toSkip } = _importDealerData;
+  const total = toAdd.length + toUpdate.length;
+
+  const badge = (n, color, bg, bd, label) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:var(--radius-sm);background:${bg};color:${color};border:1px solid ${bd};font-weight:700;font-size:0.88rem">${label}：${n} 筆</span>`;
+  document.getElementById('import-summary').innerHTML =
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0.8rem">
+      ${badge(toAdd.length,    'var(--green)',  'var(--green-dim)',  'var(--green-b)',  '新增')}
+      ${badge(toUpdate.length, 'var(--accent)', 'var(--accent-dim)', 'var(--accent-b)', '更新')}
+      ${badge(toSkip.length,   'var(--text3)',  'var(--surface2)',   'var(--border)',   '跳過')}
+    </div>
+    ${total === 0 ? '<div style="color:var(--red);font-size:0.88rem">無可匯入資料，請確認 CSV 格式。</div>' : ''}`;
+
+  const previewRows = [...toAdd, ...toUpdate].slice(0, 8);
+  const tblHtml = previewRows.length ? `
+    <table class="dealer-tbl" style="font-size:0.8rem;min-width:520px">
+      <thead><tr>
+        <th>類型</th><th>Dealer ID</th><th>通路名稱</th><th>Code</th><th>業務</th><th>狀態</th>
+      </tr></thead>
+      <tbody>
+        ${previewRows.map(({ dealerId, payload, codeChanged, oldCode, willArchive }) => {
+          const isUpd = toUpdate.some(r => r.dealerId === dealerId);
+          const statusLabel = payload.archived ? '封存' : (payload.active ? '啟用' : '停用');
+          const statusStyle = payload.archived
+            ? 'background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b)'
+            : payload.active
+              ? 'background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)'
+              : 'background:var(--red-dim);color:var(--red);border:1px solid var(--red-b)';
+          const codeCell = codeChanged
+            ? `<span style="font-family:var(--mono);font-size:0.78rem">${payload.code}</span>
+               <div style="font-size:0.72rem;color:var(--amber);margin-top:2px">⚠ 舊 Code：${oldCode}，舊連結將失效</div>`
+            : `<span style="font-family:var(--mono);font-size:0.78rem">${payload.code}</span>`;
+          const statusCell = `<span style="font-size:0.75rem;font-weight:700;padding:1px 7px;border-radius:8px;${statusStyle}">${statusLabel}</span>` +
+            (willArchive ? `<div style="font-size:0.72rem;color:var(--amber);margin-top:2px">⚠ 即將封存，通路連結將失效</div>` : '');
+          return `<tr>
+            <td><span style="font-size:0.75rem;font-weight:700;padding:1px 7px;border-radius:8px;${isUpd ? 'background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)' : 'background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)'}">${isUpd ? '更新' : '新增'}</span></td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${dealerId}</td>
+            <td>${payload.name}</td>
+            <td>${codeCell}</td>
+            <td>${payload.salesId}</td>
+            <td>${statusCell}</td>
+          </tr>`;
+        }).join('')}
+        ${total > 8 ? `<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:0.78rem;padding:6px">… 還有 ${total - 8} 筆</td></tr>` : ''}
+      </tbody>
+    </table>` : '';
+  document.getElementById('import-preview-wrap').innerHTML = tblHtml;
+
+  const skipHtml = toSkip.length ? `
+    <div style="font-size:0.82rem;color:var(--text3);margin-bottom:4px;font-weight:700">跳過明細（前 5 筆）</div>
+    ${toSkip.slice(0, 5).map(s =>
+      `<div style="font-size:0.8rem;font-family:var(--mono);margin-bottom:2px">Row ${s.rowNum}${s.dealerId ? '（' + s.dealerId + '）' : ''}：${s.reason}</div>`
+    ).join('')}` : '';
+  document.getElementById('import-skip-detail').innerHTML = skipHtml;
+
+  const btn = document.getElementById('import-confirm-btn');
+  if (btn) { btn.disabled = total === 0; btn.onclick = confirmDealerImport; }
+  document.getElementById('import-modal-title').textContent = '通路資料匯入預覽';
+  document.getElementById('import-modal').classList.remove('hidden');
+}
+
+async function confirmDealerImport() {
+  if (!_importDealerData) return;
+  const { toAdd, toUpdate } = _importDealerData;
+  const total = toAdd.length + toUpdate.length;
+  if (!total) return;
+  if (!confirm(`確定匯入 ${total} 筆通路資料？\n新增 ${toAdd.length} 筆 / 更新 ${toUpdate.length} 筆`)) return;
+
+  showToast('寫入中…');
+  try {
+    const updates = {};
+    [...toAdd, ...toUpdate].forEach(({ dealerId, payload }) => {
+      updates[`dealers/${dealerId}`] = payload;
+    });
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已匯入 ${total} 筆通路資料（新增 ${toAdd.length} / 更新 ${toUpdate.length}）`);
+    closeImportModal();
+  } catch(e) {
+    showToast('❌ 匯入失敗：' + e.message);
+  }
+}
+
+// ── 帳號權限管理 ────────────────────────────────────────────────────────────
+
+const PWD_ROLES = [
+  { role: 'superadmin', label: 'Super Admin', icon: '🔑' },
+  { role: 'pm',         label: 'PM',          icon: '⚙️' },
+  { role: 'logistics',  label: '後勤',         icon: '📊' },
+];
+const _pwdTimers = {};
+let _pwdCache = {};
+
+async function initPasswordsIfNeeded() {
+  try {
+    const snap = await fbDB.ref('settings/passwords').once('value');
+    const existing = snap.val();
+    if (existing === null) {
+      // 首次：寫入本機 PASSWORDS 常數作為初始值
+      const updates = {};
+      Object.entries(PASSWORDS).forEach(([role, pwd]) => {
+        updates[`settings/passwords/${role}`] = pwd;
+      });
+      await fbDB.ref('/').update(updates);
+      _pwdCache = { ...PASSWORDS };
+      showToast('✅ 密碼已初始化至 Firebase');
+    } else {
+      // 補齊 Firebase 中缺少的角色（不覆蓋既有值）
+      const missing = {};
+      Object.entries(PASSWORDS).forEach(([role, pwd]) => {
+        if (existing[role] == null) missing[`settings/passwords/${role}`] = pwd;
+      });
+      if (Object.keys(missing).length) await fbDB.ref('/').update(missing);
+      _pwdCache = { ...PASSWORDS, ...existing };
+    }
+  } catch (e) {
+    _pwdCache = { ...PASSWORDS }; // Firebase 失敗，fallback 本機常數
+  }
+  renderPwdCards();
+}
+
+function renderPwdCards() {
+  const wrap = document.getElementById('pwd-cards');
+  if (!wrap) return;
+  wrap.innerHTML = PWD_ROLES.map(({ role, label, icon }) => `
+    <div class="data-card">
+      <div class="data-card-hd" style="margin-bottom:1rem">${icon} ${label}</div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">登入密碼</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="password" id="pwd-input-${role}" placeholder="••••••••" readonly
+            autocomplete="off" spellcheck="false"
+            style="flex:1;min-width:0;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-family:var(--mono);font-size:0.9rem;color:var(--text);outline:none">
+          <button id="pwd-eye-${role}" onclick="toggleShowPwd('${role}')"
+            style="background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;cursor:pointer;flex-shrink:0;font-size:1.1rem;line-height:1"
+            title="顯示 / 隱藏密碼">👁</button>
+        </div>
+        <div id="pwd-timer-${role}" style="font-size:0.75rem;color:var(--amber);margin-top:4px;min-height:1.1rem"></div>
+      </div>
+      <button class="btn-sm" id="pwd-reset-${role}" style="width:100%" onclick="resetPassword('${role}')">🔄 重設密碼</button>
+    </div>
+  `).join('');
+}
+
+function toggleShowPwd(role) {
+  const input = document.getElementById(`pwd-input-${role}`);
+  if (!input) return;
+  if (input.type === 'text') { _hidePwd(role); return; }
+  if (!confirm('確定顯示目前密碼？')) return;
+  if (prompt('請輸入 CONFIRM 確認（區分大小寫）') !== 'CONFIRM') return;
+  PWD_ROLES.forEach(({ role: r }) => { if (r !== role) _hidePwd(r); });
+  input.value = _pwdCache[role] || '';
+  input.type = 'text';
+  const eyeBtn = document.getElementById(`pwd-eye-${role}`);
+  if (eyeBtn) { eyeBtn.textContent = '🙈'; eyeBtn.style.borderColor = 'var(--accent)'; }
+  clearTimeout(_pwdTimers[role]);
+  let remaining = 30;
+  const timerEl = document.getElementById(`pwd-timer-${role}`);
+  timerEl.textContent = `${remaining}s 後自動隱藏`;
+  const tick = () => {
+    remaining--;
+    if (remaining <= 0) { _hidePwd(role); }
+    else { timerEl.textContent = `${remaining}s 後自動隱藏`; _pwdTimers[role] = setTimeout(tick, 1000); }
+  };
+  _pwdTimers[role] = setTimeout(tick, 1000);
+}
+
+function _hidePwd(role) {
+  const input = document.getElementById(`pwd-input-${role}`);
+  if (!input) return;
+  input.type = 'password';
+  input.value = '';
+  clearTimeout(_pwdTimers[role]);
+  const timerEl = document.getElementById(`pwd-timer-${role}`);
+  if (timerEl) timerEl.textContent = '';
+  const eyeBtn = document.getElementById(`pwd-eye-${role}`);
+  if (eyeBtn) { eyeBtn.textContent = '👁'; eyeBtn.style.borderColor = ''; }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) PWD_ROLES.forEach(({ role }) => _hidePwd(role));
+});
+
+async function resetPassword(role) {
+  const roleLabel = PWD_ROLES.find(r => r.role === role)?.label || role;
+  const newPwd = prompt(`請輸入「${roleLabel}」的新密碼：`);
+  if (newPwd === null) return; // 使用者取消
+  if (!newPwd.trim()) { alert('密碼不可為空或只含空白'); return; }
+  if (newPwd !== newPwd.trim()) { alert('密碼不可有前後空白'); return; }
+  if (newPwd.trim().length < 4) { alert('密碼至少需要 4 個字元'); return; }
+  if (newPwd === _pwdCache[role]) { alert('新密碼與目前密碼相同，無需更新'); return; }
+  const confirmPwd = prompt('請再次輸入新密碼確認：');
+  if (confirmPwd === null) return;
+  if (newPwd !== confirmPwd) { alert('兩次輸入不一致，已取消'); return; }
+  if (prompt('請輸入 CONFIRM 確認執行（區分大小寫）') !== 'CONFIRM') return;
+  const resetBtn = document.getElementById(`pwd-reset-${role}`);
+  if (resetBtn) { resetBtn.disabled = true; resetBtn.textContent = '更新中…'; }
+  try {
+    await fbDB.ref(`settings/passwords/${role}`).set(newPwd);
+    _pwdCache[role] = newPwd;
+    _hidePwd(role);
+    const sessionNote = role === 'superadmin' ? '，目前 session 不受影響' : '';
+    showToast(`✅ ${roleLabel} 密碼已更新${sessionNote}`);
+  } catch (e) {
+    showToast('❌ 密碼更新失敗：' + e.message);
+  } finally {
+    if (resetBtn) { resetBtn.disabled = false; resetBtn.textContent = '🔄 重設密碼'; }
+  }
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),3000);}

@@ -85,7 +85,7 @@ function selectRole(role, el) {
   document.getElementById('login-btn').classList.remove('hidden');
 }
 
-function doLogin() {
+async function doLogin() {
   document.getElementById('err').classList.add('hidden');
   if (!currentRole) return showErr('請先選擇角色');
   if (currentRole === 'sales') {
@@ -96,7 +96,39 @@ function doLogin() {
     location.href = 'sales.html'; return;
   }
   const pwd = document.getElementById('staff-pwd').value;
-  if (pwd !== PASSWORDS[currentRole]) return showErr('密碼錯誤');
+  if (!pwd) return showErr('請輸入密碼');
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = '驗證中…';
+
+  let expected = PASSWORDS[currentRole];
+  let _fbFailed = false;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    const snap = await Promise.race([
+      db.ref(`settings/passwords/${currentRole}`).once('value'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+    ]);
+    if (snap.val() !== null) expected = snap.val();
+  } catch (e) {
+    _fbFailed = true;
+  }
+
+  const errEl = document.getElementById('err');
+  if (_fbFailed) {
+    errEl.style.color = '#d97706';
+    errEl.textContent = '⚠ Firebase 無法連線，已使用本機 fallback 驗證';
+    errEl.classList.remove('hidden');
+  }
+
+  if (pwd !== expected) {
+    btn.disabled = false;
+    btn.textContent = '進入系統 →';
+    errEl.style.color = '';
+    return showErr('密碼錯誤');
+  }
   sessionStorage.setItem('role', currentRole);
   const pages = { logistics:'logistics.html', pm:'pm.html', superadmin:'superadmin.html' };
   location.href = pages[currentRole];
