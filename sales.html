@@ -121,7 +121,7 @@ tr:hover td{background:var(--surface2)}
 
 <script src="firebase.js"></script>
 <script>
-let fbDB, mySales='', products={}, dealers={}, orders={}, replenishments={}, allocations={}, inventory={};
+let fbDB, mySales='', products={}, dealers={}, orders={}, replenishments={}, allocations={}, inventory={}, _vendorOwnerCache={};
 let myDealerIds=[], _salesDealer='', _salesVendor='';
 
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -141,18 +141,25 @@ window.addEventListener('DOMContentLoaded',async()=>{
     ]);
     products=pSnap.val()||{}; dealers=dSnap.val()||DEFAULT_DEALERS;
     orders=oSnap.val()||{}; replenishments=rSnap.val()||{}; allocations=aSnap.val()||{}; inventory=iSnap.val()||{};
-    myDealerIds=Object.entries(dealers).filter(([,d])=>d.sales===mySales).map(([id])=>id);
+    const mySalesId = sessionStorage.getItem('salesId') || '';
+    myDealerIds = Object.entries(dealers)
+      .filter(([,d]) => d.archived !== true && d.active !== false)
+      .filter(([,d]) => (mySalesId && d.salesId === mySalesId) || d.sales === mySales)
+      .map(([id]) => id);
     buildDealerTabs();
     fbDB.ref('window/week').once('value').then(ws=>{const wk=ws.val()||'current';fbDB.ref(`orders/${wk}`).on('value',s=>{orders=s.val()||{};render();});});
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};render();});
     fbDB.ref('window/week').once('value').then(ws=>{const wk=ws.val()||'current';fbDB.ref(`allocations/${wk}`).on('value',s=>{allocations=s.val()||{};render();});});
     fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};render();});
+    fbDB.ref('settings/vendorOwners').on('value',s=>{_vendorOwnerCache=s.val()||{};});
     render();
     document.getElementById('loading-screen').classList.add('hidden');
   }catch(err){
     document.getElementById('loading-screen').innerHTML='<div style="text-align:center;color:#dc2626;padding:2rem"><div style="font-size:3rem">⚠️</div><div style="margin-top:1rem;font-weight:600">'+err.message+'</div></div>';
   }
 });
+
+function vendorLabel(v) { return _vendorOwnerCache?.[v]?.displayName || (v === 'GS' ? 'GSE' : v); }
 
 function getAllProds(){
   const rows=[];
@@ -276,7 +283,7 @@ function renderReplenishments(){
       </div>`;
     }).join('');
     return `<tr>
-      <td style="font-size:0.78rem;font-weight:700">${r.vendor==='GS'?'GSE':r.vendor}</td>
+      <td style="font-size:0.78rem;font-weight:700">${vendorLabel(r.vendor)}</td>
       <td><span class="platform-tag ${r.p.platform}">${r.p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.88rem">${r.p.name}</div>

@@ -119,11 +119,11 @@ tr:hover td{background:var(--surface2)}
       <h3>＋ 新增品項</h3>
       <div class="form-grid">
         <div class="fg"><label>代理商</label>
-          <select id="np-vendor"><option value="BNE">BNE（萬代南夢宮）</option><option value="GS">GSE（Game Source）</option><option value="SONY">SONY</option></select></div>
+          <select id="np-vendor" onchange="onVendorChange(this.value)"></select></div>
         <div class="fg"><label>平台</label>
-          <select id="np-platform"><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select></div>
+          <select id="np-platform"></select></div>
         <div class="fg"><label>類型</label>
-          <select id="np-category"><option>軟體</option><option>主機</option><option>周邊</option><option>女性向</option><option>誠翼</option><option>OLP</option><option>PS4 HITS</option><option>SEGA</option><option>VR</option></select></div>
+          <select id="np-category"></select></div>
         <div class="fg"><label>AGBS P/N</label><input id="np-pn" placeholder="ZL.A00TZ.XXX"></div>
         <div class="fg"><label>國際條碼 (EAN)</label><input id="np-barcode"></div>
         <div class="fg" style="grid-column:1/-1"><label>中文品名 *</label><input id="np-name"></div>
@@ -132,23 +132,16 @@ tr:hover td{background:var(--surface2)}
         <div class="fg"><label>出貨價（含稅）</label><input id="np-special" type="number"></div>
         <div class="fg"><label>MOQ</label><input id="np-moq" type="number" placeholder="0"></div>
         <div class="fg"><label>貨物狀態</label>
-          <select id="np-status">
-            <option value="">— 未設定</option><option value="instock">現貨</option>
-            <option value="preorder">追加中</option><option value="clearance">出清</option>
-            <option value="unavailable">停止供應</option>
-          </select></div>
+          <select id="np-status"></select></div>
         <div class="fg"><label>促銷標籤</label>
           <select id="np-tag"></select></div>
       </div>
       <button class="btn-primary" onclick="addProduct()">＋ 新增品項</button>
     </div>
 
-    <!-- 代理商 Tab -->
-    <div class="prod-vendor-tabs">
+    <!-- 代理商 Tab（動態由 populateVendorTabs() 產生） -->
+    <div class="prod-vendor-tabs" id="prod-vendor-tabs">
       <button class="prod-vtab active" onclick="setProdVendor('',this)">全部<span class="prod-vtab-badge" id="pvbadge-all">—</span></button>
-      <button class="prod-vtab" onclick="setProdVendor('BNE',this)">BNE<span class="prod-vtab-badge" id="pvbadge-BNE">—</span></button>
-      <button class="prod-vtab" onclick="setProdVendor('GS',this)">GSE<span class="prod-vtab-badge" id="pvbadge-GS">—</span></button>
-      <button class="prod-vtab" onclick="setProdVendor('SONY',this)">SONY<span class="prod-vtab-badge" id="pvbadge-SONY">—</span></button>
     </div>
 
     <div class="tbl-wrap" style="overflow-x:auto;border-top:none;border-radius:0 0 var(--radius) var(--radius)">
@@ -196,7 +189,7 @@ tr:hover td{background:var(--surface2)}
     </div>
 
     <div class="filter-bar">
-      <select class="filter-select" id="rep-vendor" onchange="renderReplenishment()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="rep-vendor" onchange="renderReplenishment()"><option value="">全部代理商</option></select>
       <select class="filter-select" id="rep-status" onchange="renderReplenishment()">
         <option value="">全部狀態</option>
         <option value="pending">待下單</option>
@@ -259,20 +252,16 @@ tr:hover td{background:var(--surface2)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="fg" style="grid-column:1/-1"><label>中文品名</label><input id="ep-name"></div>
       <div class="fg"><label>平台</label>
-        <select id="ep-platform"><option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option></select></div>
+        <select id="ep-platform"></select></div>
       <div class="fg"><label>類型</label>
-        <select id="ep-category"><option>軟體</option><option>主機</option><option>周邊</option><option>女性向</option><option>誠翼</option><option>OLP</option><option>PS4 HITS</option><option>SEGA</option><option>VR</option></select></div>
+        <select id="ep-category"></select></div>
       <div class="fg"><label>AGBS P/N</label><input id="ep-pn"></div>
       <div class="fg"><label>國際條碼</label><input id="ep-barcode"></div>
       <div class="fg"><label>SRP（含稅）</label><input id="ep-srp" type="number"></div>
       <div class="fg"><label>出貨價（未稅）</label><input id="ep-price" type="number"></div>
       <div class="fg"><label>MOQ</label><input id="ep-moq" type="number"></div>
       <div class="fg"><label>貨物狀態</label>
-        <select id="ep-status">
-          <option value="">— 未設定</option><option value="instock">現貨</option>
-          <option value="preorder">追加中</option><option value="clearance">出清</option>
-          <option value="unavailable">停止供應</option>
-        </select></div>
+        <select id="ep-status"></select></div>
       <div class="fg"><label>到貨日</label><input id="ep-arrival" placeholder="2025/7/24"></div>
       <div class="fg"><label>促銷標籤</label>
         <select id="ep-tag"></select></div>
@@ -291,7 +280,7 @@ tr:hover td{background:var(--surface2)}
 <script>
 let fbDB, products={}, replenishments={}, orders={}, currentWeek='', inventory={};
 let _prodVendor='', _prodPlatform='';
-let priceTags=['特價','庫存出清','買1送1','附贈品','價格調整'];
+let _productOptions={}, _vendorOwnerCache={};
 let activeTab='products', _editVendor='', _editPid='', _repPid='', _repVendor='';
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -299,22 +288,26 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
-    const [pSnap,rSnap,oSnap,raSnap,wkSnap,iSnap,ptSnap]=await Promise.all([
+    const [pSnap,rSnap,oSnap,raSnap,wkSnap,iSnap,poSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('replenishments').once('value'),
       fbDB.ref('orders').once('value'),
       fbDB.ref('replenishmentArrivals').once('value'),
       fbDB.ref('window/week').once('value'),
       fbDB.ref('inventory').once('value'),
-      fbDB.ref('settings/productOptions/priceTags').once('value'),
+      fbDB.ref('settings/productOptions').once('value'),
     ]);
     products=pSnap.val()||{}; replenishments=rSnap.val()||{}; orders=oSnap.val()||{}; const replenishmentArrivals=raSnap.val()||{}; currentWeek=wkSnap.val()||''; inventory=iSnap.val()||{};
-    const ptVal=ptSnap.val(); if(Array.isArray(ptVal)&&ptVal.length) priceTags=ptVal;
-    buildPriceTagSelects();
+    _productOptions=poSnap.val()||{};
+    buildProductOptionSelects();
     fbDB.ref('replenishments').on('value',s=>{replenishments=s.val()||{};if(activeTab==='replenishment')renderReplenishment();else if(activeTab==='products')renderProducts();});
     fbDB.ref('products').on('value',s=>{products=s.val()||{};if(activeTab==='products')renderProducts();});
     fbDB.ref('orders').on('value',s=>{orders=s.val()||{};if(activeTab==='products')renderProducts();});
-    fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};if(activeTab==='products')renderProducts();});;
+    fbDB.ref('inventory').on('value',s=>{inventory=s.val()||{};if(activeTab==='products')renderProducts();});
+    fbDB.ref('settings/productOptions').on('value',s=>{_productOptions=s.val()||{};buildProductOptionSelects();});
+    fbDB.ref('settings/vendorOwners').on('value',s=>{_vendorOwnerCache=s.val()||{};buildProductOptionSelects();populateVendorTabs();populateRepVendorFilter();});
+    populateVendorTabs();
+    populateRepVendorFilter();
     renderProducts();
     document.getElementById('loading-screen').classList.add('hidden');
   } catch(err) {
@@ -336,9 +329,88 @@ function getAllProds() {
   return rows;
 }
 
-function buildPriceTagSelects() {
-  const opts='<option value="">— 無</option>'+priceTags.map(t=>`<option value="${t}">${t}</option>`).join('');
-  ['np-tag','ep-tag'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+function buildProductOptionSelects() {
+  // vendors: source of truth = settings/vendorOwners (NOT productOptions)
+  const _vendorFallback='<option value="BNE">BNE（萬代南夢宮）</option><option value="GS">GSE</option><option value="SONY">SONY</option>';
+  const voEntries=Object.entries(_vendorOwnerCache).filter(([,v])=>v.active!==false&&v.archived!==true).sort((a,b)=>(a[1].displayOrder||99)-(b[1].displayOrder||99));
+  const vendorOpts=voEntries.length ? voEntries.map(([k,v])=>`<option value="${k}">${v.displayName||k}</option>`).join('') : _vendorFallback;
+  const npVendorEl=document.getElementById('np-vendor');
+  if(npVendorEl) npVendorEl.innerHTML=vendorOpts;
+
+  // statuses: value = key (instock, preorder…), prepend "— 未設定"
+  const _statusFallback='<option value="">— 未設定</option><option value="instock">現貨</option><option value="preorder">追加中</option><option value="clearance">出清</option><option value="unavailable">停止供應</option>';
+  const statusesRaw=_productOptions.statuses;
+  let statusOpts=_statusFallback;
+  if(statusesRaw&&!Array.isArray(statusesRaw)){
+    const entries=Object.entries(statusesRaw).filter(([,o])=>o.active!==false&&o.archived!==true).sort((a,b)=>(a[1].displayOrder||99)-(b[1].displayOrder||99));
+    if(entries.length) statusOpts='<option value="">— 未設定</option>'+entries.map(([k,o])=>`<option value="${k}">${o.label||k}</option>`).join('');
+  }
+  ['np-status','ep-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=statusOpts;});
+
+  // priceTags: value = label, backward-compatible with legacy array format
+  const _tagFallback='<option value="">— 無</option><option>特價</option><option>庫存出清</option><option>買1送1</option><option>附贈品</option><option>價格調整</option>';
+  const tagsRaw=_productOptions.priceTags;
+  let tagOpts=_tagFallback;
+  if(Array.isArray(tagsRaw)&&tagsRaw.length){
+    tagOpts='<option value="">— 無</option>'+tagsRaw.map(t=>`<option value="${t}">${t}</option>`).join('');
+  } else if(tagsRaw&&!Array.isArray(tagsRaw)){
+    const entries=Object.entries(tagsRaw).filter(([,o])=>o.active!==false&&o.archived!==true).sort((a,b)=>(a[1].displayOrder||99)-(b[1].displayOrder||99));
+    if(entries.length) tagOpts='<option value="">— 無</option>'+entries.map(([,o])=>`<option value="${o.label||''}">${o.label||''}</option>`).join('');
+  }
+  ['np-tag','ep-tag'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=tagOpts;});
+
+  // np-platform / np-category driven by vendor selection
+  onVendorChange(npVendorEl ? npVendorEl.value : '');
+}
+
+function _buildPlatformOpts(vendorKey, currentValue) {
+  const vo=_vendorOwnerCache[vendorKey]||{};
+  const allowed=vo.allowedPlatforms||null;
+  const raw=_productOptions.platforms||{};
+  const _fallback='<option>NS</option><option>NS2</option><option>PS5</option><option>PS4</option><option>VR</option>';
+  let entries=[];
+  if(raw&&!Array.isArray(raw)){
+    entries=Object.entries(raw)
+      .filter(([k,o])=>o.active!==false&&o.archived!==true&&(!allowed||allowed[k]===true))
+      .sort((a,b)=>(a[1].displayOrder||99)-(b[1].displayOrder||99));
+  }
+  if(!entries.length) return _fallback;
+  let opts=entries.map(([,o])=>`<option value="${o.label||''}">${o.label||''}</option>`).join('');
+  if(currentValue&&!entries.some(([,o])=>o.label===currentValue)){
+    opts=`<option value="${currentValue}" disabled selected>[舊資料] ${currentValue}</option>`+opts;
+  }
+  return opts;
+}
+
+function _buildCategoryOpts(vendorKey, currentValue) {
+  const vo=_vendorOwnerCache[vendorKey]||{};
+  const allowed=vo.allowedCategories||null;
+  const raw=_productOptions.categories||{};
+  const _fallback='<option>軟體</option><option>主機</option><option>周邊</option><option>女性向</option><option>誠翼</option><option>OLP</option><option>PS4 HITS</option><option>SEGA</option><option>VR</option>';
+  let entries=[];
+  if(raw&&!Array.isArray(raw)){
+    entries=Object.entries(raw)
+      .filter(([k,o])=>o.active!==false&&o.archived!==true&&(!allowed||allowed[k]===true))
+      .sort((a,b)=>(a[1].displayOrder||99)-(b[1].displayOrder||99));
+  }
+  if(!entries.length) return _fallback;
+  let opts=entries.map(([,o])=>`<option value="${o.label||''}">${o.label||''}</option>`).join('');
+  if(currentValue&&!entries.some(([,o])=>o.label===currentValue)){
+    opts=`<option value="${currentValue}" disabled selected>[舊資料] ${currentValue}</option>`+opts;
+  }
+  return opts;
+}
+
+function onVendorChange(vendorKey) {
+  const pSel=document.getElementById('np-platform');
+  const cSel=document.getElementById('np-category');
+  if(!pSel||!cSel) return;
+  const prevP=pSel.value, prevC=cSel.value;
+  pSel.innerHTML=_buildPlatformOpts(vendorKey, null);
+  cSel.innerHTML=_buildCategoryOpts(vendorKey, null);
+  // Restore previous value only if still present in new options
+  if(prevP&&[...pSel.options].some(o=>o.value===prevP)) pSel.value=prevP;
+  if(prevC&&[...cSel.options].some(o=>o.value===prevC)) cSel.value=prevC;
 }
 
 function getTotalDemand(pid) {
@@ -359,11 +431,36 @@ function setProdPlatform(p, el) {
   el.classList.add('active');
   renderProducts();
 }
+function vendorLabel(v) { return _vendorOwnerCache?.[v]?.displayName || (v === 'GS' ? 'GSE' : v); }
+
+function populateVendorTabs() {
+  const container = document.getElementById('prod-vendor-tabs');
+  if (!container) return;
+  container.querySelectorAll('.prod-vtab:not(:first-child)').forEach(b => b.remove());
+  const _vList = Object.keys(products || {});
+  (_vList.length > 0 ? _vList.sort() : ['BNE','GS','SONY']).forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'prod-vtab';
+    btn.innerHTML = `${vendorLabel(v)}<span class="prod-vtab-badge" id="pvbadge-${v}">—</span>`;
+    btn.onclick = function() { setProdVendor(v, this); };
+    container.appendChild(btn);
+  });
+}
+
+function populateRepVendorFilter() {
+  const sel = document.getElementById('rep-vendor');
+  if (!sel) return;
+  const _vList = Object.keys(products || {});
+  const _vendors = _vList.length > 0 ? _vList.sort() : ['BNE','GS','SONY'];
+  sel.innerHTML = '<option value="">全部代理商</option>' +
+    _vendors.map(v => `<option value="${v}">${vendorLabel(v)}</option>`).join('');
+}
+
 function updateProdTabBadges() {
   const all=getAllProds();
   const byVendor=_prodVendor?all.filter(p=>p.vendor===_prodVendor):all;
   document.getElementById('pvbadge-all').textContent=all.length;
-  ['BNE','GS','SONY'].forEach(v=>{const el=document.getElementById('pvbadge-'+v);if(el)el.textContent=all.filter(p=>p.vendor===v).length;});
+  Object.keys(products).forEach(v=>{const el=document.getElementById('pvbadge-'+v);if(el)el.textContent=all.filter(p=>p.vendor===v).length;});
   document.getElementById('psbadge-all').textContent=byVendor.length;
   ['NS','NS2','PS5','PS4','VR'].forEach(pl=>{const el=document.getElementById('psbadge-'+pl);if(el)el.textContent=byVendor.filter(p=>p.platform===pl).length;});
 }
@@ -485,7 +582,7 @@ function renderReplenishment() {
     }).join('');
 
     return `<tr>
-      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td style="font-size:0.78rem;font-weight:700">${vendorLabel(p.vendor)}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
@@ -612,9 +709,12 @@ function openEditModal(vendor, pid) {
   let p=(products[vendor]||{})[pid];
   if(!p){for(const[v,ps]of Object.entries(products)){if(ps[pid]){p=ps[pid];_editVendor=v;break;}}}
   if(!p){showToast('找不到品項');return;}
+  // Rebuild options filtered by vendor BEFORE assigning values
+  document.getElementById('ep-platform').innerHTML=_buildPlatformOpts(_editVendor, p.platform||'');
+  document.getElementById('ep-category').innerHTML=_buildCategoryOpts(_editVendor, p.category||'');
   document.getElementById('ep-name').value=p.name||'';
-  document.getElementById('ep-platform').value=p.platform||'NS';
-  document.getElementById('ep-category').value=p.category||'軟體';
+  document.getElementById('ep-platform').value=p.platform||'';
+  document.getElementById('ep-category').value=p.category||'';
   document.getElementById('ep-pn').value=p.pn&&p.pn!=='—'?p.pn:'';
   document.getElementById('ep-barcode').value=p.barcode||'';
   document.getElementById('ep-srp').value=p.srp||0;

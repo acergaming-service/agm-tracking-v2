@@ -58,9 +58,6 @@ body{font-family:var(--font);background:var(--bg);min-height:100vh;display:flex;
     <div class="form-group"><label>選擇業務帳號</label>
       <select id="sales-select">
         <option value="">— 請選擇 —</option>
-        <option>Edward</option><option>Wythe</option><option>Eric</option>
-        <option>Hsinhui</option><option>AKI</option><option>Tom</option>
-        <option>Mickey</option><option>Meg</option>
       </select>
     </div>
   </div>
@@ -80,8 +77,12 @@ function selectRole(role, el) {
   document.getElementById('form-staff').classList.add('hidden');
   document.getElementById('form-sales').classList.add('hidden');
   document.getElementById('err').classList.add('hidden');
-  if (role === 'sales') document.getElementById('form-sales').classList.remove('hidden');
-  else document.getElementById('form-staff').classList.remove('hidden');
+  if (role === 'sales') {
+    document.getElementById('form-sales').classList.remove('hidden');
+    loadSalesOptions();
+  } else {
+    document.getElementById('form-staff').classList.remove('hidden');
+  }
   document.getElementById('login-btn').classList.remove('hidden');
 }
 
@@ -89,10 +90,13 @@ async function doLogin() {
   document.getElementById('err').classList.add('hidden');
   if (!currentRole) return showErr('請先選擇角色');
   if (currentRole === 'sales') {
-    const v = document.getElementById('sales-select').value;
-    if (!v) return showErr('請選擇業務帳號');
+    const sel = document.getElementById('sales-select');
+    const salesId = sel.value;
+    if (!salesId) return showErr('請選擇業務帳號');
+    const displayName = sel.options[sel.selectedIndex]?.text || salesId;
     sessionStorage.setItem('role', 'sales');
-    sessionStorage.setItem('sales', v);
+    sessionStorage.setItem('sales', displayName); // display name，供 sales.html nav 顯示
+    sessionStorage.setItem('salesId', salesId);   // salesId，供 dealer 過濾
     location.href = 'sales.html'; return;
   }
   const pwd = document.getElementById('staff-pwd').value;
@@ -132,6 +136,40 @@ async function doLogin() {
   sessionStorage.setItem('role', currentRole);
   const pages = { logistics:'logistics.html', pm:'pm.html', superadmin:'superadmin.html' };
   location.href = pages[currentRole];
+}
+
+function _setSalesFallback(sel) {
+  sel.innerHTML = '<option value="">— 請選擇 —</option>' +
+    SALES_LIST.map(name => `<option value="${name}">${name}</option>`).join('');
+  sel.disabled = false;
+}
+
+async function loadSalesOptions() {
+  const sel = document.getElementById('sales-select');
+  sel.innerHTML = '<option value="">載入中…</option>';
+  sel.disabled = true;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    const snap = await Promise.race([
+      db.ref('settings/salesUsers').once('value'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+    ]);
+    const salesUsers = snap.val();
+    if (!salesUsers) { _setSalesFallback(sel); return; }
+    const active = Object.entries(salesUsers)
+      .filter(([, u]) => u.active !== false && u.archived !== true)
+      .sort((a, b) => (a[1].name || a[0]).localeCompare(b[1].name || b[0]));
+    if (active.length === 0) {
+      sel.innerHTML = '<option value="">目前沒有可用業務帳號</option>';
+      return; // keep disabled
+    }
+    sel.innerHTML = '<option value="">— 請選擇 —</option>' +
+      active.map(([id, u]) => `<option value="${id}">${u.name || id}</option>`).join('');
+    sel.disabled = false;
+  } catch (e) {
+    _setSalesFallback(sel);
+  }
 }
 
 function showErr(msg) { const e=document.getElementById('err'); e.textContent=msg; e.classList.remove('hidden'); }

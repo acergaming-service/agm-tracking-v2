@@ -68,8 +68,8 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
 .data-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:1.2rem;box-shadow:var(--shadow)}
 .data-card-hd{font-size:0.88rem;font-weight:700;color:var(--text2);margin-bottom:0.5rem;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .data-card-sub{font-size:0.75rem;color:var(--text3);margin-bottom:0.8rem}
-.pwd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
-@media(max-width:700px){.pwd-grid{grid-template-columns:1fr}}
+.pwd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
+.pwd-card{display:flex;flex-direction:column}
 </style>
 </head>
 <body>
@@ -89,6 +89,7 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
   <button class="tab-btn" data-tab="data" onclick="switchTab('data')">資料匯入 / 匯出</button>
   <button class="tab-btn" data-tab="ops" onclick="switchTab('ops')">維運工具</button>
   <button class="tab-btn" data-tab="pwd" onclick="switchTab('pwd')">帳號權限管理</button>
+  <button class="tab-btn" data-tab="lines" onclick="switchTab('lines')">品牌 / PM / 產品選項</button>
 </div>
 
 <!-- ─── Tab 1: 系統狀態 ─── -->
@@ -289,6 +290,156 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
   </div>
 </div>
 
+<!-- ─── Tab 6: 品牌 / PM / 產品選項 ─── -->
+<div class="tab-content" id="tab-lines">
+  <div class="container">
+    <div class="section">
+      <h3>👤 PM 主檔</h3>
+      <p style="margin-bottom:1rem;color:var(--text2);font-size:0.9rem">管理 PM 人員主檔，用於品牌 ownership 標記。Phase 1 不控制登入權限。</p>
+      <div style="margin-bottom:1rem">
+        <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;padding:8px 16px" onclick="openAddPmModal()">＋ 新增 PM</button>
+      </div>
+      <div id="pm-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
+    </div>
+    <div class="section">
+      <h3>🏷️ 品牌 / Vendor Ownership</h3>
+      <p style="margin-bottom:1rem;color:var(--text2);font-size:0.9rem">定義各品牌（上游代理商）的負責 PM。Vendor key 對應 Firebase products/ 路徑，GS 不存 GSE。</p>
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+        <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;padding:8px 16px" onclick="openAddVendorOwnerModal()">＋ 新增品牌</button>
+        <button class="btn-sm" onclick="seedVendorOwners()">⚙ 初始化預設品牌</button>
+      </div>
+      <div id="vendor-owner-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
+    </div>
+    <div class="section">
+      <h3>⚙️ 產品選項主檔</h3>
+      <p style="margin-bottom:1rem;color:var(--text2);font-size:0.9rem">管理 PM 新增 / 編輯品項時的下拉選單。</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem">
+        <button class="btn-sm" style="border-color:var(--accent);color:var(--accent)" id="opt-tab-platforms" onclick="switchOptType('platforms',this)">平台</button>
+        <button class="btn-sm" id="opt-tab-categories"  onclick="switchOptType('categories',this)">類型</button>
+        <button class="btn-sm" id="opt-tab-statuses"    onclick="switchOptType('statuses',this)">貨物狀態</button>
+        <button class="btn-sm" id="opt-tab-priceTags"   onclick="switchOptType('priceTags',this)">促銷標籤</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center">
+        <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;padding:8px 16px" onclick="openAddOptionModal()">＋ 新增</button>
+        <button class="btn-sm" onclick="seedProductOptions()">⚙ 初始化預設選項</button>
+      </div>
+      <div id="opt-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PM Modal ─── -->
+<div class="modal-overlay hidden" id="pm-modal" onclick="if(event.target===this)closePmModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <span id="pm-modal-title">新增 PM</span>
+      <button class="btn-xs" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 9px" onclick="closePmModal()">✕</button>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">PM ID *</span>
+      <input class="dealer-input" id="pm-modal-id" placeholder="例：alice（留空則由名稱自動產生）" autocomplete="off">
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">小寫英數字與 -，儲存後不可修改</div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">顯示名稱 *</span>
+      <input class="dealer-input" id="pm-modal-name" placeholder="例：Alice" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <span class="lbl">備註</span>
+      <input class="dealer-input" id="pm-modal-note" placeholder="選填" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closePmModal()">取消</button>
+      <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0" onclick="savePmUser()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Vendor Owner Modal ─── -->
+<div class="modal-overlay hidden" id="vendor-owner-modal" onclick="if(event.target===this)closeVendorOwnerModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <span id="vo-modal-title">新增品牌</span>
+      <button class="btn-xs" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 9px" onclick="closeVendorOwnerModal()">✕</button>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">Vendor Key *</span>
+      <input class="dealer-input" id="vo-modal-key" placeholder="例：BNE / GS / SONY / PLAYSEAT / NLR" autocomplete="off" style="text-transform:uppercase">
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">大寫英數，GS 不要填 GSE。儲存後不可修改。</div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">顯示名稱</span>
+      <input class="dealer-input" id="vo-modal-name" placeholder="例：GSE（Game Source）" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <span class="lbl">負責 PM</span>
+      <select class="dealer-input" id="vo-modal-pm" style="cursor:pointer">
+        <option value="">— 未指定 —</option>
+      </select>
+    </div>
+    <div class="modal-field" style="display:flex;gap:1rem">
+      <div style="flex:1">
+        <span class="lbl">排序</span>
+        <input class="dealer-input" id="vo-modal-order" type="number" min="0" placeholder="0" autocomplete="off">
+      </div>
+      <div style="flex:1">
+        <span class="lbl">顏色</span>
+        <input class="dealer-input" id="vo-modal-color" type="color" value="#1d6ef5" style="height:40px;padding:2px 6px;cursor:pointer">
+      </div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">備註</span>
+      <input class="dealer-input" id="vo-modal-note" placeholder="選填" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <span class="lbl">可用平台 <span style="font-size:0.72rem;color:var(--text3);font-weight:400">（全未勾 = 全部 active 平台）</span></span>
+      <div id="vo-platform-checks" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:38px"></div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">可用類型 <span style="font-size:0.72rem;color:var(--text3);font-weight:400">（全未勾 = 全部 active 類型）</span></span>
+      <div id="vo-category-checks" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:38px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeVendorOwnerModal()">取消</button>
+      <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0" onclick="saveVendorOwner()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Product Option Modal ─── -->
+<div class="modal-overlay hidden" id="option-modal" onclick="if(event.target===this)closeOptionModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <span id="opt-modal-title">新增選項</span>
+      <button class="btn-xs" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 9px" onclick="closeOptionModal()">✕</button>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">Key *</span>
+      <input class="dealer-input" id="opt-modal-key" placeholder="建議留空，自動產生系統 KEY" autocomplete="off">
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">小寫英數字與 -，儲存後不可修改</div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">顯示名稱 (Label) *</span>
+      <input class="dealer-input" id="opt-modal-label" placeholder="例：NS" autocomplete="off">
+    </div>
+    <div class="modal-field" style="display:flex;gap:1rem">
+      <div style="flex:1">
+        <span class="lbl">排序</span>
+        <input class="dealer-input" id="opt-modal-order" type="number" min="0" placeholder="0" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-field">
+      <span class="lbl">備註</span>
+      <input class="dealer-input" id="opt-modal-note" placeholder="選填" autocomplete="off">
+    </div>
+    <input type="hidden" id="opt-modal-type">
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeOptionModal()">取消</button>
+      <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0" onclick="saveProductOption()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── Dealer Edit Modal ─── -->
 <div class="modal-overlay hidden" id="dealer-modal" onclick="modalOverlayClick(event)">
   <div class="modal" id="dealer-modal-box">
@@ -364,6 +515,7 @@ const PROJECT_INFO = {
 };
 
 let fbDB, _orphanRaKeys=[], _showArchived=false, _editingDealerId=null, _importProductData=null, _importInventoryData=null, _importDealerData=null;
+let _pmCache={}, _vendorOwnerCache={}, _productOptionCache={}, _productCache={}, _knownVendors=[], _editPmId=null, _editVendorKey=null, _editOptionType=null, _editOptionKey=null, _currentOptType='platforms';
 
 function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
@@ -379,6 +531,14 @@ window.addEventListener('DOMContentLoaded',async()=>{
   _renderSysInfo();
   loadDealerMgmt();
   initPasswordsIfNeeded();
+  loadPmUsers();
+  loadVendorOwners();
+  loadProductOptions();
+  fbDB.ref('products').on('value', snap => {
+    _productCache = snap.val() || {};
+    _knownVendors = Object.keys(_productCache).sort();
+    renderVendorOwners();
+  });
 });
 
 function _renderSysInfo() {
@@ -1370,7 +1530,6 @@ async function handleProductsCsvFile(input) {
         isAllocation: false,
         giftItem:     '',
       };
-
       if (currentProds[vendor]?.[productId]) {
         toUpdate.push({ vendor, productId, payload });
       } else {
@@ -1849,21 +2008,28 @@ function renderPwdCards() {
   const wrap = document.getElementById('pwd-cards');
   if (!wrap) return;
   wrap.innerHTML = PWD_ROLES.map(({ role, label, icon }) => `
-    <div class="data-card">
+    <div class="data-card pwd-card">
       <div class="data-card-hd" style="margin-bottom:1rem">${icon} ${label}</div>
-      <div style="margin-bottom:1rem">
+      <div style="margin-bottom:0.75rem">
         <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">登入密碼</div>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:stretch">
           <input type="password" id="pwd-input-${role}" placeholder="••••••••" readonly
             autocomplete="off" spellcheck="false"
             style="flex:1;min-width:0;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-family:var(--mono);font-size:0.9rem;color:var(--text);outline:none">
           <button id="pwd-eye-${role}" onclick="toggleShowPwd('${role}')"
-            style="background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;cursor:pointer;flex-shrink:0;font-size:1.1rem;line-height:1"
+            style="background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;cursor:pointer;flex-shrink:0;font-size:1.1rem;line-height:1"
             title="顯示 / 隱藏密碼">👁</button>
         </div>
         <div id="pwd-timer-${role}" style="font-size:0.75rem;color:var(--amber);margin-top:4px;min-height:1.1rem"></div>
       </div>
-      <button class="btn-sm" id="pwd-reset-${role}" style="width:100%" onclick="resetPassword('${role}')">🔄 重設密碼</button>
+      <div style="border-top:1px solid var(--border);padding-top:0.75rem;margin-top:auto">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">重設密碼</div>
+        <input type="password" id="pwd-new-${role}" placeholder="新密碼" autocomplete="new-password" spellcheck="false"
+          style="width:100%;border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-family:var(--mono);font-size:0.88rem;color:var(--text);outline:none;background:#fff;margin-bottom:6px">
+        <input type="password" id="pwd-confirm-${role}" placeholder="確認新密碼" autocomplete="new-password" spellcheck="false"
+          style="width:100%;border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-family:var(--mono);font-size:0.88rem;color:var(--text);outline:none;background:#fff;margin-bottom:8px">
+        <button class="btn-sm" id="pwd-reset-${role}" style="width:100%" onclick="resetPassword('${role}')">🔄 重設密碼</button>
+      </div>
     </div>
   `).join('');
 }
@@ -1872,21 +2038,21 @@ function toggleShowPwd(role) {
   const input = document.getElementById(`pwd-input-${role}`);
   if (!input) return;
   if (input.type === 'text') { _hidePwd(role); return; }
-  if (!confirm('確定顯示目前密碼？')) return;
-  if (prompt('請輸入 CONFIRM 確認（區分大小寫）') !== 'CONFIRM') return;
   PWD_ROLES.forEach(({ role: r }) => { if (r !== role) _hidePwd(r); });
   input.value = _pwdCache[role] || '';
   input.type = 'text';
+  input.style.background = 'var(--accent-dim)';
+  input.style.borderColor = 'var(--accent)';
   const eyeBtn = document.getElementById(`pwd-eye-${role}`);
-  if (eyeBtn) { eyeBtn.textContent = '🙈'; eyeBtn.style.borderColor = 'var(--accent)'; }
+  if (eyeBtn) { eyeBtn.textContent = '🙈'; eyeBtn.style.borderColor = 'var(--accent)'; eyeBtn.style.background = 'var(--accent-dim)'; }
   clearTimeout(_pwdTimers[role]);
   let remaining = 30;
   const timerEl = document.getElementById(`pwd-timer-${role}`);
-  timerEl.textContent = `${remaining}s 後自動隱藏`;
+  timerEl.textContent = `${remaining} 秒後自動隱藏`;
   const tick = () => {
     remaining--;
     if (remaining <= 0) { _hidePwd(role); }
-    else { timerEl.textContent = `${remaining}s 後自動隱藏`; _pwdTimers[role] = setTimeout(tick, 1000); }
+    else { timerEl.textContent = `${remaining} 秒後自動隱藏`; _pwdTimers[role] = setTimeout(tick, 1000); }
   };
   _pwdTimers[role] = setTimeout(tick, 1000);
 }
@@ -1896,11 +2062,13 @@ function _hidePwd(role) {
   if (!input) return;
   input.type = 'password';
   input.value = '';
+  input.style.background = '';
+  input.style.borderColor = '';
   clearTimeout(_pwdTimers[role]);
   const timerEl = document.getElementById(`pwd-timer-${role}`);
   if (timerEl) timerEl.textContent = '';
   const eyeBtn = document.getElementById(`pwd-eye-${role}`);
-  if (eyeBtn) { eyeBtn.textContent = '👁'; eyeBtn.style.borderColor = ''; }
+  if (eyeBtn) { eyeBtn.textContent = '👁'; eyeBtn.style.borderColor = ''; eyeBtn.style.background = ''; }
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -1909,22 +2077,23 @@ document.addEventListener('visibilitychange', () => {
 
 async function resetPassword(role) {
   const roleLabel = PWD_ROLES.find(r => r.role === role)?.label || role;
-  const newPwd = prompt(`請輸入「${roleLabel}」的新密碼：`);
-  if (newPwd === null) return; // 使用者取消
-  if (!newPwd.trim()) { alert('密碼不可為空或只含空白'); return; }
-  if (newPwd !== newPwd.trim()) { alert('密碼不可有前後空白'); return; }
-  if (newPwd.trim().length < 4) { alert('密碼至少需要 4 個字元'); return; }
-  if (newPwd === _pwdCache[role]) { alert('新密碼與目前密碼相同，無需更新'); return; }
-  const confirmPwd = prompt('請再次輸入新密碼確認：');
-  if (confirmPwd === null) return;
-  if (newPwd !== confirmPwd) { alert('兩次輸入不一致，已取消'); return; }
-  if (prompt('請輸入 CONFIRM 確認執行（區分大小寫）') !== 'CONFIRM') return;
+  const newPwdEl = document.getElementById(`pwd-new-${role}`);
+  const confirmPwdEl = document.getElementById(`pwd-confirm-${role}`);
+  const newPwd = newPwdEl?.value || '';
+  const confirmPwd = confirmPwdEl?.value || '';
+  if (!newPwd.trim()) { showToast('密碼不可為空或只含空白'); return; }
+  if (newPwd !== newPwd.trim()) { showToast('密碼不可有前後空白'); return; }
+  if (newPwd.trim().length < 4) { showToast('密碼至少需要 4 個字元'); return; }
+  if (newPwd !== confirmPwd) { showToast('兩次輸入不一致，請重新輸入'); return; }
+  if (newPwd === _pwdCache[role]) { showToast('新密碼與目前密碼相同，無需更新'); return; }
   const resetBtn = document.getElementById(`pwd-reset-${role}`);
   if (resetBtn) { resetBtn.disabled = true; resetBtn.textContent = '更新中…'; }
   try {
     await fbDB.ref(`settings/passwords/${role}`).set(newPwd);
     _pwdCache[role] = newPwd;
     _hidePwd(role);
+    if (newPwdEl) { newPwdEl.value = ''; newPwdEl.focus(); }
+    if (confirmPwdEl) confirmPwdEl.value = '';
     const sessionNote = role === 'superadmin' ? '，目前 session 不受影響' : '';
     showToast(`✅ ${roleLabel} 密碼已更新${sessionNote}`);
   } catch (e) {
@@ -1932,6 +2101,498 @@ async function resetPassword(role) {
   } finally {
     if (resetBtn) { resetBtn.disabled = false; resetBtn.textContent = '🔄 重設密碼'; }
   }
+}
+
+// ── PM Users ──────────────────────────────────────────────────────────────────
+function slugifyId(str) {
+  return str.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+function generateOptionKey(label) {
+  const ascii = slugifyId(label);
+  if (ascii) return ascii;
+  return 'opt-' + Date.now().toString().slice(-6);
+}
+function ensureUniqueOptionKey(type, baseKey) {
+  let key = baseKey, i = 2;
+  while ((_productOptionCache[type] || {})[key]) { key = `${baseKey}-${i}`; i++; }
+  return key;
+}
+
+function loadPmUsers() {
+  fbDB.ref('settings/pmUsers').on('value', snap => {
+    _pmCache = snap.val() || {};
+    renderPmUsers();
+  });
+}
+
+function renderPmUsers() {
+  const wrap = document.getElementById('pm-list-wrap');
+  if (!wrap) return;
+  const entries = Object.entries(_pmCache).sort((a,b)=>(a[1].name||a[0]).localeCompare(b[1].name||b[0]));
+  if (!entries.length) { wrap.innerHTML='<div style="color:var(--text3);font-size:0.88rem">尚無 PM 主檔，請新增。</div>'; return; }
+  const badge=(isArchived,isActive)=>isArchived
+    ?`<span style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">封存</span>`
+    :isActive
+      ?`<span style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">啟用</span>`
+      :`<span style="background:var(--surface2);color:var(--text3);border:1px solid var(--border);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">停用</span>`;
+  const activeVendorCount = pmId => Object.values(_vendorOwnerCache).filter(vo => vo.ownerPmId === pmId && vo.archived !== true).length;
+  wrap.innerHTML=`<table class="dealer-tbl"><thead><tr><th>PM ID</th><th>顯示名稱</th><th>狀態</th><th>負責品牌</th><th>備註</th><th style="text-align:center">操作</th></tr></thead><tbody>`+
+    entries.map(([pmId,pm])=>{
+      const isArchived=pm.archived===true, isActive=!isArchived&&pm.active!==false;
+      const vendorCount = activeVendorCount(pmId);
+      const vendorCell = vendorCount > 0
+        ? (isArchived
+          ? `<span style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">⚠ ${vendorCount} 個</span>`
+          : `<span style="background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">${vendorCount} 個</span>`)
+        : `<span style="color:var(--text3);font-size:0.82rem">—</span>`;
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:0.82rem">${pmId}</td>
+        <td style="font-weight:600">${pm.name||'—'}</td>
+        <td>${badge(isArchived,isActive)}</td>
+        <td>${vendorCell}</td>
+        <td style="font-size:0.82rem;color:var(--text3)">${pm.note||'—'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn-xs btn-xs-edit" onclick="openEditPmModal('${pmId}')" style="margin-right:4px">✏️</button>
+          ${!isArchived?`<button class="btn-xs" style="background:var(--${isActive?'amber':'green'}-dim);color:var(--${isActive?'amber':'green'});border:1px solid var(--${isActive?'amber':'green'}-b);margin-right:4px" onclick="togglePmActive('${pmId}')">${isActive?'停用':'啟用'}</button>`:''}
+          ${!isArchived?`<button class="btn-xs" style="background:var(--surface2);color:var(--text3);border:1px solid var(--border)" onclick="archivePm('${pmId}')">封存</button>`:''}
+          ${isArchived?`<button class="btn-xs" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)" onclick="unarchivePm('${pmId}')">解封存</button>`:''}
+        </td></tr>`;
+    }).join('')+'</tbody></table>';
+}
+
+function openAddPmModal() {
+  _editPmId=null;
+  document.getElementById('pm-modal-title').textContent='新增 PM';
+  ['pm-modal-id','pm-modal-name','pm-modal-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pm-modal-id').disabled=false;
+  document.getElementById('pm-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pm-modal-name').focus(),50);
+}
+
+function openEditPmModal(pmId) {
+  _editPmId=pmId; const pm=_pmCache[pmId]||{};
+  document.getElementById('pm-modal-title').textContent='編輯 PM';
+  document.getElementById('pm-modal-id').value=pmId; document.getElementById('pm-modal-id').disabled=true;
+  document.getElementById('pm-modal-name').value=pm.name||''; document.getElementById('pm-modal-note').value=pm.note||'';
+  document.getElementById('pm-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pm-modal-name').focus(),50);
+}
+
+function closePmModal() { document.getElementById('pm-modal').classList.add('hidden'); _editPmId=null; }
+
+async function savePmUser() {
+  const nameEl=document.getElementById('pm-modal-name');
+  const name=nameEl.value.trim();
+  if(!name){showToast('請輸入顯示名稱');nameEl.focus();return;}
+  let pmId;
+  if(_editPmId){pmId=_editPmId;}
+  else{
+    const rawId=document.getElementById('pm-modal-id').value.trim();
+    pmId=rawId?slugifyId(rawId):slugifyId(name);
+    if(!pmId){showToast('PM ID 格式無效');return;}
+    if(_pmCache[pmId]){showToast(`PM ID「${pmId}」已存在`);return;}
+  }
+  const now=new Date().toISOString(); const ex=_pmCache[pmId]||{};
+  const data={name,note:document.getElementById('pm-modal-note').value.trim(),active:ex.active!==false,archived:ex.archived===true,createdAt:ex.createdAt||now,updatedAt:now};
+  try{
+    await fbDB.ref(`settings/pmUsers/${pmId}`).set(data);
+    _pmCache[pmId]=data; renderPmUsers(); closePmModal();
+    showToast(`✅ PM「${name}」已${_editPmId?'更新':'新增'}`);
+  }catch(e){showToast('❌ 儲存失敗：'+e.message);}
+}
+
+async function togglePmActive(pmId) {
+  const pm=_pmCache[pmId]; if(!pm||pm.archived)return;
+  const newActive=pm.active===false;
+  try{
+    await fbDB.ref(`settings/pmUsers/${pmId}`).update({active:newActive,updatedAt:new Date().toISOString()});
+    _pmCache[pmId].active=newActive; renderPmUsers(); showToast(`PM 已${newActive?'啟用':'停用'}`);
+  }catch(e){showToast('❌ 更新失敗：'+e.message);}
+}
+
+async function archivePm(pmId) {
+  const _vendorCount = Object.values(_vendorOwnerCache).filter(vo => vo.ownerPmId === pmId && vo.archived !== true).length;
+  const _archiveMsg = _vendorCount > 0
+    ? `確定封存 PM「${_pmCache[pmId]?.name||pmId}」？\n此 PM 仍負責 ${_vendorCount} 個品牌，封存不會自動轉移。`
+    : `確定封存 PM「${_pmCache[pmId]?.name||pmId}」？封存後不影響已指派的品牌。`;
+  if(!confirm(_archiveMsg))return;
+  try{
+    await fbDB.ref(`settings/pmUsers/${pmId}`).update({archived:true,active:false,updatedAt:new Date().toISOString()});
+    _pmCache[pmId].archived=true; _pmCache[pmId].active=false; renderPmUsers(); showToast('PM 已封存');
+  }catch(e){showToast('❌ 封存失敗：'+e.message);}
+}
+
+async function unarchivePm(pmId) {
+  if(!confirm(`解除封存 PM「${_pmCache[pmId]?.name||pmId}」？`))return;
+  try{
+    await fbDB.ref(`settings/pmUsers/${pmId}`).update({archived:false,active:true,updatedAt:new Date().toISOString()});
+    _pmCache[pmId].archived=false; _pmCache[pmId].active=true; renderPmUsers(); showToast('PM 已解除封存');
+  }catch(e){showToast('❌ 操作失敗：'+e.message);}
+}
+
+// ── Vendor Owners ─────────────────────────────────────────────────────────────
+function loadVendorOwners() {
+  fbDB.ref('settings/vendorOwners').on('value', snap => {
+    _vendorOwnerCache = snap.val() || {};
+    renderVendorOwners();
+    renderPmUsers();
+  });
+}
+
+function getPmLabel(pmId) {
+  if(!pmId)return'—'; const pm=_pmCache[pmId];
+  if(!pm)return`${pmId} [未知]`; if(pm.archived)return`${pm.name} [已封存]`; return pm.name;
+}
+
+function vendorLabel(v) {
+  return _vendorOwnerCache?.[v]?.displayName || (v === 'GS' ? 'GSE' : v);
+}
+
+function renderVendorOwners() {
+  const wrap=document.getElementById('vendor-owner-list-wrap');
+  if(!wrap)return;
+  const entries=Object.entries(_vendorOwnerCache).sort((a,b)=>{
+    const oA=a[1].displayOrder??99,oB=b[1].displayOrder??99;
+    return oA!==oB?oA-oB:a[0].localeCompare(b[0]);
+  });
+  if(!entries.length){wrap.innerHTML='<div style="color:var(--text3);font-size:0.88rem">尚無品牌資料，請新增或點「初始化預設品牌」。</div>';return;}
+  const badge=(isArchived,isActive)=>isArchived
+    ?`<span style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">封存</span>`
+    :isActive
+      ?`<span style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">啟用</span>`
+      :`<span style="background:var(--surface2);color:var(--text3);border:1px solid var(--border);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">停用</span>`;
+  wrap.innerHTML=`<table class="dealer-tbl" style="min-width:680px"><thead><tr><th>排序</th><th>Vendor Key</th><th>顯示名稱</th><th>負責 PM</th><th style="text-align:center">產品數</th><th>狀態</th><th>備註</th><th style="text-align:center">操作</th></tr></thead><tbody>`+
+    entries.map(([vKey,vo])=>{
+      const isArchived=vo.archived===true,isActive=!isArchived&&vo.active!==false;
+      const dot=vo.color?`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${vo.color};margin-right:5px;border:1px solid rgba(0,0,0,.15);vertical-align:middle"></span>`:'';
+      const pmLbl=getPmLabel(vo.ownerPmId);
+      const pmStyle=pmLbl.includes('[已封存]')?'color:var(--amber);font-size:0.82rem':'font-size:0.82rem';
+      const keyDisp=vKey==='GS'?'GS <span style="color:var(--text3);font-weight:400">(GSE)</span>':vKey;
+      const prodCount=Object.keys(_productCache[vKey]||{}).length;
+      return `<tr>
+        <td style="text-align:center;font-size:0.82rem;color:var(--text3)">${vo.displayOrder??'—'}</td>
+        <td style="font-family:var(--mono);font-size:0.82rem;font-weight:700">${keyDisp}</td>
+        <td style="font-weight:600">${dot}${vo.displayName||'—'}</td>
+        <td style="${pmStyle}">${pmLbl}</td>
+        <td style="text-align:center;font-family:var(--mono);font-size:0.82rem;font-weight:700;color:${prodCount>0?'var(--text)':'var(--text3)'}">${prodCount}</td>
+        <td>${badge(isArchived,isActive)}</td>
+        <td style="font-size:0.82rem;color:var(--text3)">${vo.note||'—'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn-xs btn-xs-edit" onclick="openEditVendorOwnerModal('${vKey}')" style="margin-right:4px">✏️</button>
+          ${!isArchived?`<button class="btn-xs" style="background:var(--${isActive?'amber':'green'}-dim);color:var(--${isActive?'amber':'green'});border:1px solid var(--${isActive?'amber':'green'}-b);margin-right:4px" onclick="toggleVendorOwnerActive('${vKey}')">${isActive?'停用':'啟用'}</button>`:''}
+          ${!isArchived?`<button class="btn-xs" style="background:var(--surface2);color:var(--text3);border:1px solid var(--border)" onclick="archiveVendorOwner('${vKey}')">封存</button>`:''}
+          ${isArchived?`<button class="btn-xs" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)" onclick="unarchiveVendorOwner('${vKey}')">解封存</button>`:''}
+        </td></tr>`;
+    }).join('')+'</tbody></table>';
+}
+
+function _populatePmSelect(selId,selectedId) {
+  const sel=document.getElementById(selId); if(!sel)return;
+  const active=Object.entries(_pmCache).filter(([,p])=>p.archived!==true).sort((a,b)=>(a[1].name||a[0]).localeCompare(b[1].name||b[0]));
+  sel.innerHTML='<option value="">— 未指定 —</option>'+active.map(([pid,p])=>`<option value="${pid}"${pid===selectedId?' selected':''}>${p.name}</option>`).join('');
+}
+
+function _renderAllowedCheckboxes(containerId, optionsRaw, allowedMap) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!optionsRaw || Array.isArray(optionsRaw)) {
+    container.innerHTML = '<span style="color:var(--text3);font-size:0.82rem">— 請先初始化產品選項 —</span>';
+    return;
+  }
+  const entries = Object.entries(optionsRaw)
+    .filter(([,o]) => o.active !== false && o.archived !== true)
+    .sort((a,b) => (a[1].displayOrder||99) - (b[1].displayOrder||99));
+  if (!entries.length) {
+    container.innerHTML = '<span style="color:var(--text3);font-size:0.82rem">— 無可用選項 —</span>';
+    return;
+  }
+  container.innerHTML = entries.map(([k,o]) =>
+    `<label style="display:flex;align-items:center;gap:5px;font-size:0.88rem;cursor:pointer;white-space:nowrap">
+      <input type="checkbox" value="${k}" ${(allowedMap && allowedMap[k]) ? 'checked' : ''}> ${o.label||k}
+    </label>`
+  ).join('');
+}
+
+function _readAllowedMap(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return null;
+  const checked = container.querySelectorAll('input[type="checkbox"]:checked');
+  if (!checked.length) return null;
+  const result = {};
+  checked.forEach(c => { result[c.value] = true; });
+  return result;
+}
+
+function openAddVendorOwnerModal() {
+  _editVendorKey=null;
+  document.getElementById('vo-modal-title').textContent='新增品牌';
+  ['vo-modal-key','vo-modal-name','vo-modal-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('vo-modal-key').disabled=false;
+  document.getElementById('vo-modal-order').value='';
+  document.getElementById('vo-modal-color').value='#1d6ef5';
+  _populatePmSelect('vo-modal-pm','');
+  _renderAllowedCheckboxes('vo-platform-checks', _productOptionCache.platforms, {});
+  _renderAllowedCheckboxes('vo-category-checks', _productOptionCache.categories, {});
+  document.getElementById('vendor-owner-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('vo-modal-key').focus(),50);
+}
+
+function openEditVendorOwnerModal(vKey) {
+  _editVendorKey=vKey; const vo=_vendorOwnerCache[vKey]||{};
+  document.getElementById('vo-modal-title').textContent='編輯品牌';
+  document.getElementById('vo-modal-key').value=vKey; document.getElementById('vo-modal-key').disabled=true;
+  document.getElementById('vo-modal-name').value=vo.displayName||'';
+  document.getElementById('vo-modal-order').value=vo.displayOrder??'';
+  document.getElementById('vo-modal-color').value=vo.color||'#1d6ef5';
+  document.getElementById('vo-modal-note').value=vo.note||'';
+  _populatePmSelect('vo-modal-pm',vo.ownerPmId||'');
+  _renderAllowedCheckboxes('vo-platform-checks', _productOptionCache.platforms, vo.allowedPlatforms||{});
+  _renderAllowedCheckboxes('vo-category-checks', _productOptionCache.categories, vo.allowedCategories||{});
+  document.getElementById('vendor-owner-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('vo-modal-name').focus(),50);
+}
+
+function closeVendorOwnerModal() { document.getElementById('vendor-owner-modal').classList.add('hidden'); _editVendorKey=null; }
+
+async function saveVendorOwner() {
+  const keyEl=document.getElementById('vo-modal-key');
+  const vKeyRaw=keyEl.value.trim();
+  if(!vKeyRaw){showToast('請輸入 Vendor Key');keyEl.focus();return;}
+  if(vKeyRaw.toUpperCase()==='GSE'){showToast('Firebase vendor key 請使用 GS（UI 顯示 GSE）');keyEl.focus();return;}
+  const vKey=vKeyRaw.toUpperCase();
+  if(!/^[A-Z][A-Z0-9_]*$/.test(vKey)){showToast('Vendor Key 只允許大寫英數字與底線');keyEl.focus();return;}
+  if(!_editVendorKey&&_vendorOwnerCache[vKey]){showToast(`Vendor Key「${vKey}」已存在`);keyEl.focus();return;}
+  const now=new Date().toISOString(); const ex=_vendorOwnerCache[_editVendorKey||vKey]||{};
+  const orderRaw=document.getElementById('vo-modal-order').value;
+  const data={
+    displayName:document.getElementById('vo-modal-name').value.trim()||vKey,
+    ownerPmId:document.getElementById('vo-modal-pm').value||'',
+    displayOrder:orderRaw!==''?Number(orderRaw):(ex.displayOrder??99),
+    color:document.getElementById('vo-modal-color').value||'#1d6ef5',
+    note:document.getElementById('vo-modal-note').value.trim(),
+    allowedPlatforms:_readAllowedMap('vo-platform-checks'),
+    allowedCategories:_readAllowedMap('vo-category-checks'),
+    active:ex.active!==false, archived:ex.archived===true,
+    createdAt:ex.createdAt||now, updatedAt:now,
+  };
+  try{
+    await fbDB.ref(`settings/vendorOwners/${_editVendorKey||vKey}`).set(data);
+    closeVendorOwnerModal();
+    showToast(`✅ 品牌「${vKey}」已${_editVendorKey?'更新':'新增'}`);
+  }catch(e){showToast('❌ 儲存失敗：'+e.message);}
+}
+
+async function toggleVendorOwnerActive(vKey) {
+  const vo=_vendorOwnerCache[vKey]; if(!vo||vo.archived)return;
+  const newActive=vo.active===false;
+  try{
+    await fbDB.ref(`settings/vendorOwners/${vKey}`).update({active:newActive,updatedAt:new Date().toISOString()});
+    showToast(`品牌已${newActive?'啟用':'停用'}`);
+  }catch(e){showToast('❌ 更新失敗：'+e.message);}
+}
+
+async function archiveVendorOwner(vKey) {
+  if(!confirm(`確定封存品牌「${vKey}」？`))return;
+  try{
+    await fbDB.ref(`settings/vendorOwners/${vKey}`).update({archived:true,active:false,updatedAt:new Date().toISOString()});
+    showToast('品牌已封存');
+  }catch(e){showToast('❌ 封存失敗：'+e.message);}
+}
+
+async function unarchiveVendorOwner(vKey) {
+  if(!confirm(`解除封存品牌「${vKey}」？`))return;
+  try{
+    await fbDB.ref(`settings/vendorOwners/${vKey}`).update({archived:false,active:true,updatedAt:new Date().toISOString()});
+    showToast('品牌已解除封存');
+  }catch(e){showToast('❌ 操作失敗：'+e.message);}
+}
+
+const SEED_VENDOR_OWNERS=[
+  {vKey:'BNE',      displayName:'BNE（萬代南夢宮）', displayOrder:1, color:'#1d6ef5'},
+  {vKey:'GS',       displayName:'GSE（Game Source）', displayOrder:2, color:'#059669'},
+  {vKey:'SONY',     displayName:'SONY',               displayOrder:3, color:'#dc2626'},
+  {vKey:'PLAYSEAT', displayName:'PLAYSEAT',            displayOrder:4, color:'#d97706'},
+  {vKey:'NLR',      displayName:'NLR',                 displayOrder:5, color:'#be185d'},
+];
+
+async function seedVendorOwners() {
+  if(!confirm(`初始化 ${SEED_VENDOR_OWNERS.length} 個預設品牌？已存在的 Vendor Key 將跳過。`))return;
+  const now=new Date().toISOString(); const updates={}; let added=0;
+  SEED_VENDOR_OWNERS.forEach(({vKey,displayName,displayOrder,color})=>{
+    if(_vendorOwnerCache[vKey])return;
+    updates[`settings/vendorOwners/${vKey}`]={displayName,ownerPmId:'',displayOrder,color,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
+    added++;
+  });
+  if(!added){showToast('所有預設品牌已存在，無需初始化');return;}
+  try{
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已初始化 ${added} 個預設品牌`);
+  }catch(e){showToast('❌ 初始化失敗：'+e.message);}
+}
+
+// ── Product Options ───────────────────────────────────────────────────────────
+function loadProductOptions() {
+  fbDB.ref('settings/productOptions').on('value', snap => {
+    _productOptionCache = snap.val() || {};
+    renderProductOptions(_currentOptType);
+  });
+}
+
+const _OPT_TYPE_LABELS={platforms:'平台',categories:'類型',statuses:'貨物狀態',priceTags:'促銷標籤'};
+
+function switchOptType(type, btn) {
+  _currentOptType=type;
+  document.querySelectorAll('[id^="opt-tab-"]').forEach(b=>{b.style.borderColor='';b.style.color='';});
+  if(btn){btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';}
+  renderProductOptions(type);
+}
+
+function renderProductOptions(type) {
+  const wrap=document.getElementById('opt-list-wrap'); if(!wrap)return;
+  const data=_productOptionCache[type]||{};
+  const isArray=Array.isArray(data);
+  if(isArray||!Object.keys(data).length){
+    wrap.innerHTML=`<div style="color:var(--text3);font-size:0.88rem">${isArray?'⚠ 此類型使用舊格式（array），請先「初始化預設選項」升級格式。':'尚無選項，請新增或點「初始化預設選項」。'}</div>`;
+    return;
+  }
+  const entries=Object.entries(data).sort((a,b)=>(a[1].displayOrder??99)-(b[1].displayOrder??99)||(a[0].localeCompare(b[0])));
+  const badge=(isArchived,isActive)=>isArchived
+    ?`<span style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">封存</span>`
+    :isActive
+      ?`<span style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">啟用</span>`
+      :`<span style="background:var(--surface2);color:var(--text3);border:1px solid var(--border);border-radius:8px;padding:1px 8px;font-size:0.75rem;font-weight:700">停用</span>`;
+  wrap.innerHTML=`<table class="dealer-tbl"><thead><tr><th>排序</th><th>Key</th><th>顯示名稱</th><th>狀態</th><th>備註</th><th style="text-align:center">操作</th></tr></thead><tbody>`+
+    entries.map(([optKey,opt])=>{
+      const isArchived=opt.archived===true,isActive=!isArchived&&opt.active!==false;
+      return `<tr>
+        <td style="text-align:center;font-size:0.82rem;color:var(--text3)">${opt.displayOrder??'—'}</td>
+        <td style="font-family:var(--mono);font-size:0.82rem">${optKey}</td>
+        <td style="font-weight:600">${opt.label||'—'}</td>
+        <td>${badge(isArchived,isActive)}</td>
+        <td style="font-size:0.82rem;color:var(--text3)">${opt.note||'—'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn-xs btn-xs-edit" onclick="openEditOptionModal('${type}','${optKey}')" style="margin-right:4px">✏️</button>
+          ${!isArchived?`<button class="btn-xs" style="background:var(--${isActive?'amber':'green'}-dim);color:var(--${isActive?'amber':'green'});border:1px solid var(--${isActive?'amber':'green'}-b);margin-right:4px" onclick="toggleOptionActive('${type}','${optKey}')">${isActive?'停用':'啟用'}</button>`:''}
+          ${!isArchived?`<button class="btn-xs" style="background:var(--surface2);color:var(--text3);border:1px solid var(--border)" onclick="archiveOption('${type}','${optKey}')">封存</button>`:''}
+          ${isArchived?`<button class="btn-xs" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)" onclick="unarchiveOption('${type}','${optKey}')">解封存</button>`:''}
+        </td></tr>`;
+    }).join('')+'</tbody></table>';
+}
+
+function getNextOptionOrder(type) {
+  const data=_productOptionCache[type]||{};
+  if(Array.isArray(data)) return data.length+1;
+  const nums=Object.values(data).map(o=>Number(o.displayOrder||0)).filter(n=>Number.isFinite(n)&&n>0);
+  return nums.length?Math.max(...nums)+1:1;
+}
+
+function openAddOptionModal() {
+  _editOptionType=_currentOptType; _editOptionKey=null;
+  document.getElementById('opt-modal-title').textContent=`新增${_OPT_TYPE_LABELS[_currentOptType]||''}選項`;
+  ['opt-modal-key','opt-modal-label','opt-modal-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('opt-modal-key').disabled=false;
+  document.getElementById('opt-modal-order').value=getNextOptionOrder(_currentOptType);
+  document.getElementById('opt-modal-type').value=_currentOptType;
+  document.getElementById('option-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('opt-modal-label').focus(),50);
+}
+
+function openEditOptionModal(type,optKey) {
+  _editOptionType=type; _editOptionKey=optKey;
+  const opt=(_productOptionCache[type]||{})[optKey]||{};
+  document.getElementById('opt-modal-title').textContent=`編輯${_OPT_TYPE_LABELS[type]||''}選項`;
+  document.getElementById('opt-modal-key').value=optKey; document.getElementById('opt-modal-key').disabled=true;
+  document.getElementById('opt-modal-label').value=opt.label||'';
+  document.getElementById('opt-modal-order').value=opt.displayOrder??'';
+  document.getElementById('opt-modal-note').value=opt.note||'';
+  document.getElementById('opt-modal-type').value=type;
+  document.getElementById('option-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('opt-modal-label').focus(),50);
+}
+
+function closeOptionModal() { document.getElementById('option-modal').classList.add('hidden'); _editOptionType=null; _editOptionKey=null; }
+
+async function saveProductOption() {
+  const type=document.getElementById('opt-modal-type').value||_currentOptType;
+  const labelEl=document.getElementById('opt-modal-label');
+  const label=labelEl.value.trim();
+  if(!label){showToast('請輸入顯示名稱');labelEl.focus();return;}
+  let optKey;
+  if(_editOptionKey){optKey=_editOptionKey;}
+  else{
+    const rawKey=document.getElementById('opt-modal-key').value.trim();
+    if(rawKey){
+      optKey=slugifyId(rawKey);
+      if(!optKey){showToast('Key 格式無效：只允許小寫英數字與 -');document.getElementById('opt-modal-key').focus();return;}
+    } else {
+      optKey=ensureUniqueOptionKey(type, generateOptionKey(label));
+    }
+    if((_productOptionCache[type]||{})[optKey]){showToast(`Key「${optKey}」已存在`);return;}
+  }
+  const now=new Date().toISOString();
+  const ex=((_productOptionCache[type]||{})[optKey])||{};
+  const orderRaw=document.getElementById('opt-modal-order').value;
+  const data={
+    label,
+    displayOrder:orderRaw!==''?Number(orderRaw):(ex.displayOrder??99),
+    note:document.getElementById('opt-modal-note').value.trim(),
+    active:ex.active!==false, archived:ex.archived===true,
+    createdAt:ex.createdAt||now, updatedAt:now,
+  };
+  try{
+    await fbDB.ref(`settings/productOptions/${type}/${optKey}`).set(data);
+    closeOptionModal();
+    showToast(`✅「${label}」已${_editOptionKey?'更新':'新增'}`);
+  }catch(e){showToast('❌ 儲存失敗：'+e.message);}
+}
+
+async function toggleOptionActive(type,optKey) {
+  const opt=(_productOptionCache[type]||{})[optKey]; if(!opt||opt.archived)return;
+  const newActive=opt.active===false;
+  try{
+    await fbDB.ref(`settings/productOptions/${type}/${optKey}`).update({active:newActive,updatedAt:new Date().toISOString()});
+    showToast(`選項已${newActive?'啟用':'停用'}`);
+  }catch(e){showToast('❌ 更新失敗：'+e.message);}
+}
+
+async function archiveOption(type,optKey) {
+  if(!confirm(`確定封存選項「${(_productOptionCache[type]||{})[optKey]?.label||optKey}」？`))return;
+  try{
+    await fbDB.ref(`settings/productOptions/${type}/${optKey}`).update({archived:true,active:false,updatedAt:new Date().toISOString()});
+    showToast('選項已封存');
+  }catch(e){showToast('❌ 封存失敗：'+e.message);}
+}
+
+async function unarchiveOption(type,optKey) {
+  if(!confirm(`解除封存選項「${(_productOptionCache[type]||{})[optKey]?.label||optKey}」？`))return;
+  try{
+    await fbDB.ref(`settings/productOptions/${type}/${optKey}`).update({archived:false,active:true,updatedAt:new Date().toISOString()});
+    showToast('選項已解除封存');
+  }catch(e){showToast('❌ 操作失敗：'+e.message);}
+}
+
+const SEED_PRODUCT_OPTIONS={
+  platforms:  [{k:'NS',l:'NS',o:1},{k:'NS2',l:'NS2',o:2},{k:'PS5',l:'PS5',o:3},{k:'PS4',l:'PS4',o:4},{k:'VR',l:'VR',o:5}],
+  categories: [{k:'software',l:'軟體',o:1},{k:'console',l:'主機',o:2},{k:'peripheral',l:'周邊',o:3},{k:'girls',l:'女性向',o:4},{k:'chengyi',l:'誠翼',o:5},{k:'olp',l:'OLP',o:6},{k:'ps4hits',l:'PS4 HITS',o:7},{k:'sega',l:'SEGA',o:8},{k:'vr2',l:'VR',o:9}],
+  statuses:   [{k:'instock',l:'現貨',o:1},{k:'preorder',l:'追加中',o:2},{k:'clearance',l:'出清',o:3},{k:'unavailable',l:'停止供應',o:4}],
+  priceTags:  [{k:'sale',l:'特價',o:1},{k:'clearance2',l:'庫存出清',o:2},{k:'bundle1',l:'買1送1',o:3},{k:'gift',l:'附贈品',o:4},{k:'adjust',l:'價格調整',o:5}],
+};
+
+async function seedProductOptions() {
+  if(!confirm('初始化預設產品選項？已存在的 key 將跳過。'))return;
+  const now=new Date().toISOString(); const updates={}; let added=0;
+  Object.entries(SEED_PRODUCT_OPTIONS).forEach(([type,items])=>{
+    items.forEach(({k,l,o})=>{
+      if((_productOptionCache[type]||{})[k])return;
+      updates[`settings/productOptions/${type}/${k}`]={label:l,displayOrder:o,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
+      added++;
+    });
+  });
+  if(!added){showToast('所有預設選項已存在，無需初始化');return;}
+  try{
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已初始化 ${added} 個預設選項`);
+  }catch(e){showToast('❌ 初始化失敗：'+e.message);}
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),3000);}

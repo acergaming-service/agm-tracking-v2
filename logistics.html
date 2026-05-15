@@ -183,7 +183,7 @@ tr.expand-row td{background:var(--surface2)}
   <!-- ══ 需求總覽 ══ -->
   <div id="panel-demand">
     <div class="filter-bar">
-      <select class="filter-select" id="d-vendor" onchange="renderDemand()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="d-vendor" onchange="renderDemand()"><option value="">全部代理商</option></select>
       <select class="filter-select" id="d-status" onchange="renderDemand()">
         <option value="">全部狀態</option>
         <option value="ok">現貨足夠</option>
@@ -229,7 +229,7 @@ tr.expand-row td{background:var(--surface2)}
       <span style="font-size:0.85rem;color:var(--text3)">當前庫存 ＝ 初始庫存 − 已登記需求量 ＋ 已到貨量</span>
     </div>
     <div class="filter-bar">
-      <select class="filter-select" id="inv-vendor" onchange="renderInventory()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="inv-vendor" onchange="renderInventory()"><option value="">全部代理商</option></select>
       <input class="search-box" id="inv-search" placeholder="🔍 搜尋品名…" oninput="renderInventory()">
       <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
         <input type="checkbox" id="inv-only-stock" onchange="renderInventory()"> 只顯示有庫存品項
@@ -262,7 +262,7 @@ tr.expand-row td{background:var(--surface2)}
       ⚠️ 當缺口 > 0 時，後勤需手動分配各通路的出貨量。分配後業務和經銷商可以看到分配結果。
     </div>
     <div class="filter-bar">
-      <select class="filter-select" id="alloc-vendor" onchange="renderAllocation()"><option value="">全部代理商</option><option value="BNE">BNE</option><option value="GS">GSE</option><option value="SONY">SONY</option></select>
+      <select class="filter-select" id="alloc-vendor" onchange="renderAllocation()"><option value="">全部代理商</option></select>
       <input class="search-box" id="alloc-search" placeholder="🔍 搜尋品名…" oninput="renderAllocation()">
       <label style="font-size:0.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
         <input type="checkbox" id="alloc-only-shortage" onchange="renderAllocation()" checked> 只顯示有缺口品項
@@ -411,7 +411,7 @@ tr.expand-row td{background:var(--surface2)}
 <script src="firebase.js"></script>
 <script>
 // ── 狀態 ────────────────────────────────────────────────────────────────────
-let fbDB, products={}, dealers={}, orders={}, inventory={}, replenishments={}, allocations={}, replenishmentArrivals={}, winData={};
+let fbDB, products={}, dealers={}, orders={}, inventory={}, replenishments={}, allocations={}, replenishmentArrivals={}, winData={}, _vendorOwnerCache={};
 let activeTab='demand', _invPid='', _invVendor='';
 let allDemandRows=[];
 
@@ -452,6 +452,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     const sel=document.getElementById('notify-sales');
     SALES_LIST.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
 
+    fbDB.ref('settings/vendorOwners').on('value',s=>{_vendorOwnerCache=s.val()||{};populateVendorFilters();});
+    populateVendorFilters();
     populateWindowForm();
     rebuildAndRender();
     document.getElementById('loading-screen').classList.add('hidden');
@@ -459,6 +461,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('loading-screen').innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem"><div style="font-size:3rem">⚠️</div><div style="margin-top:1rem;font-weight:600">${err.message}</div></div>`;
   }
 });
+
+// ── Vendor helpers ────────────────────────────────────────────────────────────
+function vendorLabel(v) { return _vendorOwnerCache?.[v]?.displayName || (v === 'GS' ? 'GSE' : v); }
+
+function populateVendorFilters() {
+  const _vList = Object.keys(products || {});
+  const _vendors = _vList.length > 0 ? _vList.sort() : ['BNE','GS','SONY'];
+  const opts = '<option value="">全部代理商</option>' +
+    _vendors.map(v => `<option value="${v}">${vendorLabel(v)}</option>`).join('');
+  ['d-vendor','inv-vendor','alloc-vendor'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
 
 // ── 核心計算 ──────────────────────────────────────────────────────────────────
 function getAllProds() {
@@ -570,7 +586,7 @@ function renderStats() {
   document.getElementById('st-items').textContent=rows.length;
   document.getElementById('st-qty').textContent=rows.reduce((s,r)=>s+r.demand,0).toLocaleString();
   document.getElementById('st-shortage').textContent=rows.filter(r=>r.status==='shortage_pending').length;
-  const allDids=Object.keys(dealers);
+  const allDids=Object.keys(dealers).filter(did=>dealers[did].archived!==true&&dealers[did].active!==false);
   const filled=allDids.filter(did=>Object.keys(orders[did]||{}).some(pid=>(orders[did][pid]?.qty||0)>0)).length;
   document.getElementById('st-dealers').textContent=filled+' / '+allDids.length;
 }
@@ -602,7 +618,7 @@ function renderDemand() {
     const latestRep=repList.filter(r=>r.status!=='completed').sort((a,b)=>a.eta>b.eta?1:-1)[0];
 
     return `<tr class="has-order" style="cursor:pointer" onclick="toggleExpand('${p.id}')">
-      <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td style="font-size:0.78rem;font-weight:700;color:var(--text2)">${vendorLabel(p.vendor)}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.9rem">${p.name}</div>
@@ -637,7 +653,7 @@ function renderDemand() {
 function buildExpandContent(p, r) {
   const {demand,initial,arrived,availableStock,repQty,realShortage,plannedShortage,reps}=r;
   const inv=inventory[p.id]||{};
-  const allDids=Object.keys(dealers);
+  const allDids=Object.keys(dealers).filter(did=>(orders[did]||{})[p.id]?.qty>0||((allocations[p.id]||{})[did]?.allocatedQty||0)>0);
   const dealerQtys={};
   allDids.forEach(did=>{const q=(orders[did]||{})[p.id]?.qty||0;if(q>0)dealerQtys[did]=q;});
   const repList=Object.values(reps).sort((a,b)=>a.createdAt>b.createdAt?1:-1);
@@ -744,7 +760,7 @@ function renderInventory() {
     const demand=getTotalDemand(p.id);
     const arrived=getArrivedQty(p.id);
     return `<tr>
-      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td style="font-size:0.78rem;font-weight:700">${vendorLabel(p.vendor)}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
@@ -791,12 +807,14 @@ function renderAllocation() {
     const {p,demand,realShortage:shortage}=r;
     const canShip=demand-Math.max(0,shortage);
     const allocMap=(allocations[p.id]||{});
-    const allDids=Object.keys(dealers).filter(did=>(orders[did]||{})[p.id]?.qty>0);
+    const allDids=Object.keys(dealers).filter(did=>dealers[did].archived!==true&&dealers[did].active!==false).filter(did=>(orders[did]||{})[p.id]?.qty>0);
+    const archivedDemandQty=Object.keys(dealers).filter(did=>dealers[did].archived===true||dealers[did].active===false).reduce((s,did)=>s+((orders[did]||{})[p.id]?.qty||0),0);
+    const effectiveCanShip=Math.min(canShip,demand-archivedDemandQty);
     const totalAlloc=Object.values(allocMap).reduce((s,a)=>s+(a.allocatedQty||0),0);
-    const allocColor=totalAlloc>canShip?'var(--red)':totalAlloc===canShip&&canShip>0?'var(--green)':'var(--text3)';
+    const allocColor=totalAlloc>effectiveCanShip?'var(--red)':totalAlloc===effectiveCanShip&&effectiveCanShip>0?'var(--green)':'var(--text3)';
 
     return `<tr>
-      <td style="font-size:0.78rem;font-weight:700">${p.vendor==='GS'?'GSE':p.vendor}</td>
+      <td style="font-size:0.78rem;font-weight:700">${vendorLabel(p.vendor)}</td>
       <td><span class="platform-tag ${p.platform}">${p.platform}</span></td>
       <td>
         <div style="font-weight:600;font-size:0.88rem">${p.name}</div>
@@ -815,13 +833,14 @@ function renderAllocation() {
               <span style="font-size:0.82rem;font-weight:600">${dealers[did]?.name||did}<br><span style="font-size:0.75rem;color:var(--text3)">需求 ${reqQty}</span></span>
               <input class="inline-num" type="number" min="0" max="${reqQty}" value="${alloc||''}" placeholder="0"
                 style="width:70px" data-alloc-pid="${p.id}"
-                oninput="updateAllocTotal('${p.id}',${canShip})"
+                oninput="updateAllocTotal('${p.id}',${effectiveCanShip})"
                 onchange="saveAllocation('${p.id}','${did}',parseInt(this.value)||0)">
             </div>`;
           }).join('')}
         </div>
         <div id="alloc-total-${p.id}" style="font-size:0.78rem;font-weight:600;margin-top:6px;color:${allocColor}">
-          已分配 ${totalAlloc} / 可出貨 ${canShip}${shortage>0?' (缺口 +'+shortage+')':''}
+          已分配 ${totalAlloc} / 可出貨 ${effectiveCanShip}${shortage>0?' (缺口 +'+shortage+')':''}
+          ${archivedDemandQty>0?`<br><span style="font-size:0.75rem;color:var(--text3);font-weight:500">另有封存通路需求 ${archivedDemandQty} 件（不參與分配）</span>`:''}
         </div>
       </td>
     </tr>`;
@@ -853,7 +872,7 @@ async function saveAllocation(pid, dealerId, qty) {
 // ── 通路連結 ──────────────────────────────────────────────────────────────────
 function renderLogLinks() {
   const base=location.origin+location.pathname.replace('logistics.html','');
-  document.getElementById('links-tbody').innerHTML=Object.entries(dealers).map(([id,d])=>{
+  document.getElementById('links-tbody').innerHTML=Object.entries(dealers).filter(([,d])=>d.archived!==true&&d.active!==false).map(([id,d])=>{
     const url=`${base}dealer.html?code=${d.code}2025`;
     return `<tr>
       <td style="font-weight:600">${d.name}</td>
@@ -869,7 +888,7 @@ function renderLogLinks() {
 function copyLink(url) { navigator.clipboard.writeText(url); showToast('已複製'); }
 function copyAllLinks() {
   const base=location.origin+location.pathname.replace('logistics.html','');
-  const text=Object.entries(dealers).map(([id,d])=>`${d.name}：${base}dealer.html?code=${d.code}2025`).join('\n');
+  const text=Object.entries(dealers).filter(([,d])=>d.archived!==true&&d.active!==false).map(([id,d])=>`${d.name}：${base}dealer.html?code=${d.code}2025`).join('\n');
   navigator.clipboard.writeText(text); showToast('已複製全部連結');
 }
 

@@ -61,6 +61,31 @@ const FIREBASE_CONFIG = {
 // orders_archive/{week}
 //   orders, archivedAt, week
 //
+// settings/pmUsers/{pmId}
+//   name, active, archived, note, createdAt, updatedAt
+//
+// settings/vendorOwners/{vendorKey}   (vendorKey = BNE / GS / SONY / PLAYSEAT / NLR …)
+//   displayName, ownerPmId, displayOrder, color, active, archived, note
+//   ownerPmId = FK → settings/pmUsers
+//   DB always stores GS (not GSE); UI displays GSE via vendorLabel()
+//   allowedPlatforms: { {platformKey}: true }   ← null/absent = fallback all active
+//   allowedCategories: { {categoryKey}: true }  ← null/absent = fallback all active
+//   allowedPlatforms key = FK → settings/productOptions/platforms
+//   allowedCategories key = FK → settings/productOptions/categories
+//
+// settings/productOptions/{type}/{key}
+//   type = platforms | categories | statuses | priceTags   (vendors removed — use vendorOwners)
+//   label, displayOrder, active, archived, note, createdAt, updatedAt
+//   vendors/statuses → select value = key
+//   platforms/categories/priceTags → select value = label (matches product data)
+//   priceTags legacy: may exist as plain array (read-only backward-compat)
+//
+// settings/productLines/{lineId}   ← LEGACY, do not write, do not delete
+//   (kept in DB as historical data; not read by any active page)
+//
+// products/{vendor}/{pid}
+//   productLineId (optional) ← LEGACY field, do not write, do not delete
+//
 // ── 角色與密碼 ──────────────────────────────────────────────────────────────
 // 後勤：agm2025
 // PM：pm2025

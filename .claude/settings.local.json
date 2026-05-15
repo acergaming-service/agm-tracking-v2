@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(inventory'\\)\" \"D:\\\\OneDrive - Acer\\\\追貨系統\\\\Local\\\\V2\\\\agm-tracking-v2\\\\sales.html\")",
+      "Bash(grep -n \"fbDB.ref\\('inventory'\\)\\\\|fbDB.ref\\(`inventory'\\)\" \"D:\\\\OneDrive - Acer\\\\追貨系統\\\\Local\\\\V2\\\\agm-tracking-v2\\\\sales.html\")",
+      "Bash(Get-Content *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit --amend -m ' *)",
+      "Bash(git tag *)",
+      "Bash(git push *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
