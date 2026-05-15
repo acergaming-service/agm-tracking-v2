@@ -329,10 +329,11 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
     <div class="section">
       <h3>🏷️ 品牌 / Vendor Ownership</h3>
       <p style="margin-bottom:1rem;color:var(--text2);font-size:0.9rem">定義各品牌（上游代理商）的負責 PM。Vendor key 對應 Firebase products/ 路徑，GS 不存 GSE。</p>
-      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:8px;margin-bottom:0.4rem;flex-wrap:wrap;align-items:center">
         <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;padding:8px 16px" onclick="openAddVendorOwnerModal()">＋ 新增品牌</button>
-        <button class="btn-sm" onclick="seedVendorOwners()">⚙ 初始化預設品牌</button>
+        <button class="btn-sm" onclick="seedVendorOwners()">補充缺少的預設品牌</button>
       </div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem">僅補齊系統內建但目前缺少的品牌，不會覆蓋已存在的品牌設定。</div>
       <div id="vendor-owner-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
     </div>
     <div class="section">
@@ -344,10 +345,11 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
         <button class="btn-sm" id="opt-tab-statuses"    onclick="switchOptType('statuses',this)">貨物狀態</button>
         <button class="btn-sm" id="opt-tab-priceTags"   onclick="switchOptType('priceTags',this)">促銷標籤</button>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center">
+      <div style="display:flex;gap:8px;margin-bottom:0.4rem;align-items:center">
         <button class="btn-primary" style="display:inline-block;width:auto;margin-bottom:0;padding:8px 16px" onclick="openAddOptionModal()">＋ 新增</button>
-        <button class="btn-sm" onclick="seedProductOptions()">⚙ 初始化預設選項</button>
+        <button class="btn-sm" onclick="seedProductOptions()">補充缺少的預設選項</button>
       </div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem">僅補齊系統內建但目前缺少的選項，不會覆蓋已存在的選項。</div>
       <div id="opt-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
     </div>
   </div>
@@ -429,12 +431,14 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
       <input class="dealer-input" id="vo-modal-note" placeholder="選填" autocomplete="off">
     </div>
     <div class="modal-field">
-      <span class="lbl">可用平台 <span style="font-size:0.72rem;color:var(--text3);font-weight:400">（全未勾 = 全部 active 平台）</span></span>
+      <span class="lbl">可用平台</span>
       <div id="vo-platform-checks" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:38px"></div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">若有勾選，PM 只會看到勾選的平台；全未勾代表全部 active 平台皆可用。新增平台後需回此處勾選才會對此 Vendor 生效。</div>
     </div>
     <div class="modal-field">
-      <span class="lbl">可用類型 <span style="font-size:0.72rem;color:var(--text3);font-weight:400">（全未勾 = 全部 active 類型）</span></span>
+      <span class="lbl">可用類型</span>
       <div id="vo-category-checks" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:38px"></div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">若有勾選，PM 只會看到勾選的類型；全未勾代表全部 active 類型皆可用。新增類型後需回此處勾選才會對此 Vendor 生效。</div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeVendorOwnerModal()">取消</button>
@@ -2453,18 +2457,20 @@ const SEED_VENDOR_OWNERS=[
 ];
 
 async function seedVendorOwners() {
-  if(!confirm(`初始化 ${SEED_VENDOR_OWNERS.length} 個預設品牌？已存在的 Vendor Key 將跳過。`))return;
-  const now=new Date().toISOString(); const updates={}; let added=0;
-  SEED_VENDOR_OWNERS.forEach(({vKey,displayName,displayOrder,color})=>{
-    if(_vendorOwnerCache[vKey])return;
-    updates[`settings/vendorOwners/${vKey}`]={displayName,ownerPmId:'',displayOrder,color,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
-    added++;
-  });
-  if(!added){showToast('所有預設品牌已存在，無需初始化');return;}
+  if(!confirm('此功能只會補齊缺少的系統預設品牌，不會覆蓋既有品牌設定。是否繼續？'))return;
   try{
+    const snap=await fbDB.ref('settings/vendorOwners').once('value');
+    const currentDB=snap.val()||{};
+    const now=new Date().toISOString(); const updates={}; let added=0;
+    SEED_VENDOR_OWNERS.forEach(({vKey,displayName,displayOrder,color})=>{
+      if(currentDB[vKey])return;
+      updates[`settings/vendorOwners/${vKey}`]={displayName,ownerPmId:'',displayOrder,color,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
+      added++;
+    });
+    if(!added){showToast('所有預設品牌已存在，無需補充');return;}
     await fbDB.ref('/').update(updates);
-    showToast(`✅ 已初始化 ${added} 個預設品牌`);
-  }catch(e){showToast('❌ 初始化失敗：'+e.message);}
+    showToast(`✅ 已補齊 ${added} 個缺少的預設品牌`);
+  }catch(e){showToast('❌ 操作失敗：'+e.message);}
 }
 
 // ── Product Options ───────────────────────────────────────────────────────────
@@ -2616,20 +2622,22 @@ const SEED_PRODUCT_OPTIONS={
 };
 
 async function seedProductOptions() {
-  if(!confirm('初始化預設產品選項？已存在的 key 將跳過。'))return;
-  const now=new Date().toISOString(); const updates={}; let added=0;
-  Object.entries(SEED_PRODUCT_OPTIONS).forEach(([type,items])=>{
-    items.forEach(({k,l,o})=>{
-      if((_productOptionCache[type]||{})[k])return;
-      updates[`settings/productOptions/${type}/${k}`]={label:l,displayOrder:o,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
-      added++;
-    });
-  });
-  if(!added){showToast('所有預設選項已存在，無需初始化');return;}
+  if(!confirm('此功能只會補齊缺少的系統預設選項，不會覆蓋既有設定。是否繼續？'))return;
   try{
+    const snap=await fbDB.ref('settings/productOptions').once('value');
+    const currentDB=snap.val()||{};
+    const now=new Date().toISOString(); const updates={}; let added=0;
+    Object.entries(SEED_PRODUCT_OPTIONS).forEach(([type,items])=>{
+      items.forEach(({k,l,o})=>{
+        if((currentDB[type]||{})[k])return;
+        updates[`settings/productOptions/${type}/${k}`]={label:l,displayOrder:o,note:'',active:true,archived:false,createdAt:now,updatedAt:now};
+        added++;
+      });
+    });
+    if(!added){showToast('所有預設選項已存在，無需補充');return;}
     await fbDB.ref('/').update(updates);
-    showToast(`✅ 已初始化 ${added} 個預設選項`);
-  }catch(e){showToast('❌ 初始化失敗：'+e.message);}
+    showToast(`✅ 已補齊 ${added} 個缺少的預設選項`);
+  }catch(e){showToast('❌ 操作失敗：'+e.message);}
 }
 
 // ── 資料稽核 ─────────────────────────────────────────────────────────────────

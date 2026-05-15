@@ -437,11 +437,15 @@ function populateVendorTabs() {
   const container = document.getElementById('prod-vendor-tabs');
   if (!container) return;
   container.querySelectorAll('.prod-vtab:not(:first-child)').forEach(b => b.remove());
-  const _vList = Object.keys(products || {});
-  (_vList.length > 0 ? _vList.sort() : ['BNE','GS','SONY']).forEach(v => {
+  const voEntries = Object.entries(_vendorOwnerCache)
+    .filter(([,v]) => v.active !== false && v.archived !== true)
+    .sort((a,b) => (a[1].displayOrder||99) - (b[1].displayOrder||99));
+  const vList = voEntries.length ? voEntries.map(([k]) => k) : ['BNE','GS','SONY'];
+  vList.forEach(v => {
+    const count = Object.keys(products[v] || {}).length;
     const btn = document.createElement('button');
     btn.className = 'prod-vtab';
-    btn.innerHTML = `${vendorLabel(v)}<span class="prod-vtab-badge" id="pvbadge-${v}">—</span>`;
+    btn.innerHTML = `${vendorLabel(v)}<span class="prod-vtab-badge" id="pvbadge-${v}">${count}</span>`;
     btn.onclick = function() { setProdVendor(v, this); };
     container.appendChild(btn);
   });
@@ -450,17 +454,19 @@ function populateVendorTabs() {
 function populateRepVendorFilter() {
   const sel = document.getElementById('rep-vendor');
   if (!sel) return;
-  const _vList = Object.keys(products || {});
-  const _vendors = _vList.length > 0 ? _vList.sort() : ['BNE','GS','SONY'];
+  const voEntries = Object.entries(_vendorOwnerCache)
+    .filter(([,v]) => v.active !== false && v.archived !== true)
+    .sort((a,b) => (a[1].displayOrder||99) - (b[1].displayOrder||99));
+  const vList = voEntries.length ? voEntries.map(([k]) => k) : ['BNE','GS','SONY'];
   sel.innerHTML = '<option value="">全部代理商</option>' +
-    _vendors.map(v => `<option value="${v}">${vendorLabel(v)}</option>`).join('');
+    vList.map(v => `<option value="${v}">${vendorLabel(v)}</option>`).join('');
 }
 
 function updateProdTabBadges() {
   const all=getAllProds();
   const byVendor=_prodVendor?all.filter(p=>p.vendor===_prodVendor):all;
   document.getElementById('pvbadge-all').textContent=all.length;
-  Object.keys(products).forEach(v=>{const el=document.getElementById('pvbadge-'+v);if(el)el.textContent=all.filter(p=>p.vendor===v).length;});
+  Object.keys(_vendorOwnerCache).forEach(v=>{const el=document.getElementById('pvbadge-'+v);if(el)el.textContent=Object.keys(products[v]||{}).length;});
   document.getElementById('psbadge-all').textContent=byVendor.length;
   ['NS','NS2','PS5','PS4','VR'].forEach(pl=>{const el=document.getElementById('psbadge-'+pl);if(el)el.textContent=byVendor.filter(p=>p.platform===pl).length;});
 }
