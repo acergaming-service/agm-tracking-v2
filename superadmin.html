@@ -70,6 +70,24 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
 .data-card-sub{font-size:0.75rem;color:var(--text3);margin-bottom:0.8rem}
 .pwd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
 .pwd-card{display:flex;flex-direction:column}
+.audit-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow)}
+.audit-card-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.audit-card-hd-title{font-size:0.92rem;font-weight:700}
+.audit-badge-ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-badge-warn{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-badge-info{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-cap{padding:8px 16px 3px;font-size:0.8rem;font-weight:700;color:var(--text2)}
+.audit-note{padding:6px 16px 10px;font-size:0.78rem;color:var(--text3)}
+.audit-tbl{width:100%;border-collapse:collapse;font-size:0.82rem}
+.audit-tbl th{text-align:left;padding:5px 10px;background:var(--surface2);color:var(--text3);font-weight:700;font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.audit-tbl td{padding:5px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.audit-tbl tr:last-child td{border-bottom:none}
+.audit-sev-critical{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-sev-high{background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-sev-medium{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-sev-low{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-sev-info{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
+.audit-sev-ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:700}
 </style>
 </head>
 <body>
@@ -90,6 +108,7 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
   <button class="tab-btn" data-tab="ops" onclick="switchTab('ops')">維運工具</button>
   <button class="tab-btn" data-tab="pwd" onclick="switchTab('pwd')">帳號權限管理</button>
   <button class="tab-btn" data-tab="lines" onclick="switchTab('lines')">品牌 / PM / 產品選項</button>
+  <button class="tab-btn" data-tab="audit" onclick="switchTab('audit')">資料稽核</button>
 </div>
 
 <!-- ─── Tab 1: 系統狀態 ─── -->
@@ -128,6 +147,12 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
       <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
         <tbody id="sysinfo-table"></tbody>
       </table>
+    </div>
+    <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
+      <h3 style="color:var(--red)">⚠ 測試資料重置</h3>
+      <p style="font-size:0.85rem;color:var(--text2);margin-bottom:0.5rem">清空 <strong>products、dealers、inventory、allocations、replenishments、orders</strong>。</p>
+      <p style="font-size:0.82rem;color:var(--red);margin-bottom:1rem;font-weight:700">settings（vendorOwners、pmUsers、productOptions 等）不受影響。此操作不可復原。</p>
+      <button class="btn-danger" onclick="resetSandboxData()">清空測試資料</button>
     </div>
   </div>
 </div>
@@ -325,6 +350,18 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
       </div>
       <div id="opt-list-wrap"><div style="color:var(--text3);font-size:0.88rem">載入中…</div></div>
     </div>
+  </div>
+</div>
+
+<!-- ─── Tab 7: 資料稽核 ─── -->
+<div class="tab-content" id="tab-audit">
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+      <h2 style="font-size:1.05rem;font-weight:900;margin:0">🔍 資料稽核</h2>
+      <button class="btn-primary" style="display:inline-block;width:auto;padding:8px 18px" onclick="runAudit()">執行稽核</button>
+      <span id="audit-ts" style="font-size:0.82rem;color:var(--text3)"></span>
+    </div>
+    <div id="audit-results"><p style="color:var(--text3);font-size:0.9rem">點擊「執行稽核」開始分析產品資料。</p></div>
   </div>
 </div>
 
@@ -2593,6 +2630,258 @@ async function seedProductOptions() {
     await fbDB.ref('/').update(updates);
     showToast(`✅ 已初始化 ${added} 個預設選項`);
   }catch(e){showToast('❌ 初始化失敗：'+e.message);}
+}
+
+// ── 資料稽核 ─────────────────────────────────────────────────────────────────
+function _auditGetAllProducts() {
+  const result=[];
+  Object.entries(_productCache).forEach(([vendor,ps])=>{
+    if(!ps||typeof ps!=='object')return;
+    Object.entries(ps).forEach(([pid,p])=>{if(p&&typeof p==='object')result.push({...p,vendor,pid});});
+  });
+  return result;
+}
+
+function _auditReport1_Vendor(all) {
+  const known=new Set(Object.keys(_vendorOwnerCache));
+  const unknownProds=all.filter(p=>!known.has(p.vendor));
+  const emptyVendors=Object.entries(_vendorOwnerCache)
+    .filter(([,v])=>v.archived!==true).map(([k])=>k)
+    .filter(k=>!_productCache[k]||Object.keys(_productCache[k]).length===0);
+  const count=unknownProds.length;
+  const severity=unknownProds.length>0?'HIGH':emptyVendors.length>0?'INFO':'OK';
+  const tables=[];
+  if(unknownProds.length) tables.push({caption:`未登錄 Vendor 的產品（${unknownProds.length} 筆）`,cols:['Vendor','產品 ID','品名'],rows:unknownProds.map(p=>[p.vendor,p.pid,p.name||'—'])});
+  if(emptyVendors.length) tables.push({caption:`有品牌主檔但無產品（${emptyVendors.length} 個）`,cols:['Vendor Key','顯示名稱'],rows:emptyVendors.map(k=>[k,_vendorOwnerCache[k]?.displayName||'—'])});
+  return {id:'vendor',title:'1. Vendor 規範化',count,severity,tables,note:count===0&&emptyVendors.length===0?'所有產品 vendor key 皆有對應品牌主檔。':''};
+}
+
+// ── 規範化建議 helpers ────────────────────────────────────────────────────────
+const _PLATFORM_ALIAS={
+  'switch':'NS','nintendo':'NS','nintendoswitch':'NS',
+  'switch2':'NS2','nintendoswitch2':'NS2',
+  'ps5':'PS5','playstation5':'PS5',
+  'ps4':'PS4','playstation4':'PS4','playstation':'PS4',
+  'vr':'VR','psvr':'VR','psvr2':'VR','virtualreality':'VR',
+};
+const _CATEGORY_ALIAS={
+  'software':'軟體','game':'軟體','games':'軟體',
+  'console':'主機','hardware':'主機',
+  'peripheral':'周邊','accessory':'周邊','accessories':'周邊',
+  'girlsgame':'女性向','girlsgames':'女性向',
+  'olp':'OLP',
+  'ps4hits':'PS4 HITS','ps4hit':'PS4 HITS',
+  'sega':'SEGA',
+};
+
+function _normSuggest(val, canonicalLabels, aliasMap) {
+  const norm=val.trim().toLowerCase().replace(/[\s\-_]/g,'');
+  // 1. case/space-insensitive exact match
+  for(const label of canonicalLabels){
+    if(label.trim().toLowerCase().replace(/[\s\-_]/g,'')=== norm) return label;
+  }
+  // 2. alias map (ASCII-only key)
+  const ascii=norm.replace(/[^a-z0-9]/g,'');
+  if(aliasMap[ascii]) return aliasMap[ascii];
+  // 3. canonical label appears as substring of value
+  for(const label of canonicalLabels){
+    const lNorm=label.trim().toLowerCase().replace(/[\s\-_]/g,'');
+    if(lNorm.length>=2&&norm.includes(lNorm)) return label;
+  }
+  return null;
+}
+
+function _buildNormSuggestions(unknownProds, field, canonicalLabels, aliasMap) {
+  // value → products
+  const valMap={};
+  unknownProds.forEach(p=>{const v=p[field];if(!valMap[v])valMap[v]=[];valMap[v].push(p);});
+  const grouped={}, noSuggest=[];
+  Object.entries(valMap).forEach(([val,prods])=>{
+    const s=_normSuggest(val,canonicalLabels,aliasMap);
+    const item={val,count:prods.length};
+    if(s){if(!grouped[s])grouped[s]=[];grouped[s].push(item);}
+    else noSuggest.push(item);
+  });
+  return {grouped,noSuggest};
+}
+
+function _auditReport2_Platform(all) {
+  const pOpts=_productOptionCache.platforms||{};
+  const known=new Set(Object.values(pOpts).filter(o=>typeof o==='object').map(o=>o.label));
+  const canonicalLabels=[...known];
+  const unknown=all.filter(p=>p.platform&&!known.has(p.platform));
+  const empty=all.filter(p=>!p.platform);
+  const count=unknown.length+empty.length;
+  const {grouped,noSuggest}=_buildNormSuggestions(unknown,'platform',canonicalLabels,_PLATFORM_ALIAS);
+  const tables=[];
+  const suggestRows=Object.entries(grouped).map(([canon,variants])=>[
+    canon,
+    variants.map(v=>`${v.val}（${v.count}）`).join('、'),
+    variants.reduce((s,v)=>s+v.count,0),
+  ]);
+  if(suggestRows.length) tables.push({caption:`建議統一的平台值（${suggestRows.length} 組）`,cols:['建議統一為','目前使用的非標準值','影響產品數'],rows:suggestRows});
+  if(noSuggest.length) tables.push({caption:`無法辨識的平台值（${noSuggest.length} 種）`,cols:['現有值','產品數'],rows:noSuggest.map(({val,count})=>[val,count])});
+  if(empty.length) tables.push({caption:`平台空白（${empty.length} 筆）`,cols:['Vendor','品名','產品 ID'],rows:empty.map(p=>[p.vendor,p.name||'—',p.pid])});
+  const severity=noSuggest.length>0?'MEDIUM':(suggestRows.length||empty.length)?'LOW':'OK';
+  return {id:'platform',title:'2. Platform 規範化',count,severity,tables};
+}
+
+function _auditReport3_Category(all) {
+  const cOpts=_productOptionCache.categories||{};
+  const known=new Set(Object.values(cOpts).filter(o=>typeof o==='object').map(o=>o.label));
+  const canonicalLabels=[...known];
+  const unknown=all.filter(p=>p.category&&!known.has(p.category));
+  const empty=all.filter(p=>!p.category);
+  const count=unknown.length+empty.length;
+  const {grouped,noSuggest}=_buildNormSuggestions(unknown,'category',canonicalLabels,_CATEGORY_ALIAS);
+  const tables=[];
+  const suggestRows=Object.entries(grouped).map(([canon,variants])=>[
+    canon,
+    variants.map(v=>`${v.val}（${v.count}）`).join('、'),
+    variants.reduce((s,v)=>s+v.count,0),
+  ]);
+  if(suggestRows.length) tables.push({caption:`建議統一的類型值（${suggestRows.length} 組）`,cols:['建議統一為','目前使用的非標準值','影響產品數'],rows:suggestRows});
+  if(noSuggest.length) tables.push({caption:`無法辨識的類型值（${noSuggest.length} 種）`,cols:['現有值','產品數'],rows:noSuggest.map(({val,count})=>[val,count])});
+  if(empty.length) tables.push({caption:`類型空白（${empty.length} 筆）`,cols:['Vendor','品名','產品 ID'],rows:empty.map(p=>[p.vendor,p.name||'—',p.pid])});
+  const severity=noSuggest.length>0?'MEDIUM':(suggestRows.length||empty.length)?'LOW':'OK';
+  return {id:'category',title:'3. Category 規範化',count,severity,tables};
+}
+
+function _auditReport4_DupBarcode(all) {
+  const map={};
+  all.forEach(p=>{const bc=(p.barcode||'').trim();if(!bc)return;if(!map[bc])map[bc]=[];map[bc].push(p);});
+  const dups=Object.entries(map).filter(([,ps])=>ps.length>1);
+  const count=dups.reduce((s,[,ps])=>s+ps.length,0);
+  const tables=dups.map(([bc,ps])=>({caption:`條碼 ${bc}（${ps.length} 筆共用）`,cols:['Vendor','品名','產品 ID'],rows:ps.map(p=>[p.vendor,p.name||'—',p.pid])}));
+  const severity=dups.length>0?'HIGH':'OK';
+  return {id:'barcode',title:'4. 重複條碼',count,severity,tables};
+}
+
+function _auditReport5_DupProduct(all) {
+  const byPN={}, byVPN={};
+  all.forEach(p=>{
+    const pn=(p.pn||'').trim();
+    if(pn&&pn!=='—'){if(!byPN[pn])byPN[pn]=[];byPN[pn].push(p);}
+    const key=`${p.vendor}|${p.platform||''}|${(p.name||'').trim()}`;
+    if(p.name){if(!byVPN[key])byVPN[key]=[];byVPN[key].push(p);}
+  });
+  const dupPN=Object.entries(byPN).filter(([,ps])=>ps.length>1);
+  const dupVPN=Object.entries(byVPN).filter(([,ps])=>ps.length>1);
+  const countPN=dupPN.reduce((s,[,ps])=>s+ps.length,0);
+  const countVPN=dupVPN.reduce((s,[,ps])=>s+ps.length,0);
+  const count=countPN+countVPN;
+  const severity=dupPN.length>0?'HIGH':dupVPN.length>0?'MEDIUM':'OK';
+  const tables=[
+    ...dupPN.map(([pn,ps])=>({caption:`P/N 重複：${pn}（${ps.length} 筆）`,cols:['Vendor','品名','產品 ID'],rows:ps.map(p=>[p.vendor,p.name||'—',p.pid])})),
+    ...dupVPN.map(([key,ps])=>{const [v,pl,nm]=key.split('|');return {caption:`同 Vendor／平台／品名重複：${nm}（${ps.length} 筆）`,cols:['Vendor','平台','產品 ID'],rows:ps.map(p=>[p.vendor,p.platform||'—',p.pid])};}),
+  ];
+  return {id:'dup',title:'5. 重複產品',count,severity,tables};
+}
+
+function _auditReport6_MissingFields(all) {
+  const buckets={CRITICAL:[],HIGH:[],MEDIUM:[],LOW:[]};
+  all.forEach(p=>{
+    const missingName=!p.name;
+    const missingPN=!p.pn||p.pn==='—';
+    const missingPlatform=!p.platform;
+    const missingCategory=!p.category;
+    const missingPrice=!p.price;
+    const missingSRP=!p.srp;
+    if(missingName){buckets.CRITICAL.push({...p,_m:['品名']});return;}
+    if(missingPN){const m=['P/N'];if(missingPlatform)m.push('平台');if(missingCategory)m.push('類型');if(missingPrice)m.push('出貨價');if(missingSRP)m.push('SRP');buckets.HIGH.push({...p,_m:m});return;}
+    if(missingPlatform||missingCategory||missingPrice){const m=[];if(missingPlatform)m.push('平台');if(missingCategory)m.push('類型');if(missingPrice)m.push('出貨價');if(missingSRP)m.push('SRP');buckets.MEDIUM.push({...p,_m:m});return;}
+    if(missingSRP){buckets.LOW.push({...p,_m:['SRP']});}
+  });
+  const sevOrder=['CRITICAL','HIGH','MEDIUM','LOW'];
+  const severity=sevOrder.find(s=>buckets[s].length>0)||'OK';
+  const count=sevOrder.reduce((s,k)=>s+buckets[k].length,0);
+  const tables=[];
+  const labels={CRITICAL:'CRITICAL — 品名缺失',HIGH:'HIGH — P/N 缺失',MEDIUM:'MEDIUM — 平台／類型／出貨價缺失',LOW:'LOW — SRP 缺失'};
+  sevOrder.forEach(s=>{
+    if(buckets[s].length) tables.push({caption:`${labels[s]}（${buckets[s].length} 筆）`,cols:['Vendor','品名','產品 ID','缺少欄位'],rows:buckets[s].map(p=>[p.vendor,p.name||'—',p.pid,p._m.join(', ')])});
+  });
+  return {id:'missing',title:'6. 必填欄位缺失',count,severity,tables};
+}
+
+function _auditReport7_Lifecycle(all) {
+  const noStatus=all.filter(p=>!p.status);
+  const clearance=all.filter(p=>p.status==='clearance');
+  const preorder=all.filter(p=>p.status==='preorder');
+  const unavailable=all.filter(p=>p.status==='unavailable');
+  const count=noStatus.length;
+  const mkTable=(caption,ps)=>({caption,cols:['Vendor','品名','P/N'],rows:ps.map(p=>[p.vendor,p.name||'—',p.pn||'—'])});
+  const tables=[];
+  if(noStatus.length) tables.push(mkTable(`狀態未設定（${noStatus.length} 筆）— 建議設定`,noStatus));
+  if(clearance.length) tables.push(mkTable(`出清中（${clearance.length} 筆）— 評估是否轉「停止供應」`,clearance));
+  if(preorder.length) tables.push(mkTable(`追加中（${preorder.length} 筆）— 確認補貨進度`,preorder));
+  if(unavailable.length) tables.push(mkTable(`停止供應（${unavailable.length} 筆）— 評估是否移除`,unavailable));
+  const severity=noStatus.length>0?'LOW':(clearance.length||preorder.length||unavailable.length)?'INFO':'OK';
+  return {id:'lifecycle',title:'7. 生命週期建議',count,severity,tables,note:'出清 / 追加中 / 停供為參考清單；「狀態未設定」才計為異常。'};
+}
+
+function _auditRenderCard({id,title,count,severity,tables,note}) {
+  const sev=(severity||'OK').toUpperCase();
+  const sevClass=`audit-sev-${sev.toLowerCase()}`;
+  let badgeTxt;
+  if(sev==='OK') badgeTxt='✓ OK';
+  else if(sev==='INFO') badgeTxt='INFO';
+  else badgeTxt=`${sev}｜${count} 筆需關注`;
+  let html=`<div class="audit-card" id="audit-card-${id}"><div class="audit-card-hd"><span class="audit-card-hd-title">${title}</span><span class="${sevClass}">${badgeTxt}</span></div>`;
+  (tables||[]).forEach(t=>{
+    html+=`<div class="audit-cap">${t.caption}</div><div style="overflow-x:auto"><table class="audit-tbl"><thead><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  });
+  if(note) html+=`<div class="audit-note">${note}</div>`;
+  return html+'</div>';
+}
+
+function runAudit() {
+  if(!Object.keys(_productCache).length){showToast('產品資料尚未載入，請稍後再試');return;}
+  const all=_auditGetAllProducts();
+  document.getElementById('audit-results').innerHTML=[
+    _auditReport1_Vendor(all),
+    _auditReport2_Platform(all),
+    _auditReport3_Category(all),
+    _auditReport4_DupBarcode(all),
+    _auditReport5_DupProduct(all),
+    _auditReport6_MissingFields(all),
+    _auditReport7_Lifecycle(all),
+  ].map(_auditRenderCard).join('');
+  document.getElementById('audit-ts').textContent='執行時間：'+new Date().toLocaleString('zh-TW')+'　共 '+all.length+' 筆產品';
+}
+
+async function resetSandboxData() {
+  if (!confirm('確定要清空所有測試資料？\n\n將刪除：products、dealers、inventory、allocations、replenishments、orders\n\nsettings 主檔不受影響。')) return;
+  const answer = prompt('請輸入確認文字（完全一致才執行）：\n\nDELETE TEST DATA');
+  if (answer !== 'DELETE TEST DATA') { showToast('輸入不正確，操作已取消'); return; }
+  showToast('清空中，請稍候…');
+  try {
+    await Promise.all([
+      fbDB.ref('products').remove(),
+      fbDB.ref('dealers').remove(),
+      fbDB.ref('inventory').remove(),
+      fbDB.ref('allocations').remove(),
+      fbDB.ref('replenishments').remove(),
+      fbDB.ref('orders').remove(),
+    ]);
+    // products cache — clear immediately; listener will also fire and confirm
+    _productCache = {};
+    _knownVendors = [];
+    // dealers cache — NOT cleared here; realtime listener on /dealers will fire,
+    // set _dealerCache={}, then call _renderAll() (renderAccordion shows empty state)
+    // _salesLoaded/_dealersLoaded must NOT be reset or _renderAll() won't trigger
+
+    // stat cards — only updated by checkData(), must reset manually
+    ['sv-prods','sv-dealers','sv-orders','sv-inv','sv-reps','sv-ra','sv-allocs'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '0';
+    });
+    // audit — restore placeholder
+    const auditEl = document.getElementById('audit-results');
+    if (auditEl) auditEl.innerHTML = '<p style="color:var(--text3);font-size:0.9rem">點擊「執行稽核」開始分析產品資料。</p>';
+    showToast('測試資料已清空');
+  } catch(e) {
+    showToast('清空失敗：' + e.message);
+  }
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),3000);}
