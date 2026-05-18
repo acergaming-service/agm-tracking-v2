@@ -46,7 +46,7 @@ function findSheet(wb, partial) {
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 const S = {
-  products:  { total: 0, byVendor: {}, skipped: [], dupPn: [], missingBc: [], emptyPlatform: [], draftPricing: [] },
+  products:  { total: 0, byVendor: {}, skipped: [], dupPn: [], missingBc: [], emptyPlatform: [], draftPricing: [], barcodeDedup: [] },
   inventory: { total: 0, fromExcel: 0, fromCsv: 0, defaultZero: 0, csvNotInProducts: [] },
   dealers:   { total: 0, skipped: [] },
   settings:  {},
@@ -54,6 +54,9 @@ const S = {
   blockers:  [],
   ok: true,
 };
+
+// P/Ns that share a barcode with a canonical ZL.A00TZ. product — keep the ZL version, skip these
+const PN_BARCODE_DUPLICATES = new Set(['0111.ECAS-00003', '0111.ECAS-00018']);
 
 // ─── Read Excel ───────────────────────────────────────────────────────────────
 console.log('Reading Excel...');
@@ -96,6 +99,11 @@ SHEET_DEFS.forEach(function(def) {
     // Skip rows where P/N contains invalid characters (catches sub-header rows like "AGBS P/N" or "AGM料號")
     if (!/^[A-Za-z0-9._\-]+$/.test(pnRaw)) {
       S.products.skipped.push({ sheet: sheetName, row: rowNum, name: nameRaw, note: 'invalid pn: ' + pnRaw });
+      return;
+    }
+    // Skip ECAS/PCAS P/Ns that share a barcode with a canonical ZL format product
+    if (PN_BARCODE_DUPLICATES.has(pnRaw)) {
+      S.products.barcodeDedup.push({ removed: pnRaw, sheet: sheetName, row: rowNum, name: nameRaw });
       return;
     }
 
@@ -159,6 +167,10 @@ SHEET_DEFS.forEach(function(def) {
       var invQty2  = (!invRaw2 || invRaw2 === '無') ? 0 : (parseInt(String(invRaw2)) || 0);
       excelInvMap[pnRaw] = invQty2;
     }
+
+    // Normalize category values to match settings-master.json labels
+    if (category === '軟體(三廠)') category = '軟體';
+    if (category === '排檔架')    category = '排檔桿';
 
     if (!platform) S.products.emptyPlatform.push({ pn: pnRaw, sheet: sheetName, row: rowNum });
 
@@ -416,6 +428,10 @@ var md = [
   '### Missing Barcode',
   S.products.missingBc.length === 0 ? '- None' :
     S.products.missingBc.map(function(r) { return '- ' + r.pn + ' (' + r.sheet + ' row ' + r.row + ')'; }).join('\n'),
+  '',
+  '### Barcode Duplicate Removal (ECAS/PCAS superseded by ZL format)',
+  S.products.barcodeDedup.length === 0 ? '- None' :
+    S.products.barcodeDedup.map(function(r) { return '- ' + r.removed + ' (' + r.sheet + ' row ' + r.row + ') — ' + r.name; }).join('\n'),
   '',
   '### Draft Products (missing required price / priceTax in Excel source)',
   S.products.draftPricing.length === 0 ? '- None' : [

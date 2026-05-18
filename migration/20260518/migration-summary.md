@@ -5,10 +5,10 @@
 - `D:\OneDrive - Acer\追貨系統\Local\V2\migration_20260515_package\migration-inventory-ready.csv` (for BNE/GS inventory)
 
 ## Products
-- **Total:** 330
+- **Total:** 328
   - BNE: 111
   - GS: 101
-  - SONY: 100
+  - SONY: 98
   - PLAYSEAT: 9
   - NLR: 9
 
@@ -75,6 +75,10 @@
 - ZL.A00TZ.18T (BNE產品 row 114)
 - ZL.A00TZ.1BU (BNE產品 row 117)
 
+### Barcode Duplicate Removal (ECAS/PCAS superseded by ZL format)
+- 0111.ECAS-00003 (PS產品 row 106) — 漫威蜘蛛人：麥爾斯·摩拉斯
+- 0111.ECAS-00018 (PS產品 row 111) — 仁王 收藏輯
+
 ### Draft Products (missing required price / priceTax in Excel source)
 | Vendor | P/N | Sheet | Row | Missing Fields |
 |---|---|---|---|---|
@@ -93,10 +97,10 @@
 - None
 
 ## Inventory
-- **Total records:** 330 (one per product)
+- **Total records:** 328 (one per product)
 - **With initialStock > 0:** 42
 - **Source breakdown:**
-  - Excel AGM庫存量 (PS/PLAYSEAT/NLR): 118 records, 41 with qty>0
+  - Excel AGM庫存量 (PS/PLAYSEAT/NLR): 116 records, 41 with qty>0
   - Existing CSV (BNE/GS) with qty>0: 1
   - BNE/GS defaulted to 0 (not in CSV): 211
 

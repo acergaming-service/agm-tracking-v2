@@ -49,7 +49,8 @@
         "cockpit": true,
         "fl-mat": true,
         "gr-rack": true,
-        "opt-143998": true
+        "opt-143998": true,
+        "racing-stand": true
       },
       "allowedPlatforms": {
         "nlr": true
@@ -181,6 +182,15 @@
         "label": "賽車椅",
         "note": "",
         "updatedAt": "2026-05-15T07:49:22.486Z"
+      },
+      "racing-stand": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-18T00:00:00.000Z",
+        "displayOrder": 14,
+        "label": "賽車架",
+        "note": "",
+        "updatedAt": "2026-05-18T00:00:00.000Z"
       },
       "peripheral": {
         "active": true,
