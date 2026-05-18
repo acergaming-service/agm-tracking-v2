@@ -1,0 +1,435 @@
+{
+  "vendorOwners": {
+    "BNE": {
+      "active": true,
+      "allowedCategories": {
+        "software": true
+      },
+      "allowedPlatforms": {
+        "NS": true,
+        "NS2": true,
+        "PS4": true,
+        "PS5": true
+      },
+      "archived": false,
+      "color": "#1d6ef5",
+      "createdAt": "2026-05-15T06:19:17.522Z",
+      "displayName": "BNE（萬代南夢宮）",
+      "displayOrder": 1,
+      "note": "",
+      "ownerPmId": "chris",
+      "updatedAt": "2026-05-15T07:52:43.552Z"
+    },
+    "GS": {
+      "active": true,
+      "allowedCategories": {
+        "chengyi": true,
+        "girls": true,
+        "olp": true,
+        "software": true
+      },
+      "allowedPlatforms": {
+        "NS": true,
+        "NS2": true,
+        "PS4": true,
+        "PS5": true
+      },
+      "archived": false,
+      "color": "#059669",
+      "createdAt": "2026-05-15T06:19:17.522Z",
+      "displayName": "GSE",
+      "displayOrder": 2,
+      "note": "",
+      "ownerPmId": "chris",
+      "updatedAt": "2026-05-15T07:52:50.819Z"
+    },
+    "NLR": {
+      "active": true,
+      "allowedCategories": {
+        "cockpit": true,
+        "fl-mat": true,
+        "gr-rack": true,
+        "opt-143998": true
+      },
+      "allowedPlatforms": {
+        "nlr": true
+      },
+      "archived": false,
+      "color": "#be185d",
+      "createdAt": "2026-05-15T06:19:17.522Z",
+      "displayName": "NLR",
+      "displayOrder": 5,
+      "note": "",
+      "ownerPmId": "eddie",
+      "updatedAt": "2026-05-15T08:58:01.308Z"
+    },
+    "PLAYSEAT": {
+      "active": true,
+      "allowedCategories": {
+        "cockpit": true,
+        "fl-mat": true,
+        "gr-rack": true,
+        "opt-143998": true
+      },
+      "allowedPlatforms": {
+        "playseat": true
+      },
+      "archived": false,
+      "color": "#d97706",
+      "createdAt": "2026-05-15T06:19:17.522Z",
+      "displayName": "PLAYSEAT",
+      "displayOrder": 4,
+      "note": "",
+      "ownerPmId": "eddie",
+      "updatedAt": "2026-05-15T08:57:53.515Z"
+    },
+    "SONY": {
+      "active": true,
+      "allowedCategories": {
+        "console": true,
+        "peripheral": true,
+        "ps4hits": true,
+        "sega": true,
+        "software": true,
+        "vr2": true
+      },
+      "allowedPlatforms": {
+        "PS4": true,
+        "PS5": true,
+        "VR": true
+      },
+      "archived": false,
+      "color": "#dc2626",
+      "createdAt": "2026-05-15T06:19:17.522Z",
+      "displayName": "SONY",
+      "displayOrder": 3,
+      "note": "",
+      "ownerPmId": "chris",
+      "updatedAt": "2026-05-15T07:52:56.616Z"
+    }
+  },
+  "productOptions": {
+    "categories": {
+      "chengyi": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 5,
+        "label": "誠翼",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "cockpit": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:52:20.609Z",
+        "displayOrder": 13,
+        "label": "飛行座艙",
+        "note": "",
+        "updatedAt": "2026-05-15T07:52:20.609Z"
+      },
+      "console": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 2,
+        "label": "主機",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "fl-mat": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:47:51.814Z",
+        "displayOrder": 10,
+        "label": "地墊",
+        "note": "",
+        "updatedAt": "2026-05-15T07:49:18.331Z"
+      },
+      "girls": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 4,
+        "label": "女性向",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "gr-rack": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:51:21.671Z",
+        "displayOrder": 12,
+        "label": "排檔桿",
+        "note": "",
+        "updatedAt": "2026-05-15T07:51:45.116Z"
+      },
+      "olp": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 6,
+        "label": "OLP",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "opt-143998": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:45:43.998Z",
+        "displayOrder": 11,
+        "label": "賽車椅",
+        "note": "",
+        "updatedAt": "2026-05-15T07:49:22.486Z"
+      },
+      "peripheral": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 3,
+        "label": "周邊",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "ps4hits": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 7,
+        "label": "PS4 HITS",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "sega": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 8,
+        "label": "SEGA",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "software": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 1,
+        "label": "軟體",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "vr2": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 9,
+        "label": "VR",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      }
+    },
+    "platforms": {
+      "NS": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 1,
+        "label": "NS",
+        "note": "",
+        "updatedAt": "2026-05-15T07:17:39.012Z"
+      },
+      "NS2": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 2,
+        "label": "NS2",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "PS4": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 4,
+        "label": "PS4",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "PS5": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 3,
+        "label": "PS5",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "VR": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 5,
+        "label": "VR",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "nlr": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:32:38.303Z",
+        "displayOrder": 7,
+        "label": "NLR",
+        "note": "",
+        "updatedAt": "2026-05-15T07:33:10.043Z"
+      },
+      "playseat": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T07:32:32.505Z",
+        "displayOrder": 6,
+        "label": "PLAYSEAT",
+        "note": "",
+        "updatedAt": "2026-05-15T07:33:22.418Z"
+      }
+    },
+    "priceTags": {
+      "adjust": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 5,
+        "label": "價格調整",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "bundle1": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 3,
+        "label": "買1送1",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "clearance2": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 2,
+        "label": "庫存出清",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "gift": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 4,
+        "label": "附贈品",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "sale": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 1,
+        "label": "特價",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      }
+    },
+    "statuses": {
+      "clearance": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 3,
+        "label": "出清",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "instock": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 1,
+        "label": "現貨",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "preorder": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 2,
+        "label": "追加中",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      },
+      "unavailable": {
+        "active": true,
+        "archived": false,
+        "createdAt": "2026-05-15T06:20:18.752Z",
+        "displayOrder": 4,
+        "label": "停止供應",
+        "note": "",
+        "updatedAt": "2026-05-15T06:20:18.752Z"
+      }
+    }
+  },
+  "pmUsers": {
+    "chris": {
+      "active": true,
+      "archived": false,
+      "createdAt": "2026-05-15T05:44:36.630Z",
+      "name": "Chris",
+      "note": "",
+      "updatedAt": "2026-05-15T05:44:36.630Z"
+    },
+    "eddie": {
+      "active": true,
+      "archived": false,
+      "createdAt": "2026-05-15T05:44:44.774Z",
+      "name": "Eddie",
+      "note": "",
+      "updatedAt": "2026-05-15T05:44:44.774Z"
+    }
+  },
+  "salesUsers": {
+    "aki": {
+      "active": true,
+      "name": "AKI"
+    },
+    "edward": {
+      "active": true,
+      "name": "Edward"
+    },
+    "hsinhui": {
+      "active": true,
+      "name": "Hsinhui"
+    },
+    "meg": {
+      "active": true,
+      "name": "Meg"
+    },
+    "mickey": {
+      "active": true,
+      "name": "Mickey"
+    },
+    "tom": {
+      "active": true,
+      "name": "Tom"
+    },
+    "wythe": {
+      "active": true,
+      "name": "Wythe"
+    }
+  },
+  "_meta": {
+    "version": "v2",
+    "exportedAt": "2026-05-17T14:48:25.081Z",
+    "source": "agm-tracking-v2"
+  }
+}
