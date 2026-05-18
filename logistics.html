@@ -306,8 +306,20 @@ tr.expand-row td{background:var(--surface2)}
       <div class="tbl-header"><span class="tbl-title">週期設定</span></div>
       <div style="padding:1.5rem;display:flex;flex-direction:column;gap:14px">
         <div class="fg"><label>週次</label><input id="w-week" placeholder="2025-W20"></div>
-        <div class="fg"><label>收單開始時間</label><input id="w-start" type="datetime-local"></div>
-        <div class="fg"><label>收單截止時間</label><input id="w-end" type="datetime-local"></div>
+        <div class="fg">
+          <label>收單開始時間</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="w-start-date" type="date" style="flex:1;min-width:0">
+            <select id="w-start-time" style="width:100px"></select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>收單截止時間</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="w-end-date" type="date" style="flex:1;min-width:0">
+            <select id="w-end-time" style="width:100px"></select>
+          </div>
+        </div>
         <button class="btn-primary" onclick="saveWindowSettings()" style="align-self:flex-start;padding:9px 24px">儲存設定</button>
       </div>
     </div>
@@ -924,19 +936,49 @@ async function toggleWindow() {
   renderWindowCtrl(); showToast(newOpen?'✅ 收單已開放':'🔒 收單已關閉');
 }
 
+function buildTimeOptions(selectId, selectedVal) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const val = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = val;
+      if (val === selectedVal) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+}
+
 function populateWindowForm() {
   if(winData.week) document.getElementById('w-week').value=winData.week;
-  if(winData.startTime) document.getElementById('w-start').value=winData.startTime;
-  if(winData.endTime) document.getElementById('w-end').value=winData.endTime;
+  const splitDT = v => {
+    if (!v) return { date: '', time: '09:00' };
+    const i = v.indexOf('T');
+    if (i < 0) return { date: v, time: '09:00' };
+    return { date: v.slice(0, i), time: v.slice(i+1, i+6) };
+  };
+  const s = splitDT(winData.startTime);
+  const e = splitDT(winData.endTime);
+  buildTimeOptions('w-start-time', s.time);
+  buildTimeOptions('w-end-time', e.time);
+  document.getElementById('w-start-date').value = s.date;
+  document.getElementById('w-end-date').value = e.date;
 }
 
 function renderWindowForm() { populateWindowForm(); }
 
 async function saveWindowSettings() {
-  const week=document.getElementById('w-week').value.trim();
-  const start=document.getElementById('w-start').value;
-  const end=document.getElementById('w-end').value;
+  const week  = document.getElementById('w-week').value.trim();
+  const sd    = document.getElementById('w-start-date').value;
+  const st    = document.getElementById('w-start-time').value;
+  const ed    = document.getElementById('w-end-date').value;
+  const et    = document.getElementById('w-end-time').value;
   if(!week) { alert('請填入週次'); return; }
+  const start = (sd && st) ? `${sd}T${st}` : '';
+  const end   = (ed && et) ? `${ed}T${et}` : '';
   await fbDB.ref('window').update({week,startTime:start,endTime:end});
   winData={...winData,week,startTime:start,endTime:end};
   renderWindowCtrl(); showToast('週期設定已儲存');

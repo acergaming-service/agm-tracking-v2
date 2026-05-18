@@ -299,10 +299,7 @@ window.addEventListener('DOMContentLoaded', async()=>{
     }
 
     config={products};
-    const now=new Date();
-    const inTime=(!winData.startTime||now>=new Date(winData.startTime))&&
-                 (!winData.endTime||now<=new Date(winData.endTime));
-    isWindowOpen=winData.open===true&&!!winData.week&&inTime;
+    isWindowOpen=winData.open===true&&!!winData.week;
 
     // 讀本通路訂單
     const allOrders=orderSnap.val()||{};
@@ -311,10 +308,7 @@ window.addEventListener('DOMContentLoaded', async()=>{
     // 即時監聽
     fbDB.ref('window').on('value',snap=>{
       const w=snap.val()||{};
-      const now2=new Date();
-      const inTime2=(!w.startTime||now2>=new Date(w.startTime))&&
-                    (!w.endTime||now2<=new Date(w.endTime));
-      isWindowOpen=w.open===true&&!!w.week&&inTime2;
+      isWindowOpen=w.open===true&&!!w.week;
       document.getElementById('nav-week').textContent=w.week||'';
       updateWindowUI();
       updateWindowTimeBanner(w);
