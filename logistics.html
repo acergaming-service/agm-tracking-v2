@@ -448,9 +448,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     fbDB.ref(`allocations/${winData.week||'current'}`).on('value',s=>{allocations=s.val()||{};rebuildAndRender();});
     fbDB.ref('window').on('value',s=>{winData=s.val()||{};renderWindowCtrl();});
 
-    // 通知業務下拉
-    const sel=document.getElementById('notify-sales');
-    SALES_LIST.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+    // 通知業務下拉（動態從 salesUsers 載入，SALES_LIST 為離線 fallback）
+    (async () => {
+      const sel=document.getElementById('notify-sales');
+      try {
+        const snap=await Promise.race([
+          fbDB.ref('settings/salesUsers').once('value'),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+        ]);
+        const users=snap.val();
+        const active=users
+          ?Object.values(users).filter(u=>u.active!==false&&u.archived!==true).sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+          :SALES_LIST.map(n=>({name:n}));
+        active.forEach(u=>{const o=document.createElement('option');o.value=u.name||u;o.textContent=u.name||u;sel.appendChild(o);});
+      } catch(e) {
+        SALES_LIST.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+      }
+    })();
 
     fbDB.ref('settings/vendorOwners').on('value',s=>{_vendorOwnerCache=s.val()||{};populateVendorFilters();});
     populateVendorFilters();

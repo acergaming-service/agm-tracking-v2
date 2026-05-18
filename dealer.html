@@ -252,7 +252,7 @@ const FIREBASE_CONFIG={apiKey:"AIzaSyA-eDT7V7asiQ5ebGca-wBif8P-uW89_iQ",authDoma
 const RAW_CODE=(new URLSearchParams(location.search).get('code')||'').toUpperCase().trim();
 
 // ── State ─────────────────────────────────────────────────────────────────
-let fbDB, DEALER_ID, DEALER_INFO, config={}, localOrders={}, pmData={};
+let fbDB, DEALER_ID, DEALER_INFO, config={}, localOrders={}, inventory={};
 let isWindowOpen=true, saveTimer;
 let activeVendor='BNE', activeSubFilter='全部';
 
@@ -276,18 +276,18 @@ window.addEventListener('DOMContentLoaded', async()=>{
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbDB=firebase.database();
 
-    const[prodSnap,dealerSnap,winSnap,orderSnap,pmSnap]=await Promise.all([
+    const[prodSnap,dealerSnap,winSnap,orderSnap,invSnap]=await Promise.all([
       fbDB.ref('products').once('value'),
       fbDB.ref('dealers').once('value'),
       fbDB.ref('window').once('value'),
       fbDB.ref('orders').once('value'),  // 暫時先讀，後面再用 DEALER_ID 過濾
-      fbDB.ref('pmData').once('value'),
+      fbDB.ref('inventory').once('value'),
     ]);
 
     const dealers=dealerSnap.val()||{};
     const products=prodSnap.val()||{};
     const winData=winSnap.val()||{open:true,week:''};
-    pmData=pmSnap.val()||{};
+    inventory=invSnap.val()||{};
 
     // 驗證 code
     for(const[id,d]of Object.entries(dealers)){
@@ -325,8 +325,8 @@ window.addEventListener('DOMContentLoaded', async()=>{
       localOrders=snap.val()||{};
       updateSummary(); renderVendorTabs(); renderSubTabs(); renderProducts();
     });
-    fbDB.ref('pmData').on('value',snap=>{
-      pmData=snap.val()||{};
+    fbDB.ref('inventory').on('value',snap=>{
+      inventory=snap.val()||{};
       renderProducts();
     });
     // 監聽 products 變化（PM/Admin 更新 maxOrder、狀態等後即時反映）
@@ -477,18 +477,18 @@ function renderProducts(){
       </div>
       <div style="padding:10px 12px">
         ${(()=>{
-          const _pm=pmData[p.id]||{};
-          const _st=(_pm.status!==undefined&&_pm.status!==null?_pm.status:p.status)||'';
+          const _inv=inventory[p.id]||{};
+          const _st=p.status||'';
           const cfg=STATUS_CFG[_st]||STATUS_CFG[''];
-          const arrival=_pm.arrival||p.arrival||'';
-          const tag=_pm.priceTag||p.priceTag||'';
+          const arrival=p.arrival||'';
+          const tag=p.priceTag||'';
           const gTotal=(window._globalTotals||{})[p.id]||0;
           const overLimit=p.maxOrder&&p.maxOrder>0&&gTotal>p.maxOrder;
           const nearLimit=p.maxOrder&&p.maxOrder>0&&!overLimit&&Math.round(gTotal/p.maxOrder*100)>=80;
           return `
           ${(()=>{
-            const stk=(_pm.stock!==undefined?_pm.stock:p.stock)||0;
-            const ord=parseInt(_pm.vendorOrdered)||0;
+            const stk=(_inv.initialStock)||0;
+            const ord=parseInt(_inv.vendorOrdered)||0;
             if(stk>0&&ord>0) return `<span style="font-size:0.75rem;font-weight:700;color:#fff;background:#16a34a;padding:1px 7px;border-radius:3px;margin-right:4px">現貨</span><span style="font-size:0.75rem;font-weight:700;color:#fff;background:#1d6ef5;padding:1px 7px;border-radius:3px">預購</span>`;
             if(stk>0) return `<span style="font-size:0.75rem;font-weight:700;color:#fff;background:#16a34a;padding:1px 7px;border-radius:3px">現貨</span>`;
             if(ord>0) return `<span style="font-size:0.75rem;font-weight:700;color:#fff;background:#1d6ef5;padding:1px 7px;border-radius:3px">預購</span>`;
@@ -510,8 +510,7 @@ function renderProducts(){
       </div>
       <div style="text-align:right;font-family:var(--mono);font-size:0.92rem;font-weight:700;display:flex;flex-direction:column;align-items:flex-end;justify-content:center">
         ${(()=>{
-          const _pm2=pmData[p.id]||{};
-          const sp=_pm2.priceSpecial||p.priceSpecial||0;
+          const sp=p.priceSpecial||0;
           if(sp>0&&p.priceTax>0&&sp!==p.priceTax) return `<span style="text-decoration:line-through;color:var(--text3);font-size:0.78rem;line-height:1.2">NT$${p.priceTax.toLocaleString()}</span><span>NT$${sp.toLocaleString()}</span>`;
           if(sp>0&&(!p.priceTax||p.priceTax===0)) return `<span>NT$${sp.toLocaleString()}</span>`;
           return `<span>${p.priceTax>0?'NT$'+p.priceTax.toLocaleString():'—'}</span>`;
@@ -530,8 +529,7 @@ function renderProducts(){
       </div>
       <div style="font-size:0.82rem;color:var(--text2);line-height:1.6;padding:10px 12px;display:flex;align-items:center">
         ${(()=>{
-          const _pm3=pmData[p.id]||{};
-          const note=_pm3.displayNote||p.displayNote||'';
+          const note=p.displayNote||'';
           const gift=p.giftItem||'';
           const parts=[];
           if(note) parts.push(note);
@@ -715,18 +713,18 @@ function renderSearchAll(){
   const VENDOR_COLORS={BNE:'#7c3aed',GS:'#059669',SONY:'#1d6ef5'};
   const rows = allProds.map(p=>{
     const qty=localOrders[p.id]?.qty||0;
-    const _pm=pmData[p.id]||{};
-    const _st=(_pm.status!==undefined&&_pm.status!==null?_pm.status:p.status)||'';
+    const _inv=inventory[p.id]||{};
+    const _st=p.status||'';
     const cfg=STATUS_CFG[_st]||STATUS_CFG[''];
-    const arrival=_pm.arrival||p.arrival||'';
-    const tag=_pm.priceTag||p.priceTag||'';
+    const arrival=p.arrival||'';
+    const tag=p.priceTag||'';
     const gTotal=(window._globalTotals||{})[p.id]||0;
     const overLimit=p.maxOrder&&p.maxOrder>0&&gTotal>p.maxOrder;
     const nearLimit=p.maxOrder&&p.maxOrder>0&&!overLimit&&Math.round(gTotal/p.maxOrder*100)>=80;
-    const stk=(_pm.stock!==undefined?_pm.stock:p.stock)||0;
-    const ord=parseInt(_pm.vendorOrdered)||0;
+    const stk=(_inv.initialStock)||0;
+    const ord=parseInt(_inv.vendorOrdered)||0;
     const disabled=!isWindowOpen||_st==='unavailable';
-    const sp=_pm.priceSpecial||p.priceSpecial||0;
+    const sp=p.priceSpecial||0;
     const vColor=VENDOR_COLORS[p._vendor]||'var(--text3)';
     const vLabel=VENDOR_SHORT[p._vendor]||p._vendor;
     return `<div class="prod-row">
@@ -758,7 +756,7 @@ function renderSearchAll(){
         ${p._vendor==='SONY'?'—':(!p.srp||!p.priceTax?'—':Math.round(p.priceTax/p.srp*100)+'%')}
       </div>
       <div style="font-size:0.82rem;color:var(--text2);line-height:1.6;padding:10px 12px;display:flex;align-items:center">
-        ${[(_pm.displayNote||p.displayNote||''),(p.giftItem?'附贈：'+p.giftItem:''),(p.isAllocation?'⚠ 分配出貨':'')].filter(Boolean).join('　')}
+        ${[(p.displayNote||''),(p.giftItem?'附贈：'+p.giftItem:''),(p.isAllocation?'⚠ 分配出貨':'')].filter(Boolean).join('　')}
       </div>
       <div class="qty-ctrl" style="justify-content:center;padding:10px 12px">
         ${disabled
