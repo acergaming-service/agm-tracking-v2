@@ -5,14 +5,15 @@
 - `D:\OneDrive - Acer\追貨系統\Local\V2\migration_20260515_package\migration-inventory-ready.csv` (for BNE/GS inventory)
 
 ## Products
-- **Total:** 332
-  - BNE: 112
+- **Total:** 330
+  - BNE: 111
   - GS: 101
-  - SONY: 101
+  - SONY: 100
   - PLAYSEAT: 9
   - NLR: 9
 
 ### Skipped Rows (No P/N)
+- BNE產品 row 78: 中文品名
 - GSE產品 row 4: NS 沙石鎮時光 [英文封面] (繁中/簡中/英/日/韓文版) - 亞洲版
 - GSE產品 row 13: NS DREDGE - 日版
 - GSE產品 row 24: NS F.I.S.T.暗影火炬城 (繁中/簡中/英/日文版) - 亞洲版
@@ -31,6 +32,7 @@
 - GSE產品 row 50: PS4 喵喵大戰死剩種
 - GSE產品 row 57: (1跟1特典)PS5 沙石鎮時光 [中文封面] (繁中/簡中/英/日/韓文版) - 亞洲版
 - GSE產品 row 81: PS5 人類 : 一敗塗地 [夢想集版] (簡中/英/日/韓文版) - 歐版
+- PS產品 row 105: 中文品名
 
 ### Duplicate P/N (skipped)
 - ZL.A00TZ.1OL (BNE產品 row 113)
@@ -73,16 +75,30 @@
 - ZL.A00TZ.18T (BNE產品 row 114)
 - ZL.A00TZ.1BU (BNE產品 row 117)
 
+### Draft Products (missing required price / priceTax in Excel source)
+| Vendor | P/N | Sheet | Row | Missing Fields |
+|---|---|---|---|---|
+| BNE | ZL.A00TZ.1SP | BNE產品 | 41 | srp, price, priceTax |
+| BNE | ZL.A00TZ.1BW | BNE產品 | 106 | price, priceTax |
+| BNE | ZL.A00TZ.1CB | BNE產品 | 107 | srp, price, priceTax, barcode |
+| BNE | ZL.A00TZ.18T | BNE產品 | 114 | srp, price, priceTax, barcode |
+| BNE | ZL.A00TZ.1BP | BNE產品 | 115 | price, priceTax |
+| BNE | ZL.A00TZ.1BU | BNE產品 | 117 | srp, price, priceTax, barcode |
+| GS | ZL.A00TZ.11X | GSE產品 | 7 | srp, price, priceTax |
+| GS | ZL.A00TZ.1DK | GSE產品 | 122 | price, priceTax |
+| GS | ZL.A00TZ.1DM | GSE產品 | 123 | price, priceTax |
+| GS | ZL.A00TZ.1DJ | GSE產品 | 124 | price, priceTax |
+
 ### Empty Platform
 - None
 
 ## Inventory
-- **Total records:** 332 (one per product)
+- **Total records:** 330 (one per product)
 - **With initialStock > 0:** 42
 - **Source breakdown:**
-  - Excel AGM庫存量 (PS/PLAYSEAT/NLR): 119 records, 41 with qty>0
+  - Excel AGM庫存量 (PS/PLAYSEAT/NLR): 118 records, 41 with qty>0
   - Existing CSV (BNE/GS) with qty>0: 1
-  - BNE/GS defaulted to 0 (not in CSV): 212
+  - BNE/GS defaulted to 0 (not in CSV): 211
 
 ### Existing CSV entries not in Products
 - None

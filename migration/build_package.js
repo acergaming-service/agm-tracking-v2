@@ -46,7 +46,7 @@ function findSheet(wb, partial) {
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 const S = {
-  products:  { total: 0, byVendor: {}, skipped: [], dupPn: [], missingBc: [], emptyPlatform: [] },
+  products:  { total: 0, byVendor: {}, skipped: [], dupPn: [], missingBc: [], emptyPlatform: [], draftPricing: [] },
   inventory: { total: 0, fromExcel: 0, fromCsv: 0, defaultZero: 0, csvNotInProducts: [] },
   dealers:   { total: 0, skipped: [] },
   settings:  {},
@@ -91,6 +91,11 @@ SHEET_DEFS.forEach(function(def) {
 
     if (!pnRaw || pnRaw === '-' || pnRaw === '—') {
       if (nameRaw) S.products.skipped.push({ sheet: sheetName, row: rowNum, name: nameRaw });
+      return;
+    }
+    // Skip rows where P/N contains invalid characters (catches sub-header rows like "AGBS P/N" or "AGM料號")
+    if (!/^[A-Za-z0-9._\-]+$/.test(pnRaw)) {
+      S.products.skipped.push({ sheet: sheetName, row: rowNum, name: nameRaw, note: 'invalid pn: ' + pnRaw });
       return;
     }
 
@@ -157,6 +162,17 @@ SHEET_DEFS.forEach(function(def) {
 
     if (!platform) S.products.emptyPlatform.push({ pn: pnRaw, sheet: sheetName, row: rowNum });
 
+    // Products missing price or priceTax are unusable in dealer flow → draft
+    var missingFields = [];
+    if (!srp)      missingFields.push('srp');
+    if (!price)    missingFields.push('price');
+    if (!priceTax) missingFields.push('priceTax');
+    if (!barcode)  missingFields.push('barcode');
+    var status = (price === 0 || priceTax === 0) ? 'draft' : 'instock';
+    if (status === 'draft') {
+      S.products.draftPricing.push({ pn: pnRaw, vendor: vendor, sheet: sheetName, row: rowNum, missing: missingFields });
+    }
+
     S.products.byVendor[vendor] = (S.products.byVendor[vendor] || 0) + 1;
     added++;
 
@@ -165,7 +181,7 @@ SHEET_DEFS.forEach(function(def) {
       platform: platform, category: category, barcode: barcode, spec: spec,
       name: nameRaw, srp: srp, priceTax: priceTax, price: price,
       priceSpecial: priceSpecial, moq: 0, maxOrder: 0,
-      status: 'instock', arrival: '', priceTag: priceTag, displayNote: displayNote
+      status: status, arrival: '', priceTag: priceTag, displayNote: displayNote
     });
   });
 
@@ -400,6 +416,15 @@ var md = [
   '### Missing Barcode',
   S.products.missingBc.length === 0 ? '- None' :
     S.products.missingBc.map(function(r) { return '- ' + r.pn + ' (' + r.sheet + ' row ' + r.row + ')'; }).join('\n'),
+  '',
+  '### Draft Products (missing required price / priceTax in Excel source)',
+  S.products.draftPricing.length === 0 ? '- None' : [
+    '| Vendor | P/N | Sheet | Row | Missing Fields |',
+    '|---|---|---|---|---|',
+    S.products.draftPricing.map(function(r) {
+      return '| ' + r.vendor + ' | ' + r.pn + ' | ' + r.sheet + ' | ' + r.row + ' | ' + r.missing.join(', ') + ' |';
+    }).join('\n'),
+  ].join('\n'),
   '',
   '### Empty Platform',
   S.products.emptyPlatform.length === 0 ? '- None' :
