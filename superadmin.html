@@ -133,6 +133,16 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
         <div class="stat-card"><div class="stat-label">本週分配紀錄數</div><div class="stat-value" id="sv-allocs">—</div></div>
       </div>
       <div id="sv-v1" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85rem"></div>
+      <div id="sv-pmdata" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85rem;margin-top:6px"></div>
+    </div>
+    <div class="section" id="window-status-section">
+      <h3>📅 收單視窗狀態</h3>
+      <div id="ws-status-badge" style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text3)">—</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div class="stat-card"><div class="stat-label">目前週次</div><div class="stat-value" id="ws-week">—</div></div>
+        <div class="stat-card"><div class="stat-label">開始時間</div><div class="stat-value" id="ws-start" style="font-size:0.82rem;word-break:break-all">—</div></div>
+        <div class="stat-card"><div class="stat-label">結束時間</div><div class="stat-value" id="ws-end" style="font-size:0.82rem;word-break:break-all">—</div></div>
+      </div>
     </div>
     <div class="section">
       <h3>🔧 系統資訊</h3>
@@ -146,9 +156,10 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
     <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
       <h3 style="color:var(--red)">⚠ 營運資料重置</h3>
       <p style="font-size:0.85rem;color:var(--text2);margin-bottom:0.5rem">
-        <strong>清除：</strong>products、dealers、inventory、allocations、replenishments、orders<br>
+        <strong>清除：</strong>products、dealers、inventory、allocations、replenishments、replenishmentArrivals、pmData、orders<br>
+        <strong>重置：</strong>window（open:false、week 空白，防止 orders/current fallback）<br>
         <strong>保留：</strong>品牌設定、PM / 業務帳號、productOptions、密碼與系統設定<br>
-        <span style="color:var(--text3)">適用於 CSV migration 測試與環境重建。</span>
+        <span style="color:var(--text3)">適用於 CSV migration 測試與環境重建。重置前請先匯出 settings-master.json 備份。</span>
       </p>
       <p style="font-size:0.82rem;color:var(--red);margin-bottom:1rem;font-weight:700">此操作不可復原。</p>
       <button class="btn-danger" onclick="resetSandboxData()">重置營運資料</button>
@@ -215,6 +226,13 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
         <div style="color:var(--text3);font-size:0.88rem">載入中…</div>
       </div>
     </div>
+
+    <div class="section">
+      <h3>同步業務名單</h3>
+      <p style="font-size:0.85rem;color:var(--text2);margin-bottom:1rem">依目前通路資料反推實際使用的業務 ID，封存無通路使用的業務帳號。不會刪除任何資料。</p>
+      <button class="btn-sm" style="width:100%;margin-bottom:0.5rem" onclick="previewSyncSalesUsers()">分析業務使用狀況</button>
+      <div id="sync-sales-result" style="font-size:0.85rem;margin-top:0.5rem"></div>
+    </div>
   </div>
 </div>
 
@@ -227,7 +245,7 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
       <div class="data-grid">
         <div class="data-card">
           <div class="data-card-hd">產品資料</div>
-          <div class="data-card-sub">441 個品項（BNE / GSE / SONY）</div>
+          <div class="data-card-sub" id="product-card-sub">產品資料</div>
           <input type="file" id="import-products-file" accept=".csv" style="display:none" onchange="handleProductsCsvFile(this)">
           <button class="btn-sm" style="width:100%;margin-bottom:8px" onclick="downloadProductTemplate()">⬇ 下載 CSV 範本</button>
           <button class="btn-green" style="display:block;width:100%;margin-bottom:8px" onclick="exportProductsCsv()">↑ 匯出產品資料</button>
@@ -291,6 +309,32 @@ nav{background:#fff;border-bottom:2px solid var(--border);padding:0 1.5rem;heigh
       <button class="btn-sm" style="width:100%;margin-bottom:10px" onclick="checkIntegrity()">執行一致性檢查</button>
       <div id="ci-result"></div>
       <button id="btn-clear-orphan-ra" class="btn-danger" style="display:none;margin-top:8px" onclick="clearOrphanArrivals()">🗑 清除 orphan 到貨紀錄（依上方檢查結果）</button>
+    </div>
+    <div class="section">
+      <h3>💾 Settings Master 匯出 / 匯入</h3>
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:0.8rem">
+        <strong>匯出：</strong>vendorOwners、productOptions、pmUsers、salesUsers<br>
+        <strong>不含：</strong>passwords（不應進入 migration 檔）<br>
+        <span style="color:var(--text3)">用於 Full Reset 後完整重建 settings 環境。</span>
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="exportSettingsMaster()">↓ 匯出 settings-master.json</button>
+        <button class="btn-sm" onclick="triggerSettingsImport()">↑ 匯入 settings-master.json</button>
+      </div>
+      <input type="file" id="settings-master-file" accept=".json" style="display:none"
+             onchange="handleSettingsMasterFile(event)">
+    </div>
+    <div class="section">
+      <h3>📦 Migration Export 匯出</h3>
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:0.8rem">
+        <strong>匯出乾淨的 V2 正式欄位</strong>，作為 Full Reset 後重新匯入的 migration 來源。<br>
+        <span style="color:var(--text3)">不含：legacy 欄位（productLineId、pmData、dealers.sales）、passwords。</span>
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="exportMigrationProductsCsv()">↓ Products CSV</button>
+        <button class="btn-sm" onclick="exportMigrationDealersCsv()">↓ Dealers CSV</button>
+        <button class="btn-sm" onclick="exportMigrationInventoryCsv()">↓ Inventory CSV</button>
+      </div>
     </div>
     <div class="section" style="border-color:var(--red-b);background:var(--red-dim)">
       <h3 style="color:var(--red)">⚠ 危險操作</h3>
@@ -574,12 +618,30 @@ window.addEventListener('DOMContentLoaded',async()=>{
   loadPmUsers();
   loadVendorOwners();
   loadProductOptions();
+  loadWindowStatus();
   fbDB.ref('products').on('value', snap => {
     _productCache = snap.val() || {};
     _knownVendors = Object.keys(_productCache).sort();
     renderVendorOwners();
+    _updateProductCardSub();
   });
 });
+
+function renderWindowStatus(data) {
+  const d = data || {};
+  const badge = document.getElementById('ws-status-badge');
+  if (!badge) return;
+  const isOpen = d.open === true && !!d.week;
+  badge.textContent = isOpen ? '🟢 收單開放中' : '🔴 已關閉';
+  badge.style.color = isOpen ? 'var(--green)' : 'var(--red)';
+  document.getElementById('ws-week').textContent = d.week || '—';
+  document.getElementById('ws-start').textContent = d.startTime || '—';
+  document.getElementById('ws-end').textContent = d.endTime || '—';
+}
+
+function loadWindowStatus() {
+  fbDB.ref('window').on('value', snap => renderWindowStatus(snap.val()));
+}
 
 function _renderSysInfo() {
   const tbl = document.getElementById('sysinfo-table');
@@ -603,7 +665,7 @@ function _renderSysInfo() {
 }
 
 async function checkData(){
-  const [pS,dS,oS,iS,rS,winS,raS,oaS,alS]=await Promise.all([
+  const [pS,dS,oS,iS,rS,winS,raS,oaS,alS,pmS]=await Promise.all([
     fbDB.ref('products').once('value'),
     fbDB.ref('dealers').once('value'),
     fbDB.ref('orders').once('value'),
@@ -613,6 +675,7 @@ async function checkData(){
     fbDB.ref('replenishmentArrivals').once('value'),
     fbDB.ref('orders_archive').once('value'),
     fbDB.ref('allocations').once('value'),
+    fbDB.ref('pmData').once('value'),
   ]);
   const prods=pS.val()||{};
   const prodCount=Object.values(prods).reduce((s,v)=>s+Object.keys(v).length,0);
@@ -631,6 +694,7 @@ async function checkData(){
   const weekAllocs=allocAll[week]||{};
   const weekAllocCount=Object.values(weekAllocs).reduce((s,pA)=>s+Object.keys(pA||{}).length,0);
   const v1Keys=Object.keys(ordersAll).filter(k=>!/^\d{4}-W\d+$/.test(k));
+  const pmCount=Object.keys(pmS.val()||{}).length;
   document.getElementById('check-result').innerHTML='<div style="color:var(--green);font-weight:700">✓ 狀態已更新</div>';
   document.getElementById('sv-week').textContent=week||'—';
   const openEl=document.getElementById('sv-open');
@@ -658,6 +722,22 @@ async function checkData(){
     v1El.style.border='1px solid var(--green-b)';
     v1El.style.color='var(--green)';
     v1El.textContent='✓ 無 V1 舊資料，orders 路徑結構正常';
+  }
+  const pmEl=document.getElementById('sv-pmdata');
+  pmEl.style.display='block';
+  pmEl.style.padding='8px 12px';
+  pmEl.style.borderRadius='var(--radius-sm)';
+  pmEl.style.fontSize='0.85rem';
+  if(pmCount>0){
+    pmEl.style.background='var(--amber-dim)';
+    pmEl.style.border='1px solid var(--amber-b)';
+    pmEl.style.color='var(--amber)';
+    pmEl.innerHTML='⚠ 偵測到 legacy pmData：<b>'+pmCount+' 筆</b>　建議執行「重置營運資料」以清除 ghost data。';
+  }else{
+    pmEl.style.background='var(--green-dim)';
+    pmEl.style.border='1px solid var(--green-b)';
+    pmEl.style.color='var(--green)';
+    pmEl.textContent='✓ pmData 乾淨，無 legacy 殘留';
   }
 }
 
@@ -892,6 +972,70 @@ async function archiveSalesUser(salesId) {
     await fbDB.ref(`settings/salesUsers/${salesId}/archived`).set(false);
     showToast(`✅ 已解除封存業務「${name}」`);
   }
+}
+
+// ── 業務同步工具 ──────────────────────────────────────────────────────────
+
+let _unusedSalesIds = [];
+
+function previewSyncSalesUsers() {
+  const resultEl = document.getElementById('sync-sales-result');
+  resultEl.textContent = '分析中…';
+
+  const usedIds = new Set(
+    Object.values(_dealerCache).map(d => d.salesId).filter(Boolean)
+  );
+  const allEntries = Object.entries(_salesCache);
+  const unused = allEntries
+    .filter(([id, u]) => !usedIds.has(id) && u.archived !== true)
+    .map(([id]) => id);
+  const usedCount = allEntries.filter(([id]) => usedIds.has(id)).length;
+  const total = allEntries.length;
+
+  _unusedSalesIds = unused;
+
+  const badge = (n, color, bg, bd, label) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-sm);background:${bg};color:${color};border:1px solid ${bd};font-weight:700;font-size:0.82rem">${label}：${n}</span>`;
+
+  if (!unused.length) {
+    resultEl.innerHTML =
+      `<div style="color:var(--green);margin-bottom:6px">✅ 所有業務均有通路使用，無需清理。</div>` +
+      `<div style="display:flex;gap:8px;flex-wrap:wrap">` +
+        badge(total,     'var(--text2)',  'var(--surface2)',  'var(--border)',  '目前業務') +
+        badge(usedCount, 'var(--green)',  'var(--green-dim)', 'var(--green-b)', '有通路') +
+      `</div>`;
+    return;
+  }
+
+  resultEl.innerHTML =
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0.6rem">` +
+      badge(total,         'var(--text2)',  'var(--surface2)',  'var(--border)',  '目前業務') +
+      badge(usedCount,     'var(--green)',  'var(--green-dim)', 'var(--green-b)', '有通路') +
+      badge(unused.length, 'var(--amber)',  'var(--amber-dim)', 'var(--amber-b)', '無通路') +
+    `</div>` +
+    `<div style="font-size:0.8rem;font-family:var(--mono);color:var(--text3);margin-bottom:0.6rem">` +
+      unused.map(id => `<div>${id}（${_salesCache[id]?.name || id}）</div>`).join('') +
+    `</div>` +
+    `<button class="btn-sm" style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-b)" onclick="archiveUnusedSalesUsers()">封存未使用業務（${unused.length} 筆）</button>`;
+}
+
+async function archiveUnusedSalesUsers() {
+  if (!_unusedSalesIds.length) { showToast('無未使用業務'); return; }
+  if (!confirm(`確定封存 ${_unusedSalesIds.length} 位業務（${_unusedSalesIds.join('、')}）？\n此操作可解除封存，不會刪除資料。`)) return;
+  const now = new Date().toISOString();
+  const updates = {};
+  _unusedSalesIds.forEach(id => {
+    updates[`settings/salesUsers/${id}/archived`]  = true;
+    updates[`settings/salesUsers/${id}/active`]    = false;
+    updates[`settings/salesUsers/${id}/updatedAt`] = now;
+  });
+  try {
+    await fbDB.ref('/').update(updates);
+    showToast(`✅ 已封存 ${_unusedSalesIds.length} 位業務`);
+    _unusedSalesIds = [];
+    document.getElementById('sync-sales-result').innerHTML =
+      '<div style="color:var(--green)">✅ 封存完成。可重新點「分析業務使用狀況」確認。</div>';
+  } catch(e) { showToast('❌ 封存失敗：' + e.message); }
 }
 
 // ── 通路管理 ─────────────────────────────────────────────────────────────
@@ -1184,8 +1328,8 @@ function _downloadCsv(filename, content) {
 }
 
 function downloadProductTemplate() {
-  const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,status,arrival,priceTag,displayNote';
-  const sample = '"BNE","BNE_EX_001","ZL.A00TZ.1FO","NS","軟體","4713014356037","","品名範例",1490,900,857,0,0,"instock","","特價",""';
+  const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,maxOrder,status,arrival,priceTag,displayNote';
+  const sample = '"BNE","BNE_EX_001","ZL.A00TZ.1FO","NS","軟體","4713014356037","","品名範例",1490,900,857,0,0,0,"instock","","特價",""';
   _downloadCsv('products_template.csv', [header, sample].join('\n'));
 }
 
@@ -1220,13 +1364,13 @@ async function exportProductsCsv() {
   try {
     const snap = await fbDB.ref('products').once('value');
     const products = snap.val() || {};
-    const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,status,arrival,priceTag,displayNote';
+    const header = 'vendor,productId,P/N,platform,category,barcode,spec,name,srp,priceTax,price,priceSpecial,moq,maxOrder,status,arrival,priceTag,displayNote';
     const rows = [];
     Object.entries(products).forEach(([vendor, items]) => {
       Object.entries(items || {}).forEach(([pid, p]) => {
         rows.push([vendor, pid, p.pn||'', p.platform||'', p.category||'', p.barcode||'',
           p.spec||'', p.name||'', p.srp||0, p.priceTax||0, p.price||0, p.priceSpecial||0,
-          p.moq||0, p.status||'', p.arrival||'', p.priceTag||'', p.displayNote||'']
+          p.moq||0, p.maxOrder||0, p.status||'', p.arrival||'', p.priceTag||'', p.displayNote||'']
           .map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
       });
     });
@@ -1535,6 +1679,7 @@ async function handleProductsCsvFile(input) {
         price:        Number(row['price']) || 0,
         priceSpecial: Number(row['priceSpecial']) || 0,
         moq:          Number(row['moq']) || 0,
+        maxOrder:     Number(row['maxOrder']) || 0,
         status:       row['status'] || 'instock',
         arrival:      row['arrival'] || '',
         priceTag:     row['priceTag'] || '',
@@ -2280,6 +2425,7 @@ function loadVendorOwners() {
     _vendorOwnerCache = snap.val() || {};
     renderVendorOwners();
     renderPmUsers();
+    _updateProductCardSub();
   });
 }
 
@@ -2290,6 +2436,14 @@ function getPmLabel(pmId) {
 
 function vendorLabel(v) {
   return _vendorOwnerCache?.[v]?.displayName || (v === 'GS' ? 'GSE' : v);
+}
+
+function _updateProductCardSub() {
+  const el = document.getElementById('product-card-sub');
+  if (!el) return;
+  const total = Object.values(_productCache).reduce((s, v) => s + Object.keys(v).length, 0);
+  if (!total) { el.textContent = '產品資料'; return; }
+  el.textContent = `${total} 個品項`;
 }
 
 function renderVendorOwners() {
@@ -2872,8 +3026,12 @@ async function resetSandboxData() {
       fbDB.ref('inventory').remove(),
       fbDB.ref('allocations').remove(),
       fbDB.ref('replenishments').remove(),
+      fbDB.ref('replenishmentArrivals').remove(),
+      fbDB.ref('pmData').remove(),
       fbDB.ref('orders').remove(),
     ]);
+    // window 重置：open:false + week 空白，防止後續寫入進入 orders/current fallback
+    await fbDB.ref('window').set({ open: false, week: '', startTime: '', endTime: '' });
     // products cache — clear immediately; listener will also fire and confirm
     _productCache = {};
     _knownVendors = [];
@@ -2892,6 +3050,180 @@ async function resetSandboxData() {
     showToast('測試資料已清空');
   } catch(e) {
     showToast('清空失敗：' + e.message);
+  }
+}
+
+// ── Migration Export 匯出 ────────────────────────────────────────────────────
+async function exportMigrationProductsCsv() {
+  showToast('讀取產品資料中…');
+  try {
+    const snap = await fbDB.ref('products').once('value');
+    const prods = snap.val() || {};
+    const headers = ['vendor','productId','sku','name','platform','category','status','priceTag','priceTax','priceSpecial','srp','maxOrder','isAllocation','giftItem','displayNote','active','archived'];
+    const rows = [];
+    Object.entries(prods).forEach(([vendor, items]) => {
+      Object.entries(items || {}).forEach(([pid, p]) => {
+        rows.push(_csvRow([
+          vendor,
+          pid,
+          p.pn || '',
+          p.name || '',
+          p.platform || '',
+          p.category || '',
+          p.status || '',
+          p.priceTag || '',
+          p.priceTax != null ? p.priceTax : '',
+          p.priceSpecial != null ? p.priceSpecial : '',
+          p.srp != null ? p.srp : '',
+          p.maxOrder != null ? p.maxOrder : '',
+          p.isAllocation ? 1 : 0,
+          p.giftItem || '',
+          p.displayNote || '',
+          p.active !== false ? 1 : 0,
+          p.archived === true ? 1 : 0,
+        ]));
+      });
+    });
+    _downloadCsv('migration-products-ready.csv', [_csvRow(headers), ...rows].join('\r\n'));
+    showToast(`✅ Products 已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportMigrationDealersCsv() {
+  showToast('讀取通路資料中…');
+  try {
+    const [dealerSnap, suSnap] = await Promise.all([
+      fbDB.ref('dealers').once('value'),
+      fbDB.ref('settings/salesUsers').once('value'),
+    ]);
+    const dealers = dealerSnap.val() || {};
+    const salesUsers = suSnap.val() || {};
+    const headers = ['dealerId','name','code','salesId','salesName','active','archived','note'];
+    const rows = Object.entries(dealers).map(([did, d]) => {
+      const su = d.salesId ? salesUsers[d.salesId] : null;
+      const salesName = su ? (su.name || d.salesId) : (d.salesId || '');
+      return _csvRow([
+        did,
+        d.name || '',
+        d.code || '',
+        d.salesId || '',
+        salesName,
+        d.active !== false ? 1 : 0,
+        d.archived === true ? 1 : 0,
+        d.note || '',
+      ]);
+    });
+    _downloadCsv('migration-dealers-ready.csv', [_csvRow(headers), ...rows].join('\r\n'));
+    showToast(`✅ Dealers 已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+async function exportMigrationInventoryCsv() {
+  showToast('讀取庫存資料中…');
+  try {
+    const snap = await fbDB.ref('inventory').once('value');
+    const inv = snap.val() || {};
+    const headers = ['productId','stock','vendorOrdered','incoming','moq','note'];
+    const rows = Object.entries(inv).map(([pid, iv]) => _csvRow([
+      pid,
+      iv.initialStock != null ? iv.initialStock : 0,
+      iv.vendorOrdered || '',
+      iv.incoming || '',
+      iv.moq || '',
+      iv.note || '',
+    ]));
+    _downloadCsv('migration-inventory-ready.csv', [_csvRow(headers), ...rows].join('\r\n'));
+    showToast(`✅ Inventory 已匯出（${rows.length} 筆）`);
+  } catch(e) { showToast('❌ 匯出失敗：' + e.message); }
+}
+
+// ── Settings Master 匯出 / 匯入 ──────────────────────────────────────────────
+async function exportSettingsMaster() {
+  showToast('讀取 Settings 中…');
+  try {
+    const [voS, poS, pmS, suS] = await Promise.all([
+      fbDB.ref('settings/vendorOwners').once('value'),
+      fbDB.ref('settings/productOptions').once('value'),
+      fbDB.ref('settings/pmUsers').once('value'),
+      fbDB.ref('settings/salesUsers').once('value'),
+    ]);
+    const data = {
+      vendorOwners:   voS.val() || {},
+      productOptions: poS.val() || {},
+      pmUsers:        pmS.val() || {},
+      salesUsers:     suS.val() || {},
+      _meta: {
+        version:    'v2',
+        exportedAt: new Date().toISOString(),
+        source:     'agm-tracking-v2',
+      },
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `settings-master_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(
+      `✅ 已匯出：${Object.keys(data.vendorOwners).length} vendorOwners、` +
+      `${Object.keys(data.productOptions).length} productOptions 類型、` +
+      `${Object.keys(data.pmUsers).length} pmUsers、` +
+      `${Object.keys(data.salesUsers).length} salesUsers`
+    );
+  } catch(e) {
+    showToast('❌ 匯出失敗：' + e.message);
+  }
+}
+
+function triggerSettingsImport() {
+  document.getElementById('settings-master-file').value = '';
+  document.getElementById('settings-master-file').click();
+}
+
+async function handleSettingsMasterFile(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const required = ['vendorOwners', 'productOptions', 'pmUsers', 'salesUsers'];
+    for (const k of required) {
+      if (typeof data[k] !== 'object' || data[k] === null || Array.isArray(data[k])) {
+        showToast(`❌ 格式錯誤：${k} 欄位不正確`); return;
+      }
+    }
+    const voCount = Object.keys(data.vendorOwners).length;
+    const poKeys  = Object.keys(data.productOptions);
+    const pmCount = Object.keys(data.pmUsers).length;
+    const suCount = Object.keys(data.salesUsers).length;
+    const exportedAt = data._meta?.exportedAt
+      ? new Date(data._meta.exportedAt).toLocaleString('zh-TW')
+      : '不明';
+    if (!confirm(
+      '確認匯入 Settings Master？\n\n' +
+      `vendorOwners：${voCount} 筆\n` +
+      `productOptions：${poKeys.length} 類（${poKeys.join('、')}）\n` +
+      `pmUsers：${pmCount} 筆\n` +
+      `salesUsers：${suCount} 筆\n` +
+      `匯出時間：${exportedAt}\n\n` +
+      '⚠ 此操作將覆蓋 Firebase settings/*（不含 passwords）。'
+    )) return;
+    const answer = prompt('請輸入確認文字（完全一致才執行）：\n\nIMPORT SETTINGS');
+    if (answer !== 'IMPORT SETTINGS') { showToast('輸入不正確，操作已取消'); return; }
+    showToast('匯入中，請稍候…');
+    // 只寫入 4 個允許的路徑；settings/passwords 永遠不碰
+    await Promise.all([
+      fbDB.ref('settings/vendorOwners').set(data.vendorOwners),
+      fbDB.ref('settings/productOptions').set(data.productOptions),
+      fbDB.ref('settings/pmUsers').set(data.pmUsers),
+      fbDB.ref('settings/salesUsers').set(data.salesUsers),
+    ]);
+    showToast(
+      `✅ Settings 匯入完成：${voCount} vendorOwners、${pmCount} pmUsers、${suCount} salesUsers`
+    );
+  } catch(e) {
+    showToast('❌ 匯入失敗：' + e.message);
   }
 }
 
