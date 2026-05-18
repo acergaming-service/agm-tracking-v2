@@ -9,7 +9,12 @@
       "Bash(git commit --amend -m ' *)",
       "Bash(git tag *)",
       "Bash(git push *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(powershell -Command \"\\(Get-Content 'migration-products-ready.csv' -Encoding UTF8\\).Count\")",
+      "Bash(npm i *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\OneDrive - Acer\\\\追貨系統\\\\Local\\\\V2\\\\agm-tracking-v2\" -File)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

@@ -1739,9 +1739,9 @@ function _showProductImportPreview() {
   // Preview table (first 8 rows of add+update)
   const previewRows = [...toAdd, ...toUpdate].slice(0, 8);
   const tblHtml = previewRows.length ? `
-    <table class="dealer-tbl" style="font-size:0.8rem;min-width:520px">
+    <table class="dealer-tbl" style="font-size:0.8rem;min-width:680px">
       <thead><tr>
-        <th>類型</th><th>代理</th><th>Product ID</th><th>品名</th><th>平台</th><th>狀態</th>
+        <th>類型</th><th>代理</th><th>Product ID</th><th>AGM P/N</th><th>品名</th><th>國際條碼</th><th>平台</th><th>狀態</th>
       </tr></thead>
       <tbody>
         ${previewRows.map(({ vendor, productId, payload, _isUpdate }) => {
@@ -1750,12 +1750,14 @@ function _showProductImportPreview() {
             <td><span style="font-size:0.75rem;font-weight:700;padding:1px 7px;border-radius:8px;${isUpd ? 'background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-b)' : 'background:var(--green-dim);color:var(--green);border:1px solid var(--green-b)'}">${isUpd ? '更新' : '新增'}</span></td>
             <td style="font-family:var(--mono);font-size:0.78rem">${vendor}</td>
             <td style="font-family:var(--mono);font-size:0.78rem">${productId}</td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${payload.pn||'—'}</td>
             <td>${payload.name}</td>
+            <td style="font-family:var(--mono);font-size:0.78rem">${payload.barcode||'—'}</td>
             <td>${payload.platform}</td>
             <td style="font-family:var(--mono);font-size:0.78rem">${payload.status}</td>
           </tr>`;
         }).join('')}
-        ${total > 8 ? `<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:0.78rem;padding:6px">… 還有 ${total - 8} 筆</td></tr>` : ''}
+        ${total > 8 ? `<tr><td colspan="8" style="text-align:center;color:var(--text3);font-size:0.78rem;padding:6px">… 還有 ${total - 8} 筆</td></tr>` : ''}
       </tbody>
     </table>` : '';
   document.getElementById('import-preview-wrap').innerHTML = tblHtml;
